@@ -1,0 +1,56 @@
+{
+  "ranAt": "2026-11-11T20:01:43.432Z",
+  "url": "http://localhost:8080/#my-nfts",
+  "buyer": "0xAc2b060448ce420b18d951c663f24E8A286035A4",
+  "verdict": "GATEWAY LATENCY (resolved)",
+  "why": "the artwork name resolved after 8s. While waiting the app shows \"Loading artwork…\" plus a \"Token #1\" fallback, so nothing renders blank and no code change is needed. My earlier batched check simply asserted too early.",
+  "finalState": {
+    "label": "my-nfts",
+    "elapsedS": 8,
+    "connectedChip": 1,
+    "ownershipCard": true,
+    "saleState": true,
+    "artworkName": true,
+    "loadingPlaceholder": false,
+    "fallbackLabel": false,
+    "metadataError": false,
+    "ownershipReadError": false,
+    "connectPrompt": false,
+    "tokenLinks": 2,
+    "section": "Your collection and active listings. 01 wawe 1/1 · #1 Not currently for sale View artwork Your listings Cancel removes a sale listing. Open an artwork to change its price or revoke its transfer permissions. Studio Collection"
+  },
+  "gateway": {
+    "total": 1,
+    "byStatus": {
+      "200": 1
+    },
+    "first3": [
+      {
+        "status": 200,
+        "url": "https://gateway.pinata.cloud/ipfs/bafkreicppdle4nikdgzyqjmk73mbks77inybgtuuh25eygabs3xrcs257y"
+      }
+    ]
+  },
+  "rpcErrors": [],
+  "pageErrors": [
+    "Hydration failed because the server rendered HTML didn't match the client. As a result this tree will be regenerated on "
+  ],
+  "timeline": [
+    {
+      "s": 2,
+      "card": true,
+      "name": false,
+      "fallback": true,
+      "metaErr": false,
+      "readErr": false
+    },
+    {
+      "s": 8,
+      "card": true,
+      "name": true,
+      "fallback": false,
+      "metaErr": false,
+      "readErr": false
+    }
+  ]
+}

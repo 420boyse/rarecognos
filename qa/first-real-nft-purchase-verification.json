@@ -1,0 +1,285 @@
+{
+  "verifiedAt": "2026-11-11T19:48:44.287Z",
+  "network": "LiteForge Zeeve 4441",
+  "rpc": "https://rpc.testnet.liteforge.zeeve.net",
+  "transactionHash": "0xfa68d8c01640a99d4f0512d238c4094d75b9ad87a15152af375f3ad35c6846d8",
+  "transaction": {
+    "from": "0xac2b060448ce420b18d951c663f24e8a286035a4",
+    "to": "0x77c0ea4283ea569fb40fc86641799693381b7ec0",
+    "valueWei": "10000000000000000",
+    "block": "70062538",
+    "gasUsed": "156863",
+    "gasCostWei": "1568630000000",
+    "status": "success",
+    "inputSelector": "0xd6febde8"
+  },
+  "decodedCall": {
+    "functionName": "buy",
+    "args": [
+      "3",
+      "10000000000000000"
+    ]
+  },
+  "events": {
+    "market": [
+      "Purchased",
+      "SaleSettled"
+    ],
+    "collection": [
+      "Transfer"
+    ],
+    "SaleSettled": {
+      "event": "SaleSettled",
+      "id": "3",
+      "seller": "0xfFd9618E19Fb7f74169f75343550E14b74d19CB3",
+      "treasury": "0x06e53D74751392ee4aC7139f611B8db3f98591f9",
+      "price": "10000000000000000",
+      "fee": "25000000000000",
+      "sellerProceeds": "9975000000000000"
+    },
+    "Purchased": {
+      "event": "Purchased",
+      "id": "3",
+      "buyer": "0xAc2b060448ce420b18d951c663f24E8A286035A4"
+    },
+    "Transfer": {
+      "event": "Transfer",
+      "from": "0xfFd9618E19Fb7f74169f75343550E14b74d19CB3",
+      "to": "0xAc2b060448ce420b18d951c663f24E8A286035A4",
+      "tokenId": "1"
+    }
+  },
+  "liveState": {
+    "head": "70063444",
+    "ownerOf1": "0xAc2b060448ce420b18d951c663f24E8A286035A4",
+    "creator1": "0xfFd9618E19Fb7f74169f75343550E14b74d19CB3",
+    "getApproved1": "0x0000000000000000000000000000000000000000",
+    "listing3Active": false,
+    "activeListingForToken1": "0",
+    "treasuryLiveWei": "25000000000000",
+    "sellerLiveWei": "85871075241376077",
+    "buyerLiveWei": "12521583169341300"
+  },
+  "moneyEvidence": {
+    "archive": {
+      "skipped": "906 blocks behind head; RPC prunes state past ~100 blocks"
+    },
+    "live": {
+      "treasury": {
+        "snapshotWei": "0",
+        "liveWei": "25000000000000"
+      },
+      "seller": {
+        "snapshotWei": "75896075241376077",
+        "snapshotBlock": "70060374",
+        "liveWei": "85871075241376077",
+        "deltaWei": "9975000000000000",
+        "snapshotNonce": "26",
+        "nonceNow": "26"
+      },
+      "buyer": {
+        "address": "0xac2b060448ce420b18d951c663f24e8a286035a4",
+        "isEOA": true,
+        "liveWei": "12521583169341300",
+        "liveZkLTC": "0.0125215831693413",
+        "nonce": "24",
+        "gasCostWei": "1568630000000"
+      }
+    },
+    "explorer": {
+      "result": "success",
+      "value": "10000000000000000",
+      "gasUsed": "156863",
+      "status": "ok",
+      "to": "0x77c0ea4283ea569fB40FC86641799693381B7Ec0",
+      "from": "0xAc2b060448ce420b18d951c663f24E8A286035A4",
+      "decodedMethod": "buy"
+    }
+  },
+  "summary": [
+    {
+      "metric": "ownership",
+      "pass": true,
+      "checks": [
+        "ownerOf-is-buyer",
+        "creator-unchanged",
+        "market-approval-cleared-by-transfer"
+      ]
+    },
+    {
+      "metric": "seller payment",
+      "pass": true,
+      "checks": [
+        "seller-delta-equals-proceeds"
+      ]
+    },
+    {
+      "metric": "marketplace fee",
+      "pass": true,
+      "checks": [
+        "treasury-balance-equals-exactly-one-fee"
+      ]
+    }
+  ],
+  "checks": [
+    {
+      "id": "tx-found",
+      "group": "1-tx",
+      "pass": true,
+      "detail": "block 70062538, head 70063444, 906 blocks behind"
+    },
+    {
+      "id": "receipt-success",
+      "group": "1-tx",
+      "pass": true,
+      "detail": "receipt.status = \"success\""
+    },
+    {
+      "id": "target-is-market",
+      "group": "1-tx",
+      "pass": true,
+      "detail": "to = 0x77c0ea4283ea569fb40fc86641799693381b7ec0"
+    },
+    {
+      "id": "not-seller-not-treasury",
+      "group": "1-tx",
+      "pass": true,
+      "detail": "sender 0xac2b060448ce420b18d951c663f24e8a286035a4 is neither the seller nor the treasury"
+    },
+    {
+      "id": "sender-matches-prepared-wallet-B",
+      "group": "1-tx",
+      "pass": false,
+      "detail": "prepared wallet B was 0xfeb935dc86d5549e2a61003dd5f2d52f6f840811 (nonce 0, still holding 0.02 zkLTC — it never bought). Actual payer: 0xac2b060448ce420b18d951c663f24e8a286035a4"
+    },
+    {
+      "id": "function-is-buy",
+      "group": "2-decode",
+      "pass": true,
+      "detail": "decoded buy(3, 10000000000000000)"
+    },
+    {
+      "id": "listing-id-3",
+      "group": "2-decode",
+      "pass": true,
+      "detail": "buy(listingId=3)"
+    },
+    {
+      "id": "expected-price-exact",
+      "group": "2-decode",
+      "pass": true,
+      "detail": "buy(expectedPrice=10000000000000000 wei) = 0.01 zkLTC"
+    },
+    {
+      "id": "events-emitted",
+      "group": "2-decode",
+      "pass": true,
+      "detail": "market: [Purchased, SaleSettled] · collection: [Transfer] · note: buy() deactivates the listing struct directly, so no Cancelled event is expected"
+    },
+    {
+      "id": "sale-settled-fields",
+      "group": "2-decode",
+      "pass": true,
+      "detail": "{\"id\":\"3\",\"seller\":\"0xfFd9618E19Fb7f74169f75343550E14b74d19CB3\",\"treasury\":\"0x06e53D74751392ee4aC7139f611B8db3f98591f9\",\"price\":\"10000000000000000\",\"fee\":\"25000000000000\",\"proceeds\":\"9975000000000000\"}"
+    },
+    {
+      "id": "purchased-buyer-is-sender",
+      "group": "2-decode",
+      "pass": true,
+      "detail": "Purchased.buyer = 0xAc2b060448ce420b18d951c663f24E8A286035A4"
+    },
+    {
+      "id": "transfer-seller-to-buyer",
+      "group": "2-decode",
+      "pass": true,
+      "detail": "Transfer 0xfFd9618E19Fb7f74169f75343550E14b74d19CB3 -> 0xAc2b060448ce420b18d951c663f24E8A286035A4, tokenId 1"
+    },
+    {
+      "id": "ownerOf-is-buyer",
+      "group": "ownership",
+      "pass": true,
+      "detail": "ownerOf(#1) = 0xAc2b060448ce420b18d951c663f24E8A286035A4"
+    },
+    {
+      "id": "creator-unchanged",
+      "group": "ownership",
+      "pass": true,
+      "detail": "creator(#1) = 0xfFd9618E19Fb7f74169f75343550E14b74d19CB3 (immutable, survives transfer)"
+    },
+    {
+      "id": "market-approval-cleared-by-transfer",
+      "group": "ownership",
+      "pass": true,
+      "detail": "getApproved(#1) = 0x0000000000000000000000000000000000000000"
+    },
+    {
+      "id": "listing-3-inactive",
+      "group": "listing",
+      "pass": true,
+      "detail": "listings(3) = { seller 0xfFd9618E19Fb7f74169f75343550E14b74d19CB3, token #1, price 10000000000000000, active false }"
+    },
+    {
+      "id": "no-active-listing-for-token-1",
+      "group": "listing",
+      "pass": true,
+      "detail": "activeListing(#1) = 0 (0 = none)"
+    },
+    {
+      "id": "earlier-listings-still-inactive",
+      "pass": true,
+      "detail": "#1 active=false · #2 active=false (only #3 was active and is now consumed)"
+    },
+    {
+      "id": "value-0.01-zkLTC",
+      "group": "price",
+      "pass": true,
+      "detail": "tx.value = 10000000000000000 wei = 0.01 zkLTC"
+    },
+    {
+      "id": "event-price-0.01",
+      "group": "price",
+      "pass": true,
+      "detail": "SaleSettled.price = 10000000000000000 wei"
+    },
+    {
+      "id": "fee-is-floor-0.25pct",
+      "group": "price",
+      "pass": true,
+      "detail": "floor(10000000000000000 × 25 / 10000) = 25000000000000 wei — nonzero"
+    },
+    {
+      "id": "conservation-fee-plus-proceeds",
+      "group": "price",
+      "pass": true,
+      "detail": "25000000000000 + 9975000000000000 = 10000000000000000 = price"
+    },
+    {
+      "id": "treasury-balance-equals-exactly-one-fee",
+      "group": "fee",
+      "pass": true,
+      "detail": "live balance 25000000000000 wei = 0.000025 zkLTC; pre-purchase snapshot was exactly 0 wei. The only value this address can receive is the 0.25% fee, so +0.000025 zkLTC is the fee."
+    },
+    {
+      "id": "seller-delta-equals-proceeds",
+      "group": "seller",
+      "pass": true,
+      "detail": "live 85871075241376077 − snapshot(block 70060374) 75896075241376077 = 9975000000000000 wei = 0.009975 zkLTC (expected 9975000000000000). Seller nonce moved 26→26, and an exact proceeds delta means no other value moved through this account"
+    },
+    {
+      "id": "buyer-paid-price-plus-gas",
+      "group": "buyer",
+      "pass": true,
+      "detail": "msg.value 10000000000000000 wei debited atomically from 0xac2b060448ce420b18d951c663f24e8a286035a4 plus 1568630000000 wei gas (EVM guarantees the debit); buyer EOA=true, nonce 24, now holds 0.0125215831693413 zkLTC. Prepared wallet B 0xfeb935dc86d5549e2a61003dd5f2d52f6f840811 still holds exactly 0.02 zkLTC at nonce 0 — untouched"
+    },
+    {
+      "id": "explorer-confirms-success",
+      "group": "1-tx",
+      "pass": true,
+      "detail": "explorer: result=success, method=buy, value=10000000000000000 wei, gasUsed=156863"
+    }
+  ],
+  "overallPass": true,
+  "caveat": [
+    "sender-matches-prepared-wallet-B: prepared wallet B was 0xfeb935dc86d5549e2a61003dd5f2d52f6f840811 (nonce 0, still holding 0.02 zkLTC — it never bought). Actual payer: 0xac2b060448ce420b18d951c663f24e8a286035a4"
+  ]
+}

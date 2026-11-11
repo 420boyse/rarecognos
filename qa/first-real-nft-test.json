@@ -1,0 +1,404 @@
+{
+  "createdAt": "2026-11-11T14:35:33.292Z",
+  "stage": "purchase_verified",
+  "chainId": 4441,
+  "contracts": {
+    "collection": "0x289A621429dBB1Bd47288697821aC54e22C0035D",
+    "market": "0x77c0ea4283ea569fB40FC86641799693381B7Ec0",
+    "sourceVerified": true
+  },
+  "upload": {
+    "serviceUrl": "http://localhost:8787",
+    "mode": "ipfs",
+    "pinataAuthenticated": true,
+    "metadataUri": "ipfs://bafkreicppdle4nikdgzyqjmk73mbks77inybgtuuh25eygabs3xrcs257y",
+    "imageUri": "ipfs://bafkreicpuazwegfckdw3imrbmdaohnwugmvksxzpqotklequyxfdnexfcq",
+    "metadataGatewayStatus": 200,
+    "imageGatewayStatus": 200,
+    "imageContentType": "image/webp",
+    "pinataListPermission": "403 (not required for public gateway reads)"
+  },
+  "artwork": {
+    "file": null,
+    "selectedByUser": true,
+    "name": "01 wawe",
+    "description": "First end-to-end test artwork on LiteForge Zeeve testnet. ",
+    "contentSha256": "80411b4fa0bae40db943ecb1a7871d0ad2c125ff097a78af0bc4d4df96876c74",
+    "rightsDeclared": true
+  },
+  "wallets": {
+    "seller": "0xfFd9618E19Fb7f74169f75343550E14b74d19CB3",
+    "buyer": "0xfeb935dc86d5549e2a61003dd5f2d52f6f840811",
+    "treasury": "0x06e53D74751392ee4aC7139f611B8db3f98591f9",
+    "sellerConfirmation": "Connected wallet and public IPFS metadata creator match",
+    "buyerAccount": "OKX Wallet 01 / Account 02",
+    "buyerInitialBalanceWei": "0",
+    "actualBuyer": "0xac2b060448ce420b18d951c663f24e8a286035a4",
+    "actualBuyerNote": "The purchase was paid for by this address, not by the prepared wallet B (nonce 0, untouched)."
+  },
+  "sale": {
+    "priceWei": "10000000000000000",
+    "priceZkLTC": "0.01",
+    "feeBps": 25,
+    "expectedTreasuryFeeWei": "25000000000000",
+    "expectedTreasuryFeeZkLTC": "0.000025",
+    "expectedSellerProceedsWei": "9975000000000000",
+    "expectedSellerProceedsZkLTC": "0.009975"
+  },
+  "baseline": {
+    "block": "70007505",
+    "collectionName": "RareCognos",
+    "collectionVersion": "2",
+    "nextId": "0",
+    "marketCount": "0",
+    "treasuryBalanceWei": "0",
+    "treasuryPreviousBlockBalanceWei": "0",
+    "archiveBalanceRead": true,
+    "sellerBalanceWei": "95905659041376077",
+    "sellerBalanceZkLTC": "0.095905659041376077",
+    "lastReadBlock": "70009346",
+    "treasuryLatestBalanceWei": "0"
+  },
+  "transactions": {
+    "mint": "0xb6e4602a0ea78dfc4746e8aec5e212787fc5e0173e6ca96fa1db77c2e93d9874",
+    "approve": "0x6bf33f79eff0c6ec16df94b7f52fd5a23d27386d914b7aa7e39ea3cdb25a951e",
+    "firstList": "0x90912d31e2c8b86ba7eb3e40fc1aefce44aa4bb028b814c14f56555fae63edef",
+    "cancel": "0x7884da3a0898835b21c4b3720978ec544c3cfa6b9ecf68c9888a25ac2d0a9e0f",
+    "relist": "0xa27b78d94cc51befc2e58d5756d343d41b739ed6035df55bd69253efe5bc426b",
+    "buy": "0xfa68d8c01640a99d4f0512d238c4094d75b9ad87a15152af375f3ad35c6846d8",
+    "fundBuyer": "0x377480d23aca3eb54d8e23f4bebc4977fb2be5f2997f2b7051f7891553508a42",
+    "thirdListing": "0x5c6130583fe8189bf829f9065f7fa31d0b102cc73a4fc95cf5a72bbcb2efdfad"
+  },
+  "results": {
+    "mint": {
+      "tokenId": "1",
+      "transactionHash": "0xb6e4602a0ea78dfc4746e8aec5e212787fc5e0173e6ca96fa1db77c2e93d9874",
+      "block": "70010518",
+      "receiptStatus": "success",
+      "creator": "0xfFd9618E19Fb7f74169f75343550E14b74d19CB3",
+      "metadataUri": "ipfs://bafkreicppdle4nikdgzyqjmk73mbks77inybgtuuh25eygabs3xrcs257y"
+    },
+    "listing": {
+      "firstListingId": "1",
+      "transactionHash": "0x90912d31e2c8b86ba7eb3e40fc1aefce44aa4bb028b814c14f56555fae63edef",
+      "block": "70011528",
+      "seller": "0xfFd9618E19Fb7f74169f75343550E14b74d19CB3",
+      "tokenId": "1",
+      "priceWei": "10000000000000000",
+      "active": true,
+      "relistedId": "2",
+      "relistTransactionHash": "0xa27b78d94cc51befc2e58d5756d343d41b739ed6035df55bd69253efe5bc426b",
+      "relistBlock": "70012033",
+      "currentActiveListingId": "3",
+      "currentActiveListingTransactionHash": "0x5c6130583fe8189bf829f9065f7fa31d0b102cc73a4fc95cf5a72bbcb2efdfad",
+      "currentActiveListingBlock": "70012210",
+      "currentActiveListingPriceWei": "10000000000000000",
+      "note": "Listing #1 cancelled; #2 superseded by a later list() (id 3). Listing #3 is the only active listing for token #1 and is the purchase target.",
+      "purchasedListingId": "3",
+      "superseded": [
+        "#1 cancelled",
+        "#2 replaced",
+        "#3 purchased"
+      ],
+      "activeAfterPurchase": false,
+      "activeListingForToken1": "0"
+    },
+    "cancellation": {
+      "transactionHash": "0x7884da3a0898835b21c4b3720978ec544c3cfa6b9ecf68c9888a25ac2d0a9e0f",
+      "cancelledListingId": "1",
+      "buyDeactivatedListingId": "3",
+      "listing1CancelledTx": "0x7884da3a0898835b21c4b3720978ec544c3cfa6b9ecf68c9888a25ac2d0a9e0f",
+      "listing3ConsumedByPurchase": true
+    },
+    "purchase": {
+      "transactionHash": "0xfa68d8c01640a99d4f0512d238c4094d75b9ad87a15152af375f3ad35c6846d8",
+      "block": "70062538",
+      "listingId": "3",
+      "tokenId": "1",
+      "priceWei": "10000000000000000",
+      "priceZkLTC": "0.01",
+      "buyer": "0xac2b060448ce420b18d951c663f24e8a286035a4",
+      "seller": "0xfFd9618E19Fb7f74169f75343550E14b74d19CB3",
+      "treasury": "0x06e53D74751392ee4aC7139f611B8db3f98591f9",
+      "gasUsed": "156863",
+      "gasCostWei": "1568630000000",
+      "status": "success"
+    },
+    "owner": {
+      "tokenId": "1",
+      "address": "0xAc2b060448ce420b18d951c663f24E8A286035A4",
+      "previousOwner": "0xfFd9618E19Fb7f74169f75343550E14b74d19CB3",
+      "creatorPreserved": "0xfFd9618E19Fb7f74169f75343550E14b74d19CB3",
+      "marketApprovalClearedTo": "0x0000000000000000000000000000000000000000",
+      "verified": true
+    },
+    "sellerProceeds": {
+      "expectedZkLTC": "0.009975",
+      "expectedWei": "9975000000000000",
+      "eventProceedsWei": "9975000000000000",
+      "archiveDeltaWei": null,
+      "liveDeltaFromSnapshotWei": "9975000000000000",
+      "verified": true
+    },
+    "treasuryBalanceChange": {
+      "expectedZkLTC": "0.000025",
+      "expectedWei": "25000000000000",
+      "eventFeeWei": "25000000000000",
+      "archiveDeltaWei": null,
+      "liveBalanceWei": "25000000000000",
+      "prePurchaseBalanceWei": "0",
+      "nonzero": true,
+      "verified": true
+    },
+    "approval": {
+      "transactionHash": "0x6bf33f79eff0c6ec16df94b7f52fd5a23d27386d914b7aa7e39ea3cdb25a951e",
+      "block": "70010988",
+      "tokenId": "1",
+      "approved": "0x77c0ea4283ea569fB40FC86641799693381B7Ec0"
+    },
+    "fundBuyer": {
+      "from": "0xfFd9618E19Fb7f74169f75343550E14b74d19CB3",
+      "to": "0xfeb935dc86d5549e2a61003dd5f2d52f6f840811",
+      "valueWei": "20000000000000000",
+      "valueZkLTC": "0.02",
+      "block": "70014953",
+      "receiptStatus": "success"
+    },
+    "buyerPaid": {
+      "priceWei": "10000000000000000",
+      "gasCostWei": "1568630000000",
+      "payer": "0xac2b060448ce420b18d951c663f24e8a286035a4",
+      "note": "no pre-purchase snapshot for the actual payer; proven by atomic msg.value debit + conservation"
+    },
+    "verificationMethods": {
+      "receiptEvents": "SaleSettled + Purchased + Transfer decoded from the buy receipt",
+      "archiveBalances": "unavailable (state pruned)",
+      "liveBalances": "pre-purchase snapshot (qa record) versus live balances",
+      "explorerApi": "tx result + value"
+    }
+  },
+  "recordCorrectedAt": "2026-11-11T19:11:09.772Z",
+  "prePurchaseSnapshot": {
+    "takenAt": "2026-11-11T19:21:16.987Z",
+    "block": "70060374",
+    "sellerWei": "75896075241376077",
+    "buyerWei": "20000000000000000",
+    "treasuryWei": "0",
+    "sellerNonce": "26",
+    "buyerNonce": "0",
+    "treasuryNonce": "0",
+    "onChainTreasury": "0x06e53D74751392ee4aC7139f611B8db3f98591f9",
+    "feeBps": 25,
+    "activeListingId": "3",
+    "activeListingPriceWei": "10000000000000000",
+    "activeListingSeller": "0xfFd9618E19Fb7f74169f75343550E14b74d19CB3",
+    "note": "Live balances captured before the buy. The treasury receives value only as the 0.25% fee, so its post-sale delta is exact."
+  },
+  "pendingApprovals": [
+    "buy"
+  ],
+  "updatedAt": "2026-11-11T19:17:09.801Z",
+  "readOnlyVerification": {
+    "rpc": "https://rpc.testnet.liteforge.zeeve.net",
+    "chainId": 4441,
+    "sourceVerifiedFromExplorerApi": true,
+    "explorerCompiler": "v0.8.36+commit.8a079791",
+    "marketCollectionWiring": "OK - market.collection() == configured collection",
+    "marketTreasuryWiring": "OK - market.treasury() == recorded treasury",
+    "feeBpsOnChain": 25,
+    "stateHistoryWindowBlocks": 100,
+    "stateHistoryWindowSeconds": 90,
+    "ethGetLogs": "unusable on this RPC (times out even for one block)",
+    "note": "Settlement must be proven from receipt events plus a live pre-snapshot; eth_getBalance at the purchase block-1 is only valid within ~90s of the sale."
+  },
+  "flowSimulations": {
+    "generatedAt": "2026-11-11T18:49:22.860Z",
+    "rpc": "https://rpc.testnet.liteforge.zeeve.net",
+    "mode": "keyless eth_call + eth_estimateGas",
+    "gasPriceWei": "10000000",
+    "feeFormula": "fee = floor(price * 25 / 10000); proceeds = price - fee",
+    "state": {
+      "nextTokenId": "2",
+      "listingCount": "3",
+      "activeListingIdForToken1": "3",
+      "activeListing": {
+        "id": "3",
+        "seller": "0xfFd9618E19Fb7f74169f75343550E14b74d19CB3",
+        "tokenId": "1",
+        "priceWei": "10000000000000000",
+        "isActive": true
+      },
+      "receiversAreEOA": {
+        "treasury": true,
+        "seller": true,
+        "buyer": true
+      }
+    },
+    "probeUriAlreadyMinted": "0",
+    "mint (seller, new uri)": {
+      "from": "0xfFd9618E19Fb7f74169f75343550E14b74d19CB3",
+      "to": "0x289A621429dBB1Bd47288697821aC54e22C0035D",
+      "value": "0",
+      "calldata": "0xd85d3d270000000000000000000000000000000000000000000000000000000000000020…",
+      "gasUsed": "316091",
+      "txEthCostWei": "3160910000000",
+      "txEthCost": "0.00000316091 zkLTC",
+      "simulation": "PASS (no revert)"
+    },
+    "approve token#1 -> market (seller)": {
+      "from": "0xfFd9618E19Fb7f74169f75343550E14b74d19CB3",
+      "to": "0x289A621429dBB1Bd47288697821aC54e22C0035D",
+      "value": "0",
+      "calldata": "0x095ea7b300000000000000000000000077c0ea4283ea569fb40fc86641799693381b7ec0…",
+      "gasUsed": "31608",
+      "txEthCostWei": "316080000000",
+      "txEthCost": "0.00000031608 zkLTC",
+      "simulation": "PASS (no revert)"
+    },
+    "list token#1 @ 0.01 zkLTC": {
+      "from": "0xfFd9618E19Fb7f74169f75343550E14b74d19CB3",
+      "to": "0x77c0ea4283ea569fB40FC86641799693381B7Ec0",
+      "value": "0",
+      "calldata": "0x50fd73670000000000000000000000000000000000000000000000000000000000000001…",
+      "gasUsed": "170963",
+      "txEthCostWei": "1709630000000",
+      "txEthCost": "0.00000170963 zkLTC",
+      "simulation": "PASS (no revert)"
+    },
+    "price_0.01": {
+      "priceWei": "10000000000000000",
+      "treasuryFeeWei": "25000000000000",
+      "treasuryFee": "0.000025",
+      "sellerProceedsWei": "9975000000000000",
+      "nonzeroFee": true
+    },
+    "price_0.001": {
+      "priceWei": "1000000000000000",
+      "treasuryFeeWei": "2500000000000",
+      "treasuryFee": "0.0000025",
+      "sellerProceedsWei": "997500000000000",
+      "nonzeroFee": true
+    },
+    "price_0.0001": {
+      "priceWei": "100000000000000",
+      "treasuryFeeWei": "250000000000",
+      "treasuryFee": "0.00000025",
+      "sellerProceedsWei": "99750000000000",
+      "nonzeroFee": true
+    },
+    "cancel active listing": {
+      "from": "0xfFd9618E19Fb7f74169f75343550E14b74d19CB3",
+      "to": "0x77c0ea4283ea569fB40FC86641799693381B7Ec0",
+      "value": "0",
+      "calldata": "0x40e58ee50000000000000000000000000000000000000000000000000000000000000003…",
+      "gasUsed": "44947",
+      "txEthCostWei": "449470000000",
+      "txEthCost": "0.00000044947 zkLTC",
+      "simulation": "PASS (no revert)"
+    },
+    "buy listing #3 @ 0.01": {
+      "from": "0xfeb935dc86d5549e2a61003dd5f2d52f6f840811",
+      "to": "0x77c0ea4283ea569fB40FC86641799693381B7Ec0",
+      "value": "10000000000000000",
+      "calldata": "0xd6febde80000000000000000000000000000000000000000000000000000000000000003…",
+      "gasUsed": "187000",
+      "txEthCostWei": "1870000000000",
+      "txEthCost": "0.00000187 zkLTC",
+      "simulation": "PASS (no revert)"
+    },
+    "guard: buyer cancels (expect revert)": {
+      "from": "0xfeb935dc86d5549e2a61003dd5f2d52f6f840811",
+      "to": "0x77c0ea4283ea569fB40FC86641799693381B7Ec0",
+      "value": "0",
+      "calldata": "0x40e58ee50000000000000000000000000000000000000000000000000000000000000003…",
+      "simulation": "FAIL",
+      "error": "Execution reverted with reason: Not active seller.",
+      "expected": "revert",
+      "correct": true
+    },
+    "guard: buy with wrong price (expect revert)": {
+      "from": "0xfeb935dc86d5549e2a61003dd5f2d52f6f840811",
+      "to": "0x77c0ea4283ea569fB40FC86641799693381B7Ec0",
+      "value": "10000000000000000",
+      "calldata": "0xd6febde80000000000000000000000000000000000000000000000000000000000000003…",
+      "simulation": "FAIL",
+      "error": "Execution reverted with reason: Price changed.",
+      "expected": "revert",
+      "correct": true
+    },
+    "buyerFunding": {
+      "balanceWei": "20000000000000000",
+      "balance": "0.02",
+      "neededWei": "10001870000000000",
+      "sufficient": true
+    },
+    "minimumPriceForNonzeroFee": {
+      "explanation": "floor(price*25/10000) >= 1 wei",
+      "minimumPriceWei": "400",
+      "minimumPriceZkLTC": "4e-16"
+    },
+    "recommendedPrice": {
+      "value": "0.01",
+      "unit": "zkLTC",
+      "wei": "10000000000000000",
+      "treasuryFeeWei": "25000000000000",
+      "treasuryFeeZkLTC": "0.000025",
+      "sellerProceedsZkLTC": "0.009975",
+      "reason": "matches the already-listed active listing #3; fee is 25,000,000,000,000 wei, clearly nonzero and measurable by balance delta"
+    },
+    "buyerGasHeadroom": {
+      "buyGas": "187000",
+      "gasCostZkLTC": "0.00000187",
+      "note": "gas is ~1000x smaller than the price at 10 wei/gas base fee"
+    }
+  },
+  "activeListingTarget": {
+    "listingId": "3",
+    "transactionHash": "0x5c6130583fe8189bf829f9065f7fa31d0b102cc73a4fc95cf5a72bbcb2efdfad",
+    "block": "70012210",
+    "tokenId": "1",
+    "priceWei": "10000000000000000",
+    "priceZkLTC": "0.01",
+    "tokenApprovedToMarket": true,
+    "buySimulation": "PASS (no revert)",
+    "superseded": [
+      "listing #1 cancelled",
+      "listing #2 replaced by #3"
+    ]
+  },
+  "approvalPlan": {
+    "sellerA": [
+      {
+        "step": "upload authorization (message signature, not a transaction)",
+        "status": "already approved for artwork 01 wawe"
+      },
+      {
+        "step": "mint",
+        "status": "already confirmed, token #1"
+      },
+      {
+        "step": "approve market for token #1",
+        "status": "already confirmed"
+      },
+      {
+        "step": "list",
+        "status": "already confirmed as listing #3 (active)"
+      },
+      {
+        "step": "cancel",
+        "status": "already demonstrated on listing #1"
+      }
+    ],
+    "buyerB": [
+      {
+        "step": "connect OKX Wallet 01 / Account 02 on LiteForge 4441",
+        "status": "AWAITING USER"
+      },
+      {
+        "step": "buy listing #3 for exactly 0.01 zkLTC",
+        "status": "AWAITING USER - never pre-approved by the agent"
+      }
+    ]
+  },
+  "verifiedAt": "2026-11-11T19:48:44.287Z"
+}

@@ -1,0 +1,7 @@
+# Upload image: allow only runtime inputs; exclude frontend, secrets and local data.
+*
+!package.json
+!package-lock.json
+!upload-service/
+!upload-service/**
+**/.env*

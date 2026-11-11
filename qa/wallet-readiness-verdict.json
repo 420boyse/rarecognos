@@ -1,0 +1,82 @@
+{
+  "generatedAt": "2026-11-11T09:15:04.835Z",
+  "rpc": "https://rpc.testnet.liteforge.zeeve.net",
+  "chainId": 4441,
+  "mode": "wallet-readiness",
+  "treasuryAddress": null,
+  "ready": false,
+  "checks": [
+    {
+      "id": "chain-id",
+      "title": "RPC chain id matches config",
+      "status": "pass",
+      "detail": "eth_chainId=4441 (expected 4441)"
+    },
+    {
+      "id": "genesis",
+      "title": "Genesis hash matches known LiteForge history",
+      "status": "pass",
+      "detail": "hash=0x81df94cf6403fe935f6ef464f3e38c45510eefbfbab137c288a9b660be0b7fda"
+    },
+    {
+      "id": "block-advance",
+      "title": "Chain head liveness",
+      "status": "pass",
+      "detail": "block 69967289 → 69967305"
+    },
+    {
+      "id": "fees",
+      "title": "Gas price sane for testnet deploy",
+      "status": "pass",
+      "detail": "gasPrice=10000000 wei (0.00000000001 zkLTC), baseFee=10000000 wei, 50% reward=0 wei"
+    },
+    {
+      "id": "deployer-balance",
+      "title": "Deployer balance funded",
+      "status": "pass",
+      "detail": "0.095930229001376077 zkLTC at 0xffd9618e19fb7f74169f75343550e14b74d19cb3"
+    },
+    {
+      "id": "deployer-eoa",
+      "title": "Deployer is an EOA",
+      "status": "pass",
+      "detail": "code=0x, nonce=17"
+    },
+    {
+      "id": "deploy-simulation",
+      "title": "Keyless creation simulations and estimates",
+      "status": "fail",
+      "detail": "could not complete: Provide a valid nonzero public TREASURY_ADDRESS for market deployment simulation"
+    },
+    {
+      "id": "artifacts",
+      "title": "Compiled artifacts present (npm run nft:compile)",
+      "status": "pass",
+      "detail": "RareCognos.bytecode 6258 bytes, market abi list/buy/cancel found"
+    },
+    {
+      "id": "compiler-input",
+      "title": "Standard-json compiler input available (verification prep)",
+      "status": "pass",
+      "detail": "sources=19, evmVersion=shanghai, optimizerRuns=200"
+    },
+    {
+      "id": "config-chain",
+      "title": "config/liteforge.json chainId",
+      "status": "pass",
+      "detail": "chainId=4441, schemaVersion=2"
+    },
+    {
+      "id": "config-deployed",
+      "title": "config/liteforge.json deployment state",
+      "status": "info",
+      "detail": "collection/market are null — expected before the first deployment"
+    },
+    {
+      "id": "app-gate",
+      "title": "App chain config matches the network",
+      "status": "pass",
+      "detail": "chain 4441:true, verified gate:true, rpc url match:true"
+    }
+  ]
+}

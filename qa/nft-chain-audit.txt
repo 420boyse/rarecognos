@@ -1,0 +1,55 @@
+=== 1. network + contract identity ===
+  chain 4441 · head 70059521 · gasPrice 10000000 wei
+  collection "RareCognos" v2, 1 token(s)
+  market.collection() 0x289A621429dBB1Bd47288697821aC54e22C0035D == config
+  market.treasury()   0x06e53D74751392ee4aC7139f611B8db3f98591f9 == record
+  market.owner()      0xfFd9618E19Fb7f74169f75343550E14b74d19CB3
+  FEE_BPS 25 (0.25%)
+  collection  0x289A621429dBB1Bd47288697821aC54e22C0035D CONTRACT
+  market      0x77c0ea4283ea569fB40FC86641799693381B7Ec0 CONTRACT
+  treasury    0x06e53D74751392ee4aC7139f611B8db3f98591f9 EOA
+  buyer       0xfeb935dc86d5549e2a61003dd5f2d52f6f840811 EOA
+  explorer verified(collection): YES — v0.8.36+commit.8a079791, 5470 source chars
+  explorer verified(market): YES — v0.8.36+commit.8a079791, 5470 source chars
+
+=== 2. recorded transactions ===
+  mint           block 70010518 · SUCCESS · 323823 gas · Transfer,ArtworkMinted
+  approve        block 70010988 · SUCCESS · 48973 gas · Approval
+  firstList      block 70011528 · SUCCESS · 193768 gas · Listed
+  cancel         block 70011774 · SUCCESS · 34104 gas · Cancelled
+  relist         block 70012033 · SUCCESS · 176668 gas · Listed
+  buy            PENDING (no hash yet)
+  fundBuyer      block 70014953 · SUCCESS · 21187 gas · value transfer
+  thirdListing   block 70012210 · SUCCESS · 159857 gas · Listed
+
+=== 3. every listing ever created ===
+  listing #1: token #1 seller 0xfFd9618E… price 0.01 zkLTC · inactive
+  listing #2: token #1 seller 0xfFd9618E… price 0.01 zkLTC · inactive
+  listing #3: token #1 seller 0xfFd9618E… price 0.01 zkLTC · ACTIVE
+  => the purchase target is listing #3
+  token #1 owner 0xfFd9618E19Fb7f74169f75343550E14b74d19CB3 · getApproved 0x77c0ea4283ea569fB40FC86641799693381B7Ec0 (market, so buy is authorized)
+
+=== 4. wallet readiness for the purchase ===
+  seller  0.075896075241376077 zkLTC (receives proceeds 0.009975)
+  buyer   0.02 zkLTC, nonce 0 · needs 0.01000187 zkLTC (price + 187000 gas) → SUFFICIENT
+  treasury 0 zkLTC — a nonzero post-sale balance is itself proof the fee moved
+  distinct wallets: seller≠buyer true · seller≠treasury true · buyer≠treasury true
+
+=== 5. fee ladder (fee = floor(price * 25 / 10000)) ===
+  price 0.01         zkLTC -> fee          25000000000000 wei NONZERO
+  price 0.001        zkLTC -> fee           2500000000000 wei NONZERO
+  price 0.0001       zkLTC -> fee            250000000000 wei NONZERO
+  price 0.00001      zkLTC -> fee             25000000000 wei NONZERO
+  price 0.000001     zkLTC -> fee              2500000000 wei NONZERO
+  price 0.000000001  zkLTC -> fee                 2500000 wei NONZERO
+  price 0.0000000000000004 zkLTC -> fee                       1 wei NONZERO
+
+=== 6. RPC capability (constrains verification) ===
+  balance@head-1     OK
+  balance@head-100   OK
+  balance@head-500   FAIL: historical state 9be9cfd0b9069b469eeb0c3879a5
+  block@head-20000   OK
+  receipt(oldest tx) OK
+  eth_getLogs(1 blk) FAIL: timeout
+  => state is readable only for ~100 blocks (~90 s); logs are unusable.
+  => settlement proof must use receipt events + a live pre-snapshot, not block-N balance reads.

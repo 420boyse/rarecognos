@@ -1,0 +1,61 @@
+{
+  "generatedAt": "2026-11-11T18:55:06.864Z",
+  "pinned": false,
+  "signed": false,
+  "checks": {
+    "http200": true,
+    "hasNonce": true,
+    "fiveMinuteWindow": true,
+    "bindsOrigin": true,
+    "bindsChain4441": true,
+    "bindsWallet": true,
+    "bindsPayloadHashCoveringImageDigest": true,
+    "imageDigestInsidePayload": true,
+    "declaresNotATransaction": true,
+    "rightsAttested": true
+  },
+  "probes": [
+    {
+      "label": "malformed signature",
+      "expect": "4xx",
+      "status": 400,
+      "error": "Image validation or storage failed. Check the file and retry."
+    },
+    {
+      "label": "tampered image bytes",
+      "expect": "4xx",
+      "status": 400,
+      "error": "Image validation or storage failed. Check the file and retry."
+    },
+    {
+      "label": "unknown nonce",
+      "expect": "4xx",
+      "status": 401,
+      "error": "Upload authorization expired or already used. Sign again."
+    },
+    {
+      "label": "non-hex digest rejected",
+      "expect": "4xx",
+      "status": 400,
+      "error": "Check name, description, wallet and rights declaration."
+    },
+    {
+      "label": "missing rights declaration rejected",
+      "expect": "4xx",
+      "status": 400,
+      "error": "Check name, description, wallet and rights declaration."
+    },
+    {
+      "label": "disallowed origin rejected",
+      "expect": "403",
+      "status": 403,
+      "error": "Origin not allowed"
+    },
+    {
+      "label": "replay of same nonce refused",
+      "expect": "4xx",
+      "status": 400,
+      "error": "Image validation or storage failed. Check the file and retry."
+    }
+  ]
+}

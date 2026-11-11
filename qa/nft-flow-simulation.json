@@ -1,0 +1,141 @@
+{
+  "generatedAt": "2026-11-11T18:49:22.860Z",
+  "rpc": "https://rpc.testnet.liteforge.zeeve.net",
+  "mode": "keyless eth_call + eth_estimateGas",
+  "gasPriceWei": "10000000",
+  "feeFormula": "fee = floor(price * 25 / 10000); proceeds = price - fee",
+  "state": {
+    "nextTokenId": "2",
+    "listingCount": "3",
+    "activeListingIdForToken1": "3",
+    "activeListing": {
+      "id": "3",
+      "seller": "0xfFd9618E19Fb7f74169f75343550E14b74d19CB3",
+      "tokenId": "1",
+      "priceWei": "10000000000000000",
+      "isActive": true
+    },
+    "receiversAreEOA": {
+      "treasury": true,
+      "seller": true,
+      "buyer": true
+    }
+  },
+  "probeUriAlreadyMinted": "0",
+  "mint (seller, new uri)": {
+    "from": "0xfFd9618E19Fb7f74169f75343550E14b74d19CB3",
+    "to": "0x289A621429dBB1Bd47288697821aC54e22C0035D",
+    "value": "0",
+    "calldata": "0xd85d3d270000000000000000000000000000000000000000000000000000000000000020…",
+    "gasUsed": "316091",
+    "txEthCostWei": "3160910000000",
+    "txEthCost": "0.00000316091 zkLTC",
+    "simulation": "PASS (no revert)"
+  },
+  "approve token#1 -> market (seller)": {
+    "from": "0xfFd9618E19Fb7f74169f75343550E14b74d19CB3",
+    "to": "0x289A621429dBB1Bd47288697821aC54e22C0035D",
+    "value": "0",
+    "calldata": "0x095ea7b300000000000000000000000077c0ea4283ea569fb40fc86641799693381b7ec0…",
+    "gasUsed": "31608",
+    "txEthCostWei": "316080000000",
+    "txEthCost": "0.00000031608 zkLTC",
+    "simulation": "PASS (no revert)"
+  },
+  "list token#1 @ 0.01 zkLTC": {
+    "from": "0xfFd9618E19Fb7f74169f75343550E14b74d19CB3",
+    "to": "0x77c0ea4283ea569fB40FC86641799693381B7Ec0",
+    "value": "0",
+    "calldata": "0x50fd73670000000000000000000000000000000000000000000000000000000000000001…",
+    "gasUsed": "170963",
+    "txEthCostWei": "1709630000000",
+    "txEthCost": "0.00000170963 zkLTC",
+    "simulation": "PASS (no revert)"
+  },
+  "price_0.01": {
+    "priceWei": "10000000000000000",
+    "treasuryFeeWei": "25000000000000",
+    "treasuryFee": "0.000025",
+    "sellerProceedsWei": "9975000000000000",
+    "nonzeroFee": true
+  },
+  "price_0.001": {
+    "priceWei": "1000000000000000",
+    "treasuryFeeWei": "2500000000000",
+    "treasuryFee": "0.0000025",
+    "sellerProceedsWei": "997500000000000",
+    "nonzeroFee": true
+  },
+  "price_0.0001": {
+    "priceWei": "100000000000000",
+    "treasuryFeeWei": "250000000000",
+    "treasuryFee": "0.00000025",
+    "sellerProceedsWei": "99750000000000",
+    "nonzeroFee": true
+  },
+  "cancel active listing": {
+    "from": "0xfFd9618E19Fb7f74169f75343550E14b74d19CB3",
+    "to": "0x77c0ea4283ea569fB40FC86641799693381B7Ec0",
+    "value": "0",
+    "calldata": "0x40e58ee50000000000000000000000000000000000000000000000000000000000000003…",
+    "gasUsed": "44947",
+    "txEthCostWei": "449470000000",
+    "txEthCost": "0.00000044947 zkLTC",
+    "simulation": "PASS (no revert)"
+  },
+  "buy listing #3 @ 0.01": {
+    "from": "0xfeb935dc86d5549e2a61003dd5f2d52f6f840811",
+    "to": "0x77c0ea4283ea569fB40FC86641799693381B7Ec0",
+    "value": "10000000000000000",
+    "calldata": "0xd6febde80000000000000000000000000000000000000000000000000000000000000003…",
+    "gasUsed": "187000",
+    "txEthCostWei": "1870000000000",
+    "txEthCost": "0.00000187 zkLTC",
+    "simulation": "PASS (no revert)"
+  },
+  "guard: buyer cancels (expect revert)": {
+    "from": "0xfeb935dc86d5549e2a61003dd5f2d52f6f840811",
+    "to": "0x77c0ea4283ea569fB40FC86641799693381B7Ec0",
+    "value": "0",
+    "calldata": "0x40e58ee50000000000000000000000000000000000000000000000000000000000000003…",
+    "simulation": "FAIL",
+    "error": "Execution reverted with reason: Not active seller.",
+    "expected": "revert",
+    "correct": true
+  },
+  "guard: buy with wrong price (expect revert)": {
+    "from": "0xfeb935dc86d5549e2a61003dd5f2d52f6f840811",
+    "to": "0x77c0ea4283ea569fB40FC86641799693381B7Ec0",
+    "value": "10000000000000000",
+    "calldata": "0xd6febde80000000000000000000000000000000000000000000000000000000000000003…",
+    "simulation": "FAIL",
+    "error": "Execution reverted with reason: Price changed.",
+    "expected": "revert",
+    "correct": true
+  },
+  "buyerFunding": {
+    "balanceWei": "20000000000000000",
+    "balance": "0.02",
+    "neededWei": "10001870000000000",
+    "sufficient": true
+  },
+  "minimumPriceForNonzeroFee": {
+    "explanation": "floor(price*25/10000) >= 1 wei",
+    "minimumPriceWei": "400",
+    "minimumPriceZkLTC": "4e-16"
+  },
+  "recommendedPrice": {
+    "value": "0.01",
+    "unit": "zkLTC",
+    "wei": "10000000000000000",
+    "treasuryFeeWei": "25000000000000",
+    "treasuryFeeZkLTC": "0.000025",
+    "sellerProceedsZkLTC": "0.009975",
+    "reason": "matches the already-listed active listing #3; fee is 25,000,000,000,000 wei, clearly nonzero and measurable by balance delta"
+  },
+  "buyerGasHeadroom": {
+    "buyGas": "187000",
+    "gasCostZkLTC": "0.00000187",
+    "note": "gas is ~1000x smaller than the price at 10 wei/gas base fee"
+  }
+}

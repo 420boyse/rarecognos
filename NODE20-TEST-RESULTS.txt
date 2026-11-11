@@ -1,0 +1,10 @@
+Node 20 SQLite fix — 2026-11-10
+Replaced node:sqlite DatabaseSync with better-sqlite3 12.4.1; package and lock updated.
+SQL statements, schema, WAL, limits and nonce behavior unchanged.
+PASS Node v20.19.0 npm run test:upload.
+PASS CLI entrypoint node upload-service/server.mjs using existing server env (test preloader selected an ephemeral port because 8787 was occupied).
+PASS /status enabled=true, mode=ipfs; WAL=true.
+Original .env.local, upload-service/.env, both env examples and Dockerfile are byte-identical to input archive.
+Docker stays Node 22; Docker runtime not tested. Native dependency must be installed with npm ci on the target Node version/OS.
+Frontend dependencies may still require Node 22; this fix covers upload-service only.
+/status checks configuration, not live Pinata credential validity or pinning.

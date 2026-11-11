@@ -1,0 +1,11 @@
+{
+  "name": "Red Aperture",
+  "description": "RareCognos testnet collection. Repeatable studio edition.",
+  "image": "http://127.0.0.1:8080/art/red-aperture.jpg",
+  "attributes": [
+    {
+      "trait_type": "Artwork",
+      "value": "red-aperture"
+    }
+  ]
+}

@@ -1,0 +1,29 @@
+{
+  "ranAt": "2026-11-11T20:07:00.952Z",
+  "base": "http://localhost:8080",
+  "buyer": "0xAc2b060448ce420b18d951c663f24E8A286035A4",
+  "seller": "0xfFd9618E19Fb7f74169f75343550E14b74d19CB3",
+  "cases": [
+    {
+      "label": "guest-explore",
+      "pass": true,
+      "detail": "guest Explore: buy buttons=0, \"no active sales\"=true\n      connected=? walletChip=0 gateway={} after 2s errors=0"
+    },
+    {
+      "label": "buyer-detail-no-selfbuy",
+      "pass": true,
+      "detail": "buyer #token/1: walletChip=1, buy button=0 (0 correct: the market rejects seller==buyer)\n      connected=see below walletChip=1 gateway={} after 2s errors=0"
+    },
+    {
+      "label": "buyer-my-nfts",
+      "pass": true,
+      "detail": "walletChip=1 ownershipCard=true nameOrFallback=\"01 wawe (IPFS)\" saleState=true -> ownership + IPFS name resolved\n      connected=see below walletChip=1 gateway={\"200\":1} after 2s errors=0"
+    },
+    {
+      "label": "seller-no-longer-owns",
+      "pass": true,
+      "detail": "walletChip=1 seller ownership card for token #1 present=false (must be false)\n      connected=see below walletChip=1 gateway={} after 2s errors=0"
+    }
+  ],
+  "allPass": true
+}

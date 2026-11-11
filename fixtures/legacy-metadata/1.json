@@ -1,0 +1,11 @@
+{
+  "name": "Blue Index",
+  "description": "RareCognos testnet collection. Repeatable studio edition.",
+  "image": "http://127.0.0.1:8080/art/blue-index.jpg",
+  "attributes": [
+    {
+      "trait_type": "Artwork",
+      "value": "blue-index"
+    }
+  ]
+}

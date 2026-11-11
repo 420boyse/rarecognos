@@ -1,0 +1,73 @@
+{
+  "ranAt": "2026-11-11T19:18:22.193Z",
+  "base": "http://localhost:8080",
+  "mode": "public app (read-only)",
+  "results": [
+    {
+      "id": "public-app",
+      "pass": true,
+      "detail": "deployment-console headings: 0 (must be 0)"
+    },
+    {
+      "id": "contracts-configured",
+      "pass": true,
+      "detail": "app is NOT in the unconfigured gate state"
+    },
+    {
+      "id": "live-listing-visible",
+      "pass": true,
+      "detail": "active listing price 0.01 zkLTC present in Explore: true"
+    },
+    {
+      "id": "listing-cards",
+      "pass": true,
+      "detail": "2 token link(s) rendered from live RPC batch reads"
+    },
+    {
+      "id": "token-detail",
+      "pass": true,
+      "detail": "token #1 metadata name resolved from IPFS"
+    },
+    {
+      "id": "token-creator",
+      "pass": true,
+      "detail": "creator shown on detail"
+    },
+    {
+      "id": "okx-discovered",
+      "pass": true,
+      "detail": "connect menu offers [Injected, OKX Wallet (injected), OKX Wallet]"
+    },
+    {
+      "id": "okx-connected",
+      "pass": true,
+      "detail": "connected chip on chain 4441: 0xfFd9…9CB3"
+    },
+    {
+      "id": "create-form",
+      "pass": true,
+      "detail": "Create section rendered: 1"
+    },
+    {
+      "id": "upload-service-ui",
+      "pass": true,
+      "detail": "Create form does not report upload storage unavailable"
+    },
+    {
+      "id": "artwork-input",
+      "pass": true,
+      "detail": "artwork file input present: 1"
+    },
+    {
+      "id": "no-signing-attempt",
+      "pass": true,
+      "detail": "sign/broadcast attempts: []; non-transactional handshake calls observed: [\"wallet_requestPermissions\"]"
+    },
+    {
+      "id": "clean-console",
+      "pass": true,
+      "detail": "no uncaught console errors"
+    }
+  ],
+  "pass": true
+}

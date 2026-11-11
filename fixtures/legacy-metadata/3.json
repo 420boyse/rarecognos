@@ -1,0 +1,11 @@
+{
+  "name": "Second Sight",
+  "description": "RareCognos testnet collection. Repeatable studio edition.",
+  "image": "http://127.0.0.1:8080/art/second-sight.jpg",
+  "attributes": [
+    {
+      "trait_type": "Artwork",
+      "value": "second-sight"
+    }
+  ]
+}

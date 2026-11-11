@@ -1,0 +1,69 @@
+{
+  "generatedAt": "2026-11-11T14:28:06.023Z",
+  "solcVersion": "0.8.36+commit.8a079791.Emscripten.clang",
+  "evmVersion": "shanghai",
+  "optimizer": {
+    "enabled": true,
+    "runs": 200
+  },
+  "license": "MIT",
+  "sourceFile": "RareCognos.sol",
+  "collectionAddress": "0x289A621429dBB1Bd47288697821aC54e22C0035D",
+  "treasuryAddress": "0x06e53D74751392ee4aC7139f611B8db3f98591f9",
+  "contracts": {
+    "RareCognos": {
+      "constructorArgs": [],
+      "constructorArgsHex": null,
+      "deployedBytecodeKeccak256": "0x156c3daf864d2e674787987bc2200f68942d18fb6c428c87d35ba8dc21c48371",
+      "creationBytecodeKeccak256": "0x6f4f660907b6ecc488728aef4c6766421ba510cacf45b4ea5a36b7db52bebe12",
+      "deployedBytecodeBytes": 5777,
+      "immutableReferences": {}
+    },
+    "RareCognosMarket": {
+      "constructorArgs": [
+        "0x289A621429dBB1Bd47288697821aC54e22C0035D",
+        "0x06e53D74751392ee4aC7139f611B8db3f98591f9"
+      ],
+      "constructorArgsHex": "0x000000000000000000000000289a621429dbb1bd47288697821ac54e22c0035d00000000000000000000000006e53d74751392ee4ac7139f611b8db3f98591f9",
+      "deployedBytecodeKeccak256": "0xab6e4a4188be16b4421ce8a5a6ccd039455e9d715a01f4bc597a8f44b7aef095",
+      "creationBytecodeKeccak256": "0x739ed5f3ce0a234d6e0132a8dbb05f9f7aacecb50dd7ef2d6aabce597f154065",
+      "deployedBytecodeBytes": 4444,
+      "immutableReferences": {
+        "7211": [
+          {
+            "length": 32,
+            "start": 428
+          },
+          {
+            "length": 32,
+            "start": 1149
+          },
+          {
+            "length": 32,
+            "start": 1529
+          },
+          {
+            "length": 32,
+            "start": 1872
+          },
+          {
+            "length": 32,
+            "start": 2030
+          },
+          {
+            "length": 32,
+            "start": 2375
+          },
+          {
+            "length": 32,
+            "start": 2569
+          },
+          {
+            "length": 32,
+            "start": 2864
+          }
+        ]
+      }
+    }
+  }
+}

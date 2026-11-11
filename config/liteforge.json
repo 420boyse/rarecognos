@@ -1,0 +1,13 @@
+{
+  "chainId": 4441,
+  "collection": "0x289A621429dBB1Bd47288697821aC54e22C0035D",
+  "market": "0x77c0ea4283ea569fB40FC86641799693381B7Ec0",
+  "verified": true,
+  "collectionDeploymentTx": "0x5e5340c7a26bdc126ab7f4c3dbf9e6b1095e7f5c608b24b8b3778d3d85ddc9d6",
+  "marketDeploymentTx": "0xe03a8f11f7722dd4abd5590682ade16ca8a38e8a6ff7c3183903b8ee39e22e7b",
+  "verificationUrls": [
+    "https://explorer.testnet.liteforge.zeeve.net/address/0x289A621429dBB1Bd47288697821aC54e22C0035D?tab=contract",
+    "https://explorer.testnet.liteforge.zeeve.net/address/0x77c0ea4283ea569fB40FC86641799693381B7Ec0?tab=contract"
+  ],
+  "schemaVersion": 2
+}

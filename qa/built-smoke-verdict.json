@@ -1,0 +1,27 @@
+{
+  "ok": true,
+  "results": [
+    {
+      "name": "desktop",
+      "httpStatus": 200,
+      "bodyTextLength": 677,
+      "bodyTextPrefix": "Explore Create LiteForge Testnet Connect wallet An eye for the rare. Distinctive digital art. Yours to discover, create, and collect. Explore NFTs Create NFT Nocturne Blackened chrome, 2026 Available to collect Art on",
+      "ogTitle": "RareCognos",
+      "consoleErrors": [],
+      "failedRequests": [],
+      "horizontalOverflow": false,
+      "screenshot": "/Users/efecan/Desktop/RARECOGNOS FİNAL KLASORU/qa/built-smoke-desktop.png"
+    },
+    {
+      "name": "mobile",
+      "httpStatus": 200,
+      "bodyTextLength": 654,
+      "bodyTextPrefix": "Explore Create LiteForge Testnet Connect wallet An eye for the rare. Distinctive digital art. Yours to discover, create, and collect. Explore NFTs Create NFT Nocturne Blackened chrome, 2026 Available to collect Art on",
+      "ogTitle": "RareCognos",
+      "consoleErrors": [],
+      "failedRequests": [],
+      "horizontalOverflow": false,
+      "screenshot": "/Users/efecan/Desktop/RARECOGNOS FİNAL KLASORU/qa/built-smoke-mobile.png"
+    }
+  ]
+}
