@@ -7,6 +7,7 @@ import { type Availability, NFTMarket } from "@/components/nft-market";
 import { NFTDeploy } from "@/components/nft-deploy";
 import { MarketHeader } from "@/components/market-header";
 import { CreatorDashboard, NFTDropMint } from "@/components/nft-drops";
+import { FanStackNFT } from "@/components/fan-stack-nft";
 import { isAddress, type Address } from "viem";
 export const Route = createFileRoute("/")({ component: Home });
 function Home() {
@@ -113,6 +114,21 @@ function Home() {
               next === "My NFTs" ? "my-nfts" : next === "Create" ? "create" : "explore";
           }}
         />
+        {view === "Explore" && (
+          <FanStackNFT
+            items={works.map((w) => ({
+              id: w.id,
+              title: w.title,
+              image: w.image,
+              medium: w.medium,
+              price: undefined,
+            }))}
+            onSelectWork={(id) => {
+              const found = works.find((w) => w.id === id);
+              if (found) setActive(found);
+            }}
+          />
+        )}
         <section id="studio" className="studio-section" aria-labelledby="studio-title">
           <div className="section-heading">
             <div>
