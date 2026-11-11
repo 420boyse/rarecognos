@@ -20,6 +20,8 @@ artifacts/imagine_images/
 **/.upload-data/
 .grok/*
 !.grok/app-env.json
+qa/package.json
+qa/package-lock.json
 .openai/
 test-logs/
 runtime-error.log
