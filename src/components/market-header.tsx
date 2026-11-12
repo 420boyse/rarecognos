@@ -2,7 +2,7 @@ import * as Dropdown from "@radix-ui/react-dropdown-menu";
 import { ChevronDown, LogOut, Grid2X2, Wallet, X } from "lucide-react";
 import { useAccount, useConnect, useDisconnect, useSwitchChain } from "wagmi";
 import { useState } from "react";
-import { Wordmark } from "./wordmark";
+import { EyeMark, Wordmark } from "./wordmark";
 import { chain } from "@/lib/nft/config";
 import { transactionError } from "@/lib/nft/transaction";
 export function MarketHeader({ view }: { view: string }) {
@@ -13,7 +13,7 @@ export function MarketHeader({ view }: { view: string }) {
   const [error, setError] = useState("");
   const wrong = account.isConnected && account.chainId !== chain.id;
   const address = account.address
-    ? `${account.address.slice(0, 6)}…${account.address.slice(-4)}`
+    ? `${account.address.slice(0, 6)}...${account.address.slice(-4)}`
     : "";
   const connecting = connect.isPending || account.status === "reconnecting";
   const connectWallet = async (connector: (typeof connect.connectors)[number]) => {
@@ -37,6 +37,7 @@ export function MarketHeader({ view }: { view: string }) {
     <header className="market-header">
       <div className="market-header-inner">
         <a href="#top" className="market-logo" aria-label="RareCognos home">
+          <EyeMark className="logo-eye" />
           <Wordmark />
         </a>
         <nav aria-label="Primary" className="market-nav">
@@ -45,6 +46,12 @@ export function MarketHeader({ view }: { view: string }) {
           </a>
           <a href="#create" aria-current={view === "Create" ? "page" : undefined}>
             Create
+          </a>
+          <a href="#quest" aria-current={view === "Quest" ? "page" : undefined}>
+            Quest
+          </a>
+          <a href="#referral" aria-current={view === "Referral" ? "page" : undefined}>
+            Referral
           </a>
         </nav>
         <div className="market-wallet">
@@ -58,7 +65,7 @@ export function MarketHeader({ view }: { view: string }) {
               disabled={network.isPending}
               onClick={() => void switchNetwork()}
             >
-              {network.isPending ? "Switching…" : "Switch to LiteForge"}
+              {network.isPending ? "Switching..." : "Switch to LiteForge"}
             </button>
           )}
           {account.isConnected ? (
@@ -93,7 +100,7 @@ export function MarketHeader({ view }: { view: string }) {
             <Dropdown.Root>
               <Dropdown.Trigger className="wallet-button" disabled={connecting}>
                 <Wallet size={16} />
-                {connecting ? "Connecting…" : "Connect wallet"}
+                {connecting ? "Connecting..." : "Connect wallet"}
               </Dropdown.Trigger>
               <Dropdown.Portal>
                 <Dropdown.Content className="wallet-menu" align="end" sideOffset={12}>
@@ -116,7 +123,7 @@ export function MarketHeader({ view }: { view: string }) {
               }}
             >
               <Wallet size={16} />
-              {connecting ? "Connecting…" : "Connect wallet"}
+              {connecting ? "Connecting..." : "Connect wallet"}
             </button>
           )}
         </div>
