@@ -30,17 +30,20 @@
 }
 .market-hero:not(.market-hero--compact) .hero-art {
   position: absolute;
-  inset: 0 0 0 auto;
-  width: 50%;
-  height: 100%;
+  top: 50%;
+  right: 1.5%;
+  left: auto;
+  width: min(62vw, 860px);
+  height: min(94%, 780px);
   max-height: none;
-  object-fit: cover;
-  object-position: 78% center;
+  transform: translateY(-50%);
+  object-fit: contain;
+  object-position: center;
   opacity: 1;
   filter: none;
   z-index: 1;
-  -webkit-mask-image: linear-gradient(90deg, transparent 0%, #000 16%);
-  mask-image: linear-gradient(90deg, transparent 0%, #000 16%);
+  -webkit-mask-image: linear-gradient(90deg, transparent 0%, #000 18%);
+  mask-image: linear-gradient(90deg, transparent 0%, #000 18%);
 }
 .market-hero:not(.market-hero--compact) .hero-content {
   position: relative;
@@ -91,12 +94,15 @@
     position: relative;
     order: 2;
     inset: auto;
+    top: auto;
+    right: auto;
     width: 100%;
-    height: 52vw;
-    min-height: 220px;
-    max-height: 420px;
-    object-fit: cover;
-    object-position: 70% center;
+    height: auto;
+    min-height: 0;
+    max-height: 72vw;
+    transform: none;
+    object-fit: contain;
+    object-position: center;
     -webkit-mask-image: none;
     mask-image: none;
   }
