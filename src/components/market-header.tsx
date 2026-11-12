@@ -36,21 +36,21 @@ export function MarketHeader({ view }: { view: string }) {
   return (
     <header className="market-header">
       <div className="market-header-inner">
-        <a href="#top" className="market-logo" aria-label="RareCognos home">
+        <a href="/" className="market-logo" aria-label="RareCognos home">
           <EyeMark className="logo-eye" />
           <Wordmark />
         </a>
         <nav aria-label="Primary" className="market-nav">
-          <a href="#explore" aria-current={view === "Explore" ? "page" : undefined}>
+          <a href="/#explore" aria-current={view === "Explore" ? "page" : undefined}>
             Explore
           </a>
-          <a href="#create" aria-current={view === "Create" ? "page" : undefined}>
+          <a href="/#create" aria-current={view === "Create" ? "page" : undefined}>
             Create
           </a>
-          <a href="#quest" aria-current={view === "Quest" ? "page" : undefined}>
+          <a href="/quest" aria-current={view === "Quest" ? "page" : undefined}>
             Quest
           </a>
-          <a href="#referral" aria-current={view === "Referral" ? "page" : undefined}>
+          <a href="/referral" aria-current={view === "Referral" ? "page" : undefined}>
             Referral
           </a>
         </nav>
@@ -83,7 +83,7 @@ export function MarketHeader({ view }: { view: string }) {
                     Connected wallet<span>{address}</span>
                   </Dropdown.Label>
                   <Dropdown.Item asChild>
-                    <a href="#my-nfts">
+                    <a href="/#my-nfts">
                       <Grid2X2 size={16} />
                       My NFTs
                     </a>
