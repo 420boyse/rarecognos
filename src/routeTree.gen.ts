@@ -9,8 +9,20 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as ReferralRouteImport } from './routes/referral'
+import { Route as QuestRouteImport } from './routes/quest'
 import { Route as IndexRouteImport } from './routes/index'
 
+const ReferralRoute = ReferralRouteImport.update({
+  id: '/referral',
+  path: '/referral',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const QuestRoute = QuestRouteImport.update({
+  id: '/quest',
+  path: '/quest',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
@@ -19,24 +31,32 @@ const IndexRoute = IndexRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/quest': typeof QuestRoute
+  '/referral': typeof ReferralRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/quest': typeof QuestRoute
+  '/referral': typeof ReferralRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/quest': typeof QuestRoute
+  '/referral': typeof ReferralRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths: '/' | '/quest' | '/referral'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to: '/' | '/quest' | '/referral'
+  id: '__root__' | '/' | '/quest' | '/referral'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  QuestRoute: typeof QuestRoute
+  ReferralRoute: typeof ReferralRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -48,11 +68,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/quest': {
+      id: '/quest'
+      path: '/quest'
+      fullPath: '/quest'
+      preLoaderRoute: typeof QuestRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/referral': {
+      id: '/referral'
+      path: '/referral'
+      fullPath: '/referral'
+      preLoaderRoute: typeof ReferralRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  QuestRoute: QuestRoute,
+  ReferralRoute: ReferralRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
