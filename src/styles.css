@@ -461,6 +461,62 @@
 .market-footer p {
   color: rgb(245 244 239 / 0.65);
 }
+.footer-x {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border: 1px solid var(--color-line);
+  border-radius: 999px;
+}
+.find-work,
+.check-in,
+.quest-card {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  justify-content: space-between;
+  gap: 16px 24px;
+}
+.check-in,
+.quest-card {
+  width: min(720px, 100%);
+  margin-bottom: 28px;
+  padding: 20px;
+  border: 1px solid var(--color-line);
+  border-radius: 12px;
+}
+.check-in h3,
+.quest-card h2 {
+  font-size: 22px;
+  font-weight: 500;
+}
+.check-in p,
+.quest-card p {
+  color: rgb(245 244 239 / 0.65);
+  margin-top: 6px;
+}
+.find-work form {
+  display: flex;
+  gap: 12px;
+  align-items: end;
+  width: min(520px, 100%);
+}
+.find-work label {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1;
+  font-size: 14px;
+}
+.find-work input {
+  min-height: 44px;
+  border: 1px solid var(--color-line);
+  border-radius: 8px;
+  background: var(--color-surface);
+  padding: 12px;
+}
 input,
 select {
   caret-color: var(--color-cobalt);

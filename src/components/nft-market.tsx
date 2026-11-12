@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from "react";
 import { useAccount, usePublicClient, useWalletClient } from "wagmi";
 import { useQueryClient } from "@tanstack/react-query";
 import { parseEventLogs, zeroAddress, type PublicClient, type WalletClient, type Hash } from "viem";
-import { ArrowLeft, ArrowRight } from "lucide-react";
 import { chain, configured, contracts, explorer } from "@/lib/nft/config";
 import { useListings, useOwned } from "@/lib/nft/data";
 import { abi as nft } from "@/lib/nft/RareCognos";
@@ -15,6 +14,7 @@ import {
 } from "@/lib/nft/transaction";
 import { NFTCreate } from "./nft-create";
 import { NFTToken } from "./nft-token";
+import { DailyCheckIn } from "./daily-check-in";
 export type Availability = "loading" | "available" | "empty" | "error" | "unconfigured";
 export function NFTMarket({
   tab,
@@ -29,9 +29,8 @@ export function NFTMarket({
     client = usePublicClient({ chainId: chain.id }),
     wallet = useWalletClient(),
     cache = useQueryClient();
-  const listings = useListings(),
+  const listings = useListings(tab === "My NFTs"),
     owned = useOwned(account.address),
-    gallery = useRef<HTMLDivElement>(null),
     lock = useRef(false);
   const [busy, setBusy] = useState(false),
     [status, setStatus] = useState<{
@@ -41,6 +40,8 @@ export function NFTMarket({
       token?: string;
     }>({ message: "" }),
     [history, setHistory] = useState<Pending[]>([]);
+  const [query, setQuery] = useState("");
+  const [queryNote, setQueryNote] = useState("");
   const address = account.address?.toLowerCase();
   const active = listings.data?.pages.flatMap((p) => p.listings).filter((l) => l.valid) || [];
   const own = owned.data?.pages.flatMap((p) => p.ids) || [];
@@ -202,7 +203,7 @@ export function NFTMarket({
                 ? "Create an NFT"
                 : tab === "My NFTs"
                   ? "My NFTs"
-                  : "Available to collect"}
+                  : "Find a work"}
           </h2>
           <p>
             {tokenId
@@ -211,29 +212,9 @@ export function NFTMarket({
                 ? "Your image. Your name. Your work."
                 : tab === "My NFTs"
                   ? "Your collection and active listings."
-                  : "Art on the market. Discover your next piece."}
+                  : "Search by token number. Works are not listed here on their own."}
           </p>
         </div>
-        {tab === "Explore" && active.length > 0 && (
-          <div className="gallery-controls">
-            {[-1, 1].map((n) => (
-              <button
-                key={n}
-                aria-label={n < 0 ? "Previous artworks" : "Next artworks"}
-                onClick={() =>
-                  gallery.current?.scrollBy({
-                    left: n * gallery.current.clientWidth,
-                    behavior: matchMedia("(prefers-reduced-motion: reduce)").matches
-                      ? "instant"
-                      : "smooth",
-                  })
-                }
-              >
-                {n < 0 ? <ArrowLeft /> : <ArrowRight />}
-              </button>
-            ))}
-          </div>
-        )}
       </div>
       {account.isConnected && account.chainId !== chain.id && (
         <p className="market-notice" role="alert">
@@ -352,59 +333,35 @@ export function NFTMarket({
           </p>
         </>
       ) : (
-        <>
-          {state === "loading" && (
-            <p role="status">
-              {listings.hasNextPage
-                ? "No active listings in this page. Load older listings to continue browsing."
-                : "Reading listings from the chain…"}
-            </p>
-          )}
-          {state === "error" && (
-            <div role="alert" className="market-notice">
-              Could not reach the marketplace. This is not an empty collection.{" "}
-              <button className="nft-button" onClick={() => void listings.refetch()}>
-                Retry
-              </button>
-            </div>
-          )}
-          <div
-            className="listing-gallery"
-            ref={gallery}
-            tabIndex={active.length ? 0 : undefined}
-            aria-label="Active NFT listings"
+        <div className="find-work">
+          <DailyCheckIn />
+          <form
+            onSubmit={(event) => {
+              event.preventDefault();
+              const value = query.trim();
+              if (!/^[1-9]\d{0,6}$/.test(value)) {
+                setQueryNote("Enter a token number.");
+                return;
+              }
+              setQueryNote("");
+              location.hash = `token/${value}`;
+            }}
           >
-            {active.map((l) => (
-              <NFTToken key={String(l.id)} id={l.tokenId} ready={ready} run={run} />
-            ))}
-          </div>
-          {listings.hasNextPage && (
-            <button
-              className="nft-button"
-              disabled={listings.isFetchingNextPage}
-              onClick={() => void listings.fetchNextPage()}
-            >
-              Load older listings
+            <label>
+              Token number
+              <input
+                inputMode="numeric"
+                value={query}
+                onChange={(event) => setQuery(event.target.value)}
+                placeholder="2"
+              />
+            </label>
+            <button className="primary-action" type="submit">
+              Find
             </button>
-          )}
-          {(state === "empty" || state === "unconfigured") && (
-            <div className="market-empty">
-              <div>
-                <h3>
-                  {state === "empty" ? "No works for sale yet." : "The collection is taking shape."}
-                </h3>
-                <p>
-                  {state === "empty"
-                    ? "There are no active sales. Explore the studio, or create your own work."
-                    : "Trading opens after the verified V2 contracts are deployed. Explore the studio in the meantime."}
-                </p>
-              </div>
-              <a className="secondary-action" href="#studio">
-                Explore the studio <ArrowRight size={18} />
-              </a>
-            </div>
-          )}
-        </>
+          </form>
+          {queryNote && <p role="status">{queryNote}</p>}
+        </div>
       )}
     </section>
   );

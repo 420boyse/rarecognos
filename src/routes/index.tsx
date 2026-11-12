@@ -1,13 +1,14 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { ArrowRight, ArrowUpRight, X } from "lucide-react";
 import { useEffect, useId, useRef, useState } from "react";
-import { EyeMark, Wordmark } from "@/components/wordmark";
+import { EyeMark } from "@/components/wordmark";
 import { works, type Work } from "@/data/works";
 import { type Availability, NFTMarket } from "@/components/nft-market";
 import { NFTDeploy } from "@/components/nft-deploy";
 import { MarketHeader } from "@/components/market-header";
 import { CreatorDashboard, NFTDropMint } from "@/components/nft-drops";
 import { FanStackNFT } from "@/components/fan-stack-nft";
+import { SiteFooter } from "@/components/site-footer";
 import { isAddress, type Address } from "viem";
 export const Route = createFileRoute("/")({ component: Home });
 function Home() {
@@ -146,11 +147,7 @@ function Home() {
         </section>
         <NFTDeploy />
       </main>
-      <footer className="market-footer">
-        <Wordmark />
-        <p>For the way you see.</p>
-        <a href="#explore">Explore NFTs</a>
-      </footer>
+      <SiteFooter exploreHref="#explore" />
       {active && <WorkDialog work={active} onClose={() => setActive(null)} />}
     </div>
   );
@@ -232,7 +229,7 @@ function WorkDialog({ work, onClose }: { work: Work; onClose: () => void }) {
           </div>
           <p className="text-sm leading-relaxed text-pretty text-fg/75">{work.description}</p>
           <p className="mt-auto text-xs text-fg/45">
-            Studio preview. Availability and prices appear in Available to collect.
+            Studio preview. Search a token number to open a live work.
           </p>
           <div className="flex items-center gap-3 pt-2">
             <EyeMark className="h-4 w-7 object-contain opacity-50" />

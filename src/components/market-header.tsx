@@ -5,12 +5,15 @@ import { useState } from "react";
 import { EyeMark, Wordmark } from "./wordmark";
 import { chain } from "@/lib/nft/config";
 import { transactionError } from "@/lib/nft/transaction";
+import { signInGmail, useGmail, writeGmail } from "@/lib/member";
 export function MarketHeader({ view }: { view: string }) {
   const account = useAccount(),
     connect = useConnect(),
     disconnect = useDisconnect(),
     network = useSwitchChain();
   const [error, setError] = useState("");
+  const gmail = useGmail();
+  const member = Boolean(account.address || gmail);
   const wrong = account.isConnected && account.chainId !== chain.id;
   const address = account.address
     ? `${account.address.slice(0, 6)}...${account.address.slice(-4)}`
@@ -47,14 +50,31 @@ export function MarketHeader({ view }: { view: string }) {
           <a href="/#create" aria-current={view === "Create" ? "page" : undefined}>
             Create
           </a>
-          <a href="/quest" aria-current={view === "Quest" ? "page" : undefined}>
-            Quest
-          </a>
+          {member && (
+            <a href="/quest" aria-current={view === "Quest" ? "page" : undefined}>
+              Quest
+            </a>
+          )}
           <a href="/referral" aria-current={view === "Referral" ? "page" : undefined}>
             Referral
           </a>
         </nav>
         <div className="market-wallet">
+          {gmail ? (
+            <button className="wallet-button" onClick={() => writeGmail(null)} title={gmail.email}>
+              {gmail.email.split("@")[0]}
+            </button>
+          ) : (
+            <button
+              className="wallet-button"
+              onClick={() => {
+                setError("");
+                void signInGmail().catch((e) => setError(transactionError(e)));
+              }}
+            >
+              Gmail
+            </button>
+          )}
           <span className="network-indicator">
             <span aria-hidden="true" />
             {chain.id === 4441 ? "LiteForge Testnet" : "Local Testnet"}

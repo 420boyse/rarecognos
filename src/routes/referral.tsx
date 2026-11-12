@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { MarketHeader } from "@/components/market-header";
-import { Wordmark } from "@/components/wordmark";
+import { SiteFooter } from "@/components/site-footer";
 
 export const Route = createFileRoute("/referral")({
   component: ReferralPage,
@@ -18,11 +18,7 @@ function ReferralPage() {
           </div>
         </div>
       </main>
-      <footer className="market-footer">
-        <Wordmark />
-        <p>For the way you see.</p>
-        <a href="/#explore">Explore NFTs</a>
-      </footer>
+      <SiteFooter />
     </div>
   );
 }

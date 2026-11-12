@@ -66,11 +66,11 @@ export async function metadata(uri: string) {
     image: mediaURL(d.image),
   };
 }
-export function useListings() {
+export function useListings(enabled = true) {
   const client = usePublicClient({ chainId: chain.id });
   return useInfiniteQuery({
     queryKey: ["nft", "listings", chain.id, contracts.market],
-    enabled: configured && !!client,
+    enabled: enabled && configured && !!client,
     initialPageParam: undefined as bigint | undefined,
     staleTime: 15000,
     queryFn: async ({ pageParam }) => {
