@@ -1287,3 +1287,69 @@ button:disabled {
     padding: 0 20px;
   }
 }
+
+.art-preview.is-empty {
+  aspect-ratio: auto;
+  min-height: 280px;
+  border: 1px dashed rgb(245 244 239 / 0.28);
+  background: transparent;
+  cursor: pointer;
+}
+
+.art-preview.is-empty:hover {
+  border-color: rgb(245 244 239 / 0.62);
+}
+
+.preview-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  color: var(--color-fg);
+  background: transparent;
+  border: 0;
+  padding: 24px;
+}
+
+.preview-empty strong {
+  font-size: 16px;
+  font-weight: 500;
+}
+
+.preview-empty span {
+  font-size: 13px;
+  color: rgb(245 244 239 / 0.62);
+}
+
+.preview-file {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+}
+
+.kind-toggle {
+  display: flex;
+  gap: 8px;
+}
+
+.kind-toggle button {
+  min-height: 36px;
+  padding: 0 14px;
+  border-radius: 999px;
+  border: 1px solid var(--color-line);
+  font-size: 13px;
+  color: rgb(245 244 239 / 0.72);
+  background: transparent;
+}
+
+.kind-toggle button[aria-pressed="true"] {
+  background: var(--color-fg);
+  color: var(--color-bg);
+  border-color: var(--color-fg);
+}
+
+.market-notice .nft-button {
+  margin-top: 12px;
+}
