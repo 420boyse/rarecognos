@@ -15,8 +15,6 @@ const CARD_RADIUS = 20;
 const FAN_ROTATION = 4.5;
 const FAN_SPREAD = 0.42;
 const SCALE_STEP = 0.16;
-const EDGE_SLOT = 2.15;
-const GHOST_RANGE = 0.9;
 
 const FRICTION = 0.94;
 const SNAP_SPRING = 0.18;
@@ -81,29 +79,29 @@ export function FanStackNFT({
       const n = countRef.current;
       const size = sizeRef.current;
       const spread = size * FAN_SPREAD;
+      const half = n / 2;
+      const fadeBand = Math.min(0.9, Math.max(0.45, half * 0.42));
       for (let i = 0; i < n; i++) {
         const el = cardRefs.current[i];
         if (!el) continue;
         let offset = i - scrollPos.current;
-        while (offset > n / 2) offset -= n;
-        while (offset < -n / 2) offset += n;
+        offset = ((offset + half) % n + n) % n - half;
         const abs = Math.abs(offset);
-        const isGhost = abs >= EDGE_SLOT;
-        const ghostOpacity = isGhost ? Math.max(0, 1 - (abs - EDGE_SLOT) / GHOST_RANGE) : 1;
-        const scale = Math.max(0.55, 1 - abs * SCALE_STEP);
+        const room = half - abs;
+        const fade = room >= fadeBand ? 1 : Math.max(0, room / fadeBand);
+        const scale = Math.max(0.72, 1 - abs * SCALE_STEP);
         el.style.transform = `translate3d(${offset * spread}px, 0, 0) rotate(${offset * FAN_ROTATION}deg) scale(${scale})`;
-        el.style.opacity = `${ghostOpacity}`;
-        el.style.zIndex = isGhost ? "0" : String(Math.round((EDGE_SLOT + 1 - abs) * 10));
-        const imageLayer = el.querySelector("[data-image]") as HTMLElement | null;
-        const ghostLayer = el.querySelector("[data-ghost]") as HTMLElement | null;
+        el.style.opacity = `${fade}`;
+        el.style.visibility = fade < 0.02 ? "hidden" : "visible";
+        el.style.zIndex = String(Math.round((half - abs) * 10));
         const borderLayer = el.querySelector("[data-border]") as HTMLElement | null;
         const overlay = el.querySelector("[data-overlay]") as HTMLElement | null;
-        if (imageLayer) imageLayer.style.opacity = isGhost ? "0" : "1";
-        if (ghostLayer) ghostLayer.style.opacity = isGhost ? "1" : "0";
-        if (borderLayer) borderLayer.style.opacity = isGhost ? "0" : String(Math.max(0, 1 - abs * 1.6));
-        if (overlay) overlay.style.opacity = isGhost ? "0" : String(Math.min(0.45, abs * 0.22));
+        const ghostLayer = el.querySelector("[data-ghost]") as HTMLElement | null;
+        if (ghostLayer) ghostLayer.style.opacity = "0";
+        if (borderLayer) borderLayer.style.opacity = String(fade * Math.max(0, 1 - abs * 1.4));
+        if (overlay) overlay.style.opacity = String(Math.min(0.45, abs * 0.2));
       }
-      const next = wrapIndex(Math.round(scrollPos.current), n);
+      const next = wrapIndex(Math.round(scrollPos.current), Math.max(1, n));
       if (next !== centeredRef.current) {
         centeredRef.current = next;
         setCentered(next);
