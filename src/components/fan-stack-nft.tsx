@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, useCallback } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 type NFTCard = {
   id: string;
@@ -9,20 +9,18 @@ type NFTCard = {
   medium?: string;
 };
 
-const N = 8;
 const CARD_SIZE_BASE = 280;
 const CARD_ASPECT = 1.25;
 const CARD_RADIUS = 20;
 const FAN_ROTATION = 4.5;
-const FAN_SPREAD = 0.38;
-const SCALE_STEP = 0.2;
-const EDGE_SLOT = 2;
-const GHOST_RANGE = 1.2;
+const FAN_SPREAD = 0.42;
+const SCALE_STEP = 0.16;
+const EDGE_SLOT = 2.15;
+const GHOST_RANGE = 0.9;
 
-const FRICTION = 0.91;
-const SNAP_SPRING = 0.09;
-const SNAP_DAMPING = 0.72;
-const DRAG_SENSITIVITY = 0.0035;
+const FRICTION = 0.94;
+const SNAP_SPRING = 0.18;
+const SNAP_DAMPING = 0.78;
 
 function getCardSize() {
   if (typeof window === "undefined") return CARD_SIZE_BASE;
@@ -38,6 +36,13 @@ function wrapIndex(i: number, n: number) {
   return ((i % n) + n) % n;
 }
 
+const placeholder: NFTCard = {
+  id: "placeholder",
+  title: "RareCognos",
+  image: "/art/nocturne.jpg",
+  medium: "Studio",
+};
+
 export function FanStackNFT({
   items,
   onSelectWork,
@@ -45,131 +50,104 @@ export function FanStackNFT({
   items: NFTCard[];
   onSelectWork?: (id: string) => void;
 }) {
-  const source: NFTCard[] =
-    items.length > 0
-      ? items
-      : [
-          {
-            id: "placeholder",
-            title: "RareCognos",
-            image: "/art/nocturne.jpg",
-            medium: "Studio",
-          },
-        ];
-
-  const cards: NFTCard[] = Array.from({ length: N }, (_, i) => {
-    const base = source[i % source.length];
-    return {
+  const cards = useMemo(() => {
+    const source = items.length > 0 ? items : [placeholder];
+    return source.map((base, i) => ({
       ...base,
       id: `${base.id}-${i}`,
       origId: base.origId ?? base.id,
-    };
-  });
+    }));
+  }, [items]);
 
   const containerRef = useRef<HTMLDivElement>(null);
   const cardRefs = useRef<(HTMLDivElement | null)[]>([]);
-  const slotLeftRef = useRef<HTMLDivElement>(null);
-  const slotRightRef = useRef<HTMLDivElement>(null);
-  const leftImgRef = useRef<HTMLImageElement>(null);
-  const rightImgRef = useRef<HTMLImageElement>(null);
-
   const scrollPos = useRef(0);
   const velocity = useRef(0);
   const isDragging = useRef(false);
   const dragStart = useRef({ x: 0, y: 0, lastX: 0, lastTime: 0 });
   const axisLocked = useRef<"h" | "v" | null>(null);
+  const sizeRef = useRef(CARD_SIZE_BASE);
+  const countRef = useRef(cards.length);
+  const centeredRef = useRef(0);
 
   const [cardSize, setCardSize] = useState(CARD_SIZE_BASE);
   const [centered, setCentered] = useState(0);
 
-  const updateCards = useCallback(() => {
-    const size = cardSize;
-    const height = size * CARD_ASPECT;
-    const spread = size * FAN_SPREAD;
-
-    cards.forEach((_, i) => {
-      const el = cardRefs.current[i];
-      if (!el) return;
-
-      let offset = i - scrollPos.current;
-      while (offset > N / 2) offset -= N;
-      while (offset < -N / 2) offset += N;
-      const abs = Math.abs(offset);
-
-      const isGhost = abs >= EDGE_SLOT;
-      const ghostOpacity = isGhost ? Math.max(0, 1 - (abs - EDGE_SLOT) / GHOST_RANGE) : 1;
-
-      const tx = offset * spread;
-      const rot = offset * FAN_ROTATION;
-      const scale = Math.max(0.45, 1 - abs * SCALE_STEP);
-
-      el.style.transform = `translate3d(${tx}px, 0, 0) rotate(${rot}deg) scale(${scale})`;
-      el.style.opacity = `${ghostOpacity}`;
-      el.style.zIndex = isGhost ? "0" : String(Math.round((EDGE_SLOT + 1 - abs) * 10));
-
-      const imageLayer = el.querySelector("[data-image]") as HTMLElement;
-      const ghostLayer = el.querySelector("[data-ghost]") as HTMLElement;
-      const borderLayer = el.querySelector("[data-border]") as HTMLElement;
-      const overlay = el.querySelector("[data-overlay]") as HTMLElement;
-
-      if (imageLayer) imageLayer.style.opacity = isGhost ? "0" : "1";
-      if (ghostLayer) ghostLayer.style.opacity = isGhost ? "1" : "0";
-      if (borderLayer) borderLayer.style.opacity = isGhost ? "0" : String(Math.max(0, 1 - abs * 2.2));
-      if (overlay) overlay.style.opacity = isGhost ? "0" : String(Math.min(0.4, (abs / EDGE_SLOT) * 0.4));
-    });
-
-    const edgeScale = Math.max(0.5, 1 - EDGE_SLOT * SCALE_STEP);
-    const edgeW = size * edgeScale;
-    const edgeH = height * edgeScale;
-    const edgeRot = FAN_ROTATION * EDGE_SLOT;
-    const edgeTx = EDGE_SLOT * spread;
-
-    [slotLeftRef, slotRightRef].forEach((ref, idx) => {
-      const el = ref.current;
-      if (!el) return;
-      const sign = idx === 0 ? -1 : 1;
-      el.style.width = `${edgeW}px`;
-      el.style.height = `${edgeH}px`;
-      el.style.marginLeft = `${-edgeW / 2}px`;
-      el.style.marginTop = `${-edgeH / 2}px`;
-      el.style.borderRadius = `${CARD_RADIUS * edgeScale}px`;
-      el.style.transform = `translate3d(${sign * edgeTx}px, 0, 0) rotate(${sign * edgeRot}deg)`;
-    });
-
-    const leftIdx = wrapIndex(Math.floor(scrollPos.current) - EDGE_SLOT, N);
-    const rightIdx = wrapIndex(Math.ceil(scrollPos.current) + EDGE_SLOT, N);
-    if (leftImgRef.current) leftImgRef.current.src = cards[leftIdx]?.image || "";
-    if (rightImgRef.current) rightImgRef.current.src = cards[rightIdx]?.image || "";
-
-    const nextCentered = wrapIndex(Math.round(scrollPos.current), N);
-    if (nextCentered !== centered) setCentered(nextCentered);
-  }, [cardSize, cards, centered]);
+  sizeRef.current = cardSize;
+  countRef.current = cards.length;
 
   useEffect(() => {
+    const paint = () => {
+      const n = countRef.current;
+      const size = sizeRef.current;
+      const spread = size * FAN_SPREAD;
+      for (let i = 0; i < n; i++) {
+        const el = cardRefs.current[i];
+        if (!el) continue;
+        let offset = i - scrollPos.current;
+        while (offset > n / 2) offset -= n;
+        while (offset < -n / 2) offset += n;
+        const abs = Math.abs(offset);
+        const isGhost = abs >= EDGE_SLOT;
+        const ghostOpacity = isGhost ? Math.max(0, 1 - (abs - EDGE_SLOT) / GHOST_RANGE) : 1;
+        const scale = Math.max(0.55, 1 - abs * SCALE_STEP);
+        el.style.transform = `translate3d(${offset * spread}px, 0, 0) rotate(${offset * FAN_ROTATION}deg) scale(${scale})`;
+        el.style.opacity = `${ghostOpacity}`;
+        el.style.zIndex = isGhost ? "0" : String(Math.round((EDGE_SLOT + 1 - abs) * 10));
+        const imageLayer = el.querySelector("[data-image]") as HTMLElement | null;
+        const ghostLayer = el.querySelector("[data-ghost]") as HTMLElement | null;
+        const borderLayer = el.querySelector("[data-border]") as HTMLElement | null;
+        const overlay = el.querySelector("[data-overlay]") as HTMLElement | null;
+        if (imageLayer) imageLayer.style.opacity = isGhost ? "0" : "1";
+        if (ghostLayer) ghostLayer.style.opacity = isGhost ? "1" : "0";
+        if (borderLayer) borderLayer.style.opacity = isGhost ? "0" : String(Math.max(0, 1 - abs * 1.6));
+        if (overlay) overlay.style.opacity = isGhost ? "0" : String(Math.min(0.45, abs * 0.22));
+      }
+      const next = wrapIndex(Math.round(scrollPos.current), n);
+      if (next !== centeredRef.current) {
+        centeredRef.current = next;
+        setCentered(next);
+      }
+    };
+
     let raf = 0;
     const loop = () => {
       if (!isDragging.current) {
         scrollPos.current += velocity.current;
         velocity.current *= FRICTION;
-
-        if (Math.abs(velocity.current) < 0.12) {
+        if (Math.abs(velocity.current) < 0.08) {
           const nearest = Math.round(scrollPos.current);
-          const diff = nearest - scrollPos.current;
-          velocity.current += diff * SNAP_SPRING;
+          velocity.current += (nearest - scrollPos.current) * SNAP_SPRING;
           velocity.current *= SNAP_DAMPING;
         }
-
-        if (Math.abs(velocity.current) < 0.0008) {
+        if (
+          Math.abs(velocity.current) < 0.001 &&
+          Math.abs(scrollPos.current - Math.round(scrollPos.current)) < 0.001
+        ) {
           velocity.current = 0;
           scrollPos.current = Math.round(scrollPos.current);
         }
       }
-      updateCards();
+      paint();
       raf = requestAnimationFrame(loop);
     };
     raf = requestAnimationFrame(loop);
     return () => cancelAnimationFrame(raf);
-  }, [updateCards]);
+  }, []);
+
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    const onWheel = (event: WheelEvent) => {
+      if (Math.abs(event.deltaX) <= Math.abs(event.deltaY)) return;
+      event.preventDefault();
+      const spread = Math.max(1, sizeRef.current * FAN_SPREAD);
+      scrollPos.current += event.deltaX / spread;
+      velocity.current = 0;
+    };
+    el.addEventListener("wheel", onWheel, { passive: false });
+    return () => el.removeEventListener("wheel", onWheel);
+  }, []);
 
   useEffect(() => {
     const onResize = () => setCardSize(getCardSize());
@@ -179,11 +157,12 @@ export function FanStackNFT({
   }, []);
 
   const onPointerDown = (e: React.PointerEvent) => {
+    if (countRef.current < 2) return;
+    if ((e.target as HTMLElement).closest("button")) return;
     isDragging.current = true;
     axisLocked.current = null;
     velocity.current = 0;
     dragStart.current = { x: e.clientX, y: e.clientY, lastX: e.clientX, lastTime: performance.now() };
-    (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
   };
 
   const onPointerMove = (e: React.PointerEvent) => {
@@ -192,15 +171,26 @@ export function FanStackNFT({
     const adx = Math.abs(e.clientX - dragStart.current.x);
     const ady = Math.abs(e.clientY - dragStart.current.y);
 
-    if (!axisLocked.current && (adx > 8 || ady > 8)) {
-      axisLocked.current = adx > ady * 1.2 ? "h" : "v";
+    if (!axisLocked.current) {
+      if (adx < 8 && ady < 8) return;
+      if (adx > ady * 1.15) {
+        axisLocked.current = "h";
+        (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+      } else {
+        axisLocked.current = "v";
+        isDragging.current = false;
+        return;
+      }
     }
-    if (axisLocked.current === "v") return;
+    if (axisLocked.current !== "h") return;
 
     const now = performance.now();
     const dt = Math.max(8, now - dragStart.current.lastTime);
-    scrollPos.current -= dx * DRAG_SENSITIVITY;
-    velocity.current = (-dx * DRAG_SENSITIVITY / dt) * 16 * 1.15;
+    const spread = Math.max(1, sizeRef.current * FAN_SPREAD);
+    const step = dx / spread;
+    scrollPos.current -= step;
+    const nextVelocity = (-step * 16) / dt;
+    velocity.current = Math.max(-0.55, Math.min(0.55, nextVelocity));
     dragStart.current.lastX = e.clientX;
     dragStart.current.lastTime = now;
   };
@@ -221,21 +211,14 @@ export function FanStackNFT({
         onPointerMove={onPointerMove}
         onPointerUp={onPointerUp}
         onPointerCancel={onPointerUp}
-        style={{ height: cardSize * CARD_ASPECT + 60 }}
+        style={{ height: cardSize * CARD_ASPECT + 48 }}
       >
-        <div ref={slotLeftRef} className="fan-slot">
-          <img ref={leftImgRef} alt="" />
-          <div className="fan-slot-overlay" />
-        </div>
-        <div ref={slotRightRef} className="fan-slot">
-          <img ref={rightImgRef} alt="" />
-          <div className="fan-slot-overlay" />
-        </div>
-
         {cards.map((card, i) => (
           <div
             key={card.id}
-            ref={(el) => { cardRefs.current[i] = el; }}
+            ref={(el) => {
+              cardRefs.current[i] = el;
+            }}
             className="fan-card"
             style={{
               width: cardSize,
@@ -245,7 +228,7 @@ export function FanStackNFT({
             }}
           >
             <div data-image className="fan-card-image">
-              <img src={card.image} alt={card.title} />
+              <img src={card.image} alt={card.title} draggable={false} />
               <div data-overlay className="fan-card-overlay" />
             </div>
             <div data-ghost className="fan-card-ghost" />
@@ -272,7 +255,7 @@ export function FanStackNFT({
             type="button"
             className="fan-secondary"
             onClick={() => {
-              const el = document.getElementById("collection");
+              const el = document.getElementById("studio");
               if (el) el.scrollIntoView({ behavior: "smooth" });
             }}
           >
@@ -283,12 +266,11 @@ export function FanStackNFT({
 
       <style>{`
         .fan-section {
-          min-height: 80vh;
           display: flex;
           flex-direction: column;
           align-items: center;
           justify-content: center;
-          padding: 40px 20px 80px;
+          padding: 28px 20px 64px;
           background: radial-gradient(ellipse at center, rgba(59,91,255,0.08) 0%, transparent 60%), #050505;
           overflow-x: clip;
         }
@@ -296,32 +278,18 @@ export function FanStackNFT({
           position: relative;
           width: 100%;
           max-width: 1100px;
-          touch-action: none;
+          touch-action: pan-y;
           cursor: grab;
           user-select: none;
         }
         .fan-container:active { cursor: grabbing; }
-        .fan-slot, .fan-card {
+        .fan-card {
           position: absolute;
           left: 50%;
           top: 50%;
           border-radius: ${CARD_RADIUS}px;
           overflow: hidden;
           will-change: transform;
-        }
-        .fan-slot {
-          z-index: 1;
-          pointer-events: none;
-        }
-        .fan-slot img {
-          width: 100%;
-          height: 100%;
-          object-fit: cover;
-        }
-        .fan-slot-overlay {
-          position: absolute;
-          inset: 0;
-          background: rgba(0,0,0,0.42);
         }
         .fan-card-image {
           position: absolute;
@@ -333,6 +301,7 @@ export function FanStackNFT({
           width: 100%;
           height: 100%;
           object-fit: cover;
+          pointer-events: none;
         }
         .fan-card-overlay {
           position: absolute;
@@ -357,7 +326,7 @@ export function FanStackNFT({
           pointer-events: none;
         }
         .fan-detail {
-          margin-top: 48px;
+          margin-top: 28px;
           text-align: center;
           max-width: 420px;
         }
