@@ -13,6 +13,17 @@ export type Work = {
 
 export const works: Work[] = [
   {
+    id: "lit-mark",
+    title: "Lit Mark",
+    medium: "Chrome and enamel",
+    kind: "sculpture",
+    year: "2026",
+    image: "/art/lit-mark.jpg",
+    caption: "LitVM, with the mark set in",
+    description:
+      "The LitVM form in polished chrome, with a blue enamel field and a white mark set into it. One object, not two logos placed side by side. Studio preview, not a live listing.",
+  },
+  {
     id: "nocturne",
     title: "Nocturne",
     medium: "Blackened chrome",
@@ -32,7 +43,7 @@ export const works: Work[] = [
     image: "/art/blue-index.jpg",
     caption: "Color measure",
     description:
-      "A cobalt aperture scored by one silver index. The work measures a color rather than depicting a subject. Sample record only — not a live listing.",
+      "A cobalt aperture scored by one silver index. The work measures a color rather than depicting a subject. Sample record only \u2014 not a live listing.",
   },
   {
     id: "red-aperture",
