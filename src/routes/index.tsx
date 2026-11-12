@@ -132,7 +132,7 @@ function Home() {
           <div className="section-heading">
             <div>
               <h2 id="studio-title">Studio Collection</h2>
-              <p>Four works from the studio. A closer look, before you collect.</p>
+              <p>Five works from the studio. A closer look, before you collect.</p>
             </div>
             <span className="studio-note">Studio previews · not sale listings</span>
           </div>
