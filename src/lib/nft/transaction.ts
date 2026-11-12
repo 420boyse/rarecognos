@@ -153,13 +153,22 @@ export async function transact(
     throw Error("A transaction is still pending. Resume receipt tracking before sending another.");
   notify("Simulating transaction…");
   const { request } = await publicClient.simulateContract({ ...call, account: wallet.account });
+  const fees = await publicClient.estimateFeesPerGas();
+  const priced =
+    "maxFeePerGas" in fees
+      ? { maxFeePerGas: fees.maxFeePerGas, maxPriorityFeePerGas: fees.maxPriorityFeePerGas }
+      : { gasPrice: fees.gasPrice };
   assertChain(await wallet.getChainId(), chainId);
   const addresses = await wallet.getAddresses();
   if (addresses[0]?.toLowerCase() !== address.toLowerCase())
     throw Error("Wallet account changed. Review the action again.");
   const block = await publicClient.getBlockNumber();
   notify("Confirm in your wallet");
-  const hash = await wallet.writeContract({ ...request, chain: publicClient.chain });
+  const hash = await wallet.writeContract({
+    ...request,
+    ...priced,
+    chain: publicClient.chain,
+  });
   const r: Pending = {
     id: hash,
     chainId,
@@ -186,9 +195,11 @@ export function transactionError(error: unknown): string {
   let e = error as { code?: number; cause?: unknown; shortMessage?: string; message?: string };
   for (let i = 0; i < 8 && e; i++, e = e.cause as typeof e)
     if (e.code === 4001) return "Rejected in wallet. No transaction was confirmed.";
-  return (
+  const raw =
     (error as { shortMessage?: string; message?: string })?.shortMessage ||
     (error as Error)?.message ||
-    "Request failed"
-  );
+    "Request failed";
+  if (/failed to fetch/i.test(raw))
+    return "The wallet could not load its own fee service for LiteForge. The site now sets the network fee. Approve again. If it still fails, set the wallet RPC to https://rpc.testnet.liteforge.zeeve.net.";
+  return raw;
 }
