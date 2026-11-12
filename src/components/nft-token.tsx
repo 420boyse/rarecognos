@@ -38,7 +38,7 @@ export function NFTToken({ id, detail = false, ready, run }: Props) {
       const call = {
         ...marketCall,
         functionName: "buy" as const,
-        args: [t!.listingId, salePrice!] as const,
+        args: [t!.listingId!, salePrice!] as const,
         value: salePrice!,
         account: account.address!,
       };
@@ -92,12 +92,12 @@ export function NFTToken({ id, detail = false, ready, run }: Props) {
   );
   const buy = () =>
     run(
-      { ...marketCall, functionName: "buy", args: [t.listingId, salePrice!], value: salePrice! },
+      { ...marketCall, functionName: "buy", args: [t.listingId!, salePrice!], value: salePrice! },
       async () => {
         const [seller, tokenId, value, active, nonce] = await client!.readContract({
           ...marketCall,
           functionName: "listings",
-          args: [t.listingId],
+          args: [t.listingId!],
         });
         const [owner, approved, version] = await Promise.all([
           client!.readContract({ ...nftCall, functionName: "ownerOf", args: [id] }),
@@ -145,7 +145,9 @@ export function NFTToken({ id, detail = false, ready, run }: Props) {
             </button>
           </p>
         )}
-        {t.active ? (
+        {!t.saleReady ? (
+          <p className="sale-state">Checking listing…</p>
+        ) : t.active ? (
           <p className="sale-price">{formatEther(salePrice!)} zkLTC</p>
         ) : (
           <p className="sale-state">
@@ -191,7 +193,7 @@ export function NFTToken({ id, detail = false, ready, run }: Props) {
                 {t.active ? "buy this work" : "manage this work"}. You will stay on this artwork.
               </p>
             )}
-            {isOwner ? (
+            {isOwner && t.saleReady ? (
               <div className="token-actions">
                 <h4>Manage this work</h4><p className="uri-text">Transfer operator: {contracts.market}</p>
                 <label>
@@ -253,7 +255,7 @@ export function NFTToken({ id, detail = false, ready, run }: Props) {
                       className="nft-button"
                       disabled={!ready}
                       onClick={() =>
-                        void run({ ...marketCall, functionName: "cancel", args: [t.listingId] })
+                        void run({ ...marketCall, functionName: "cancel", args: [t.listingId!] })
                       }
                     >
                       Cancel listing

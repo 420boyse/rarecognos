@@ -115,8 +115,8 @@ export function NFTCreate({
         description,
         rights,
       });
-      setProgress("Confirm upload authorization in your wallet");
-      const signature = await wallet.data.signMessage({ message: challenge.message });
+      setProgress("Confirm in your wallet. This only allows the upload. It does not send zkLTC.");
+      const signature = await wallet.data.signTypedData(challenge.typed);
       const current = await wallet.data.getAddresses();
       if (current[0]?.toLowerCase() !== address.toLowerCase())
         throw Error("Account changed. Prepare again with the current wallet.");

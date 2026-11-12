@@ -1,5 +1,5 @@
-import { createHash, createHmac, randomBytes } from "node:crypto";
-import { isAddress, verifyMessage } from "viem";
+import { createHash, createHmac } from "node:crypto";
+import { isAddress, verifyTypedData, type Address, type Hex } from "viem";
 import { env } from "@/lib/env.server";
 
 export const MAX_UPLOAD_BYTES = 3 * 1024 * 1024;
@@ -72,13 +72,39 @@ function pack(body: unknown) {
 function unpack(id: string) {
   const parsed = JSON.parse(Buffer.from(id, "base64url").toString("utf8")) as {
     payload?: string;
-    message?: string;
+    typed?: PublishTyped;
     expires?: number;
     mac?: string;
   };
-  if (!parsed.payload || !parsed.message || !parsed.expires || !parsed.mac) throw Error("Bad authorization");
+  if (!parsed.payload || !parsed.typed || !parsed.expires || !parsed.mac) throw Error("Bad authorization");
   return parsed;
 }
+
+const publishDomain = { name: "RareCognos", version: "1", chainId: CHAIN_ID } as const;
+const publishTypes = {
+  Publish: [
+    { name: "statement", type: "string" },
+    { name: "artwork", type: "string" },
+    { name: "site", type: "string" },
+    { name: "wallet", type: "address" },
+    { name: "image", type: "bytes32" },
+    { name: "until", type: "string" },
+  ],
+} as const;
+type PublishTyped = {
+  domain: typeof publishDomain;
+  types: typeof publishTypes;
+  primaryType: "Publish";
+  message: {
+    statement: string;
+    artwork: string;
+    site: string;
+    wallet: Address;
+    image: Hex;
+    until: string;
+  };
+};
+const publishStatement = "Publish this artwork. This does not send zkLTC.";
 
 export async function uploadChallenge(request: Request) {
   const origin = request.headers.get("origin") ?? "";
@@ -107,7 +133,6 @@ export async function uploadChallenge(request: Request) {
     return uploadJson(400, { error: "Check name, description, wallet and rights declaration." }, origin);
   }
   const expires = Date.now() + 300000;
-  const nonce = randomBytes(16).toString("hex");
   const payload = JSON.stringify({
     wallet: wallet.toLowerCase(),
     digest,
@@ -116,8 +141,35 @@ export async function uploadChallenge(request: Request) {
     rights,
     chainId: CHAIN_ID,
   });
-  const message = `RareCognos upload authorization\nOrigin: ${origin}\nChain: ${CHAIN_ID}\nWallet: ${wallet.toLowerCase()}\nPayload SHA-256: ${createHash("sha256").update(payload).digest("hex")}\nNonce: ${nonce}\nExpires: ${new Date(expires).toISOString()}\nI confirm I own or have rights to publish this artwork. This signature is not a transaction.`;
-  return uploadJson(200, { id: pack({ payload, message, expires, mac: mac(message) }), message, expires }, origin);
+  const until =
+    new Date(expires).toLocaleString("en-GB", {
+      timeZone: "UTC",
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+      hourCycle: "h23",
+    }) + " UTC";
+  const typed: PublishTyped = {
+    domain: publishDomain,
+    types: publishTypes,
+    primaryType: "Publish",
+    message: {
+      statement: publishStatement,
+      artwork: name.trim(),
+      site: new URL(origin).host,
+      wallet: wallet as Address,
+      image: `0x${digest}` as Hex,
+      until,
+    },
+  };
+  return uploadJson(
+    200,
+    { id: pack({ payload, typed, expires, mac: mac(JSON.stringify(typed)) }), typed, expires },
+    origin,
+  );
 }
 
 function imageType(bytes: Buffer) {
@@ -158,7 +210,8 @@ export async function uploadPrepare(request: Request) {
     if (!body.id || typeof body.signature !== "string" || typeof body.file !== "string")
       return uploadJson(400, { error: "Missing image" }, origin);
     const ticket = unpack(body.id);
-    if (ticket.mac !== mac(ticket.message) || !ticket.expires || ticket.expires < Date.now())
+    const typed = ticket.typed!;
+    if (ticket.mac !== mac(JSON.stringify(typed)) || !ticket.expires || ticket.expires < Date.now())
       return uploadJson(401, { error: "Upload authorization expired or already used. Sign again." }, origin);
     const payload = JSON.parse(ticket.payload!) as {
       wallet: string;
@@ -166,9 +219,29 @@ export async function uploadPrepare(request: Request) {
       name: string;
       description: string;
     };
-    if (!ticket.message!.includes(`Origin: ${origin}`))
+    const site = new URL(origin).host;
+    if (
+      typed.domain.name !== publishDomain.name ||
+      typed.domain.version !== publishDomain.version ||
+      typed.domain.chainId !== CHAIN_ID ||
+      typed.primaryType !== "Publish" ||
+      typed.message.statement !== publishStatement ||
+      typed.message.site !== site ||
+      typed.message.wallet.toLowerCase() !== payload.wallet ||
+      typed.message.artwork !== payload.name ||
+      typed.message.image.toLowerCase() !== `0x${payload.digest}`
+    )
       return uploadJson(401, { error: "Upload authorization expired or already used. Sign again." }, origin);
-    if (!(await verifyMessage({ address: payload.wallet as `0x${string}`, message: ticket.message!, signature: body.signature as `0x${string}` })))
+    if (
+      !(await verifyTypedData({
+        address: payload.wallet as Address,
+        domain: publishDomain,
+        types: publishTypes,
+        primaryType: "Publish",
+        message: typed.message,
+        signature: body.signature as Hex,
+      }))
+    )
       return uploadJson(401, { error: "Invalid wallet signature" }, origin);
     const bytes = Buffer.from(body.file, "base64");
     if (bytes.length > MAX_UPLOAD_BYTES) return uploadJson(413, { error: "Maximum file size is 3 MB" }, origin);

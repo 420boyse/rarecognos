@@ -1,11 +1,12 @@
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { usePublicClient } from "wagmi";
-import { type Address, zeroAddress } from "viem";
+import { createPublicClient, http, type Address, zeroAddress } from "viem";
 import { abi as nft } from "./RareCognos";
 import { abi as market } from "./RareCognosMarket";
 import { chain, contracts, configured } from "./config";
 export const nftCall = { address: contracts.collection!, abi: nft },
   marketCall = { address: contracts.market!, abi: market };
+const reads = createPublicClient({ chain, transport: http(chain.rpcUrls.default.http[0]) });
 export const PAGE = 12;
 export const short = (a: string) => a.slice(0, 6) + "…" + a.slice(-4);
 export function mediaURL(uri: string) {
@@ -139,32 +140,40 @@ export function useOwned(address?: Address) {
   });
 }
 export function useToken(id: bigint) {
-  const client = usePublicClient({ chainId: chain.id });
-  return useQuery({
+  const core = useQuery({
     queryKey: ["nft", "token", chain.id, contracts.collection, String(id)],
     enabled: configured && id > 0n,
-    staleTime: 10000,
+    staleTime: 15000,
+    retry: 1,
     queryFn: async () => {
-      const [owner, uri, tokenApproval, listingId] = await Promise.all([
-        client!.readContract({ ...nftCall, functionName: "ownerOf", args: [id] }),
-        client!.readContract({ ...nftCall, functionName: "tokenURI", args: [id] }),
-        client!.readContract({ ...nftCall, functionName: "getApproved", args: [id] }),
-        client!.readContract({ ...marketCall, functionName: "activeListing", args: [id] }),
+      const [owner, uri, creator] = await Promise.all([
+        reads.readContract({ ...nftCall, functionName: "ownerOf", args: [id] }),
+        reads.readContract({ ...nftCall, functionName: "tokenURI", args: [id] }),
+        reads.readContract({ ...nftCall, functionName: "creator", args: [id] }).catch(() => zeroAddress),
       ]);
-      const [allApproval, creator, listing, version] = await Promise.all([
-        client!.readContract({
+      return { id, owner, uri, creator };
+    },
+  });
+  const extra = useQuery({
+    queryKey: ["nft", "token-sale", chain.id, contracts.collection, String(id), core.data?.owner],
+    enabled: configured && !!core.data,
+    staleTime: 10000,
+    retry: 1,
+    queryFn: async () => {
+      const owner = core.data!.owner;
+      const [tokenApproval, listingId, allApproval, version] = await Promise.all([
+        reads.readContract({ ...nftCall, functionName: "getApproved", args: [id] }),
+        reads.readContract({ ...marketCall, functionName: "activeListing", args: [id] }),
+        reads.readContract({
           ...nftCall,
           functionName: "isApprovedForAll",
           args: [owner, contracts.market!],
         }),
-        client!
-          .readContract({ ...nftCall, functionName: "creator", args: [id] })
-          .catch(() => zeroAddress),
-        listingId
-          ? client!.readContract({ ...marketCall, functionName: "listings", args: [listingId] })
-          : null,
-        client!.readContract({ ...nftCall, functionName: "transferVersion", args: [id] }),
+        reads.readContract({ ...nftCall, functionName: "transferVersion", args: [id] }),
       ]);
+      const listing = listingId
+        ? await reads.readContract({ ...marketCall, functionName: "listings", args: [listingId] })
+        : null;
       const tokenApproved = tokenApproval.toLowerCase() === contracts.market!.toLowerCase();
       const active =
         !!listing &&
@@ -172,9 +181,23 @@ export function useToken(id: bigint) {
         listing[0].toLowerCase() === owner.toLowerCase() &&
         listing[4] === version &&
         (allApproval || tokenApproved);
-      return { id, owner, uri, creator, tokenApproved, allApproval, listingId, listing, active };
+      return { tokenApproved, allApproval, listingId, listing, active };
     },
   });
+  return {
+    data: core.data && {
+      ...core.data,
+      tokenApproved: extra.data?.tokenApproved ?? false,
+      allApproval: extra.data?.allApproval ?? false,
+      listingId: extra.data?.listingId,
+      listing: extra.data?.listing ?? null,
+      active: extra.data?.active ?? false,
+      saleReady: extra.isSuccess,
+    },
+    isPending: core.isPending,
+    error: core.error,
+    refetch: () => Promise.all([core.refetch(), extra.refetch()]),
+  };
 }
 export function useMetadata(uri?: string) {
   return useQuery({
