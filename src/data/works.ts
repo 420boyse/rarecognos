@@ -13,6 +13,17 @@ export type Work = {
 
 export const works: Work[] = [
   {
+    id: "founder",
+    title: "Founder",
+    medium: "Blackened chrome",
+    kind: "sculpture",
+    year: "2026",
+    image: "/art/founder.jpg",
+    caption: "LitVM",
+    description:
+      "A chrome bust of the LitVM founder. Hair, beard, and collar are cut from the same metal. Studio study, not a live listing.",
+  },
+  {
     id: "lit-mark",
     title: "Lit Mark",
     medium: "Chrome and enamel",
