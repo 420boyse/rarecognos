@@ -7,7 +7,7 @@ import { mediaURL, nftCall } from "@/lib/nft/data";
 import { assertChain, records, resumeTransaction, transactionError, type transact } from "@/lib/nft/transaction";
 import { dropsConfigured } from "@/lib/nft/config";
 import { createDrop, DropCreated } from "./nft-drops";
-export const uploadAPI = (import.meta.env.VITE_UPLOAD_API_URL || "").replace(/\/$/, "");
+export const uploadAPI = (import.meta.env.VITE_UPLOAD_API_URL || "/api/upload").replace(/\/$/, "");
 type Prepared = {
   uri: string;
   image: string;
@@ -48,6 +48,7 @@ export function NFTCreate({
   const pending = records().find(r => r.status === "pending" && r.chainId === chain.id && r.wallet.toLowerCase() === account.address?.toLowerCase());
   const currentAccount = useRef(account.address);
   currentAccount.current = account.address;
+  const fileRef = useRef<HTMLInputElement>(null);
   const key = `rarecognos.prepared.v2:${chain.id}:${contracts.collection}:${account.address?.toLowerCase()}`;
   const service = useQuery({
     queryKey: ["upload-status", uploadAPI],
@@ -75,6 +76,16 @@ export function NFTCreate({
     setPreview(url);
     return () => URL.revokeObjectURL(url);
   }, [file]);
+
+  function acceptFile(next?: File) {
+    if (!next) return;
+    if (!["image/png", "image/jpeg", "image/webp"].includes(next.type) || next.size > 3 * 1024 * 1024) {
+      setProgress("Choose PNG, JPEG or WebP up to 3 MB");
+      return;
+    }
+    setFile(next);
+    setProgress("");
+  }
   async function prepare() {
     if (!file || !account.address || !wallet.data || !rights || uploading) return;
     setUploading(true);
@@ -142,45 +153,37 @@ export function NFTCreate({
   const validEdition = /^\d+$/.test(supply) && /^\d+$/.test(limit) && BigInt(supply) > 0n && BigInt(limit) > 0n && BigInt(limit) <= BigInt(supply) && symbol.trim().length > 0 && symbol.trim().length <= 32 && (!start && !end || !!start && !!end && new Date(start).getTime() < new Date(end).getTime()) && /^\d+(\.\d{1,18})?$/.test(price || "0");
   return (
     <div className="creation-grid">
-      <div className="art-preview">
+      <div
+        className={prepared || preview ? "art-preview" : "art-preview is-empty"}
+        onDragOver={(e) => {
+          if (!prepared) e.preventDefault();
+        }}
+        onDrop={(e) => {
+          if (prepared) return;
+          e.preventDefault();
+          acceptFile(e.dataTransfer.files?.[0]);
+        }}
+      >
         {prepared || preview ? (
           <img
             src={prepared ? mediaURL(prepared.image) : preview}
             alt={prepared?.name || name || "Artwork preview"}
           />
         ) : (
-          <div>
-            <h3>Your work belongs here.</h3>
-            <p>Upload an image to preview your NFT.</p>
-          </div>
+          <button type="button" className="preview-empty" disabled={disabled} onClick={() => fileRef.current?.click()}>
+            <strong>Drop artwork here</strong>
+            <span>or click to choose · PNG, JPEG, WebP · 3 MB</span>
+          </button>
         )}
       </div>
       <div className="creation-form">
-        <div className="gallery-controls" aria-label="Creation type"><button type="button" aria-pressed={kind === "single"} onClick={() => setKind("single")}>1/1 artwork</button><button type="button" aria-pressed={kind === "edition"} onClick={() => setKind("edition")}>Limited edition</button></div>
+        <div className="kind-toggle" role="group" aria-label="Creation type"><button type="button" aria-pressed={kind === "single"} onClick={() => setKind("single")}>1/1 artwork</button><button type="button" aria-pressed={kind === "edition"} onClick={() => setKind("edition")}>Limited edition</button></div>
         <h3>{prepared ? (kind === "edition" ? "Ready to launch" : "Ready to mint") : kind === "edition" ? "Create a limited edition" : "Create a 1/1 work"}</h3>
         <p>
-          One token for this metadata record. Reusing an image does not prove originality or
-          copyright.
+          {kind === "edition"
+            ? "A fixed supply from one artwork. Collectors mint from that edition."
+            : "One token for this record. Reusing an image does not prove originality."}
         </p>
-        {!uploadAPI || service.error || service.data?.enabled === false ? (
-          <p className="market-notice" role="status">
-            Permanent uploads are not available yet.{" "}
-            {service.error
-              ? "The upload service could not be reached."
-              : "The storage service needs to be configured."}{" "}
-            {uploadAPI && (
-              <button className="nft-button" onClick={() => void service.refetch()}>
-                Retry service
-              </button>
-            )}
-          </p>
-        ) : (
-          service.data?.mode === "local-demo" && (
-            <p className="market-notice">
-              Local demo storage. These files are not pinned to the public IPFS network.
-            </p>
-          )
-        )}
         {prepared ? (
           <>
             {pending && <button className="nft-button" disabled={busy} onClick={async () => { if (!client) return; setProgress("Checking transaction receipt…"); try { await resumeTransaction(client, pending, setProgress); } catch (e) { setProgress(transactionError(e)); } }}>Recheck pending transaction (does not resend)</button>}
@@ -230,28 +233,22 @@ export function NFTCreate({
           </>
         ) : (
           <>
-            <label>
-              Artwork image <span>PNG, JPEG or WebP · max 5 MB</span>
-              <input
-                type="file"
-                accept="image/png,image/jpeg,image/webp"
-                disabled={disabled}
-                onChange={(e) => {
-                  const f = e.target.files?.[0];
-                  if (
-                    f &&
-                    (!["image/png", "image/jpeg", "image/webp"].includes(f.type) ||
-                      f.size > 5 * 1024 * 1024)
-                  ) {
-                    setProgress("Choose PNG, JPEG or WebP up to 5 MB");
-                    e.target.value = "";
-                    return;
-                  }
-                  setFile(f);
-                  setProgress("");
-                }}
-              />
-            </label>
+            <input
+              ref={fileRef}
+              className="preview-file"
+              type="file"
+              accept="image/png,image/jpeg,image/webp"
+              disabled={disabled}
+              onChange={(e) => {
+                acceptFile(e.target.files?.[0]);
+                e.target.value = "";
+              }}
+            />
+            {file && (
+              <button type="button" className="nft-button" disabled={disabled} onClick={() => fileRef.current?.click()}>
+                Replace image · {file.name}
+              </button>
+            )}
             <label>
               Work name
               <input
@@ -280,6 +277,21 @@ export function NFTCreate({
               />
               I own this artwork or have permission to publish it as an NFT.
             </label>
+            {!service.data?.enabled && (
+              <div className="market-notice" role="status">
+                {service.isLoading
+                  ? "Checking storage…"
+                  : service.isError
+                    ? "Upload service could not be reached."
+                    : "Permanent storage needs a Pinata key on the server (PINATA_JWT)."}
+                <button type="button" className="nft-button" onClick={() => void service.refetch()}>
+                  Retry
+                </button>
+              </div>
+            )}
+            {service.data?.mode === "local-demo" && (
+              <p className="market-notice">Local demo storage. These files are not on public IPFS.</p>
+            )}
             <button
               className="primary-action"
               disabled={
