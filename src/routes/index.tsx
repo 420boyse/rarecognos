@@ -25,7 +25,11 @@ function Home() {
             ? "Create"
             : location.hash === "#my-nfts"
               ? "My NFTs"
-              : "Explore",
+              : location.hash === "#quest"
+                ? "Quest"
+                : location.hash === "#referral"
+                  ? "Referral"
+                  : "Explore",
       );
     update();
     window.addEventListener("hashchange", update);
@@ -42,7 +46,7 @@ function Home() {
       <MarketHeader view={view} />
       <main>
         <section
-          className={`market-hero ${view !== "Explore" ? "market-hero--compact" : ""}`}
+          className={`market-hero ${view === "Explore" || view === "Quest" || view === "Referral" ? "" : "market-hero--compact"}`}
           aria-labelledby="hero-title"
         >
           <img
@@ -51,7 +55,6 @@ function Home() {
             alt="Nocturne, a blackened-chrome sculpture"
             fetchPriority="high"
           />
-          <EyeMark className="hero-eye-accent" />
           <div className="hero-content">
             <h1 id="hero-title" aria-label="An eye for the rare.">
               <span aria-hidden="true">
@@ -146,6 +149,22 @@ function Home() {
           </ul>
         </section>
         <NFTDeploy />
+        <section id="quest" className="market-section" aria-labelledby="quest-title">
+          <div className="section-heading">
+            <div>
+              <h2 id="quest-title">Quest</h2>
+              <p>Not live. No points and no rewards on this testnet.</p>
+            </div>
+          </div>
+        </section>
+        <section id="referral" className="market-section" aria-labelledby="referral-title">
+          <div className="section-heading">
+            <div>
+              <h2 id="referral-title">Referral</h2>
+              <p>Not live. Invites do not pay out.</p>
+            </div>
+          </div>
+        </section>
       </main>
       <footer className="market-footer">
         <Wordmark />
