@@ -118,7 +118,6 @@ export function FanStackNFT({
       if (overlay) overlay.style.opacity = isGhost ? "0" : String(Math.min(0.4, (abs / EDGE_SLOT) * 0.4));
     });
 
-    // Static slots
     const edgeScale = Math.max(0.5, 1 - EDGE_SLOT * SCALE_STEP);
     const edgeW = size * edgeScale;
     const edgeH = height * edgeScale;
@@ -131,11 +130,12 @@ export function FanStackNFT({
       const sign = idx === 0 ? -1 : 1;
       el.style.width = `${edgeW}px`;
       el.style.height = `${edgeH}px`;
+      el.style.marginLeft = `${-edgeW / 2}px`;
+      el.style.marginTop = `${-edgeH / 2}px`;
       el.style.borderRadius = `${CARD_RADIUS * edgeScale}px`;
       el.style.transform = `translate3d(${sign * edgeTx}px, 0, 0) rotate(${sign * edgeRot}deg)`;
     });
 
-    // Slot images
     const leftIdx = wrapIndex(Math.floor(scrollPos.current) - EDGE_SLOT, N);
     const rightIdx = wrapIndex(Math.ceil(scrollPos.current) + EDGE_SLOT, N);
     if (leftImgRef.current) leftImgRef.current.src = cards[leftIdx]?.image || "";
@@ -223,7 +223,6 @@ export function FanStackNFT({
         onPointerCancel={onPointerUp}
         style={{ height: cardSize * CARD_ASPECT + 60 }}
       >
-        {/* Static edge slots */}
         <div ref={slotLeftRef} className="fan-slot">
           <img ref={leftImgRef} alt="" />
           <div className="fan-slot-overlay" />
@@ -233,7 +232,6 @@ export function FanStackNFT({
           <div className="fan-slot-overlay" />
         </div>
 
-        {/* Animated cards */}
         {cards.map((card, i) => (
           <div
             key={card.id}
