@@ -127,3 +127,10 @@
     width: auto;
   }
 }
+
+.letter-wrap {
+  padding-right: 0.16em;
+  margin-right: -0.16em;
+  padding-left: 0.03em;
+  margin-left: -0.03em;
+}
