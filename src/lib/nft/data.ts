@@ -14,7 +14,7 @@ export function mediaURL(uri: string) {
     const path = uri.slice(7);
     if (!/^[a-zA-Z0-9]+(?:\/[a-zA-Z0-9._-]+)*$/.test(path)) throw Error("Invalid IPFS URI");
     return (
-      (import.meta.env.VITE_IPFS_GATEWAY || "https://ipfs.io/ipfs/").replace(/\/?$/, "/") + path
+      (import.meta.env.VITE_IPFS_GATEWAY || "https://gateway.pinata.cloud/ipfs/").replace(/\/?$/, "/") + path
     );
   }
   const u = new URL(uri);

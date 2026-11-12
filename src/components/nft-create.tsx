@@ -166,7 +166,7 @@ export function NFTCreate({
       >
         {prepared || preview ? (
           <img
-            src={prepared ? mediaURL(prepared.image) : preview}
+            src={preview || mediaURL(prepared!.image)}
             alt={prepared?.name || name || "Artwork preview"}
           />
         ) : (
