@@ -11,6 +11,9 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as ReferralRouteImport } from './routes/referral'
 import { Route as QuestRouteImport } from './routes/quest'
+import { Route as ApiUploadStatusRouteImport } from './routes/api/upload/status'
+import { Route as ApiUploadPrepareRouteImport } from './routes/api/upload/prepare'
+import { Route as ApiUploadChallengeRouteImport } from './routes/api/upload/challenge'
 import { Route as IndexRouteImport } from './routes/index'
 
 const ReferralRoute = ReferralRouteImport.update({
@@ -23,6 +26,21 @@ const QuestRoute = QuestRouteImport.update({
   path: '/quest',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiUploadStatusRoute = ApiUploadStatusRouteImport.update({
+  id: '/api/upload/status',
+  path: '/api/upload/status',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiUploadPrepareRoute = ApiUploadPrepareRouteImport.update({
+  id: '/api/upload/prepare',
+  path: '/api/upload/prepare',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiUploadChallengeRoute = ApiUploadChallengeRouteImport.update({
+  id: '/api/upload/challenge',
+  path: '/api/upload/challenge',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
@@ -31,30 +49,42 @@ const IndexRoute = IndexRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/api/upload/challenge': typeof ApiUploadChallengeRoute
+  '/api/upload/prepare': typeof ApiUploadPrepareRoute
+  '/api/upload/status': typeof ApiUploadStatusRoute
   '/quest': typeof QuestRoute
   '/referral': typeof ReferralRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/api/upload/challenge': typeof ApiUploadChallengeRoute
+  '/api/upload/prepare': typeof ApiUploadPrepareRoute
+  '/api/upload/status': typeof ApiUploadStatusRoute
   '/quest': typeof QuestRoute
   '/referral': typeof ReferralRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/api/upload/challenge': typeof ApiUploadChallengeRoute
+  '/api/upload/prepare': typeof ApiUploadPrepareRoute
+  '/api/upload/status': typeof ApiUploadStatusRoute
   '/quest': typeof QuestRoute
   '/referral': typeof ReferralRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/quest' | '/referral'
+  fullPaths: '/' | '/api/upload/challenge' | '/api/upload/prepare' | '/api/upload/status' | '/quest' | '/referral'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/quest' | '/referral'
-  id: '__root__' | '/' | '/quest' | '/referral'
+  to: '/' | '/api/upload/challenge' | '/api/upload/prepare' | '/api/upload/status' | '/quest' | '/referral'
+  id: '__root__' | '/' | '/api/upload/challenge' | '/api/upload/prepare' | '/api/upload/status' | '/quest' | '/referral'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  ApiUploadChallengeRoute: typeof ApiUploadChallengeRoute
+  ApiUploadPrepareRoute: typeof ApiUploadPrepareRoute
+  ApiUploadStatusRoute: typeof ApiUploadStatusRoute
   QuestRoute: typeof QuestRoute
   ReferralRoute: typeof ReferralRoute
 }
@@ -82,11 +112,35 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ReferralRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/upload/status': {
+      id: '/api/upload/status'
+      path: '/api/upload/status'
+      fullPath: '/api/upload/status'
+      preLoaderRoute: typeof ApiUploadStatusRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/upload/prepare': {
+      id: '/api/upload/prepare'
+      path: '/api/upload/prepare'
+      fullPath: '/api/upload/prepare'
+      preLoaderRoute: typeof ApiUploadPrepareRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/upload/challenge': {
+      id: '/api/upload/challenge'
+      path: '/api/upload/challenge'
+      fullPath: '/api/upload/challenge'
+      preLoaderRoute: typeof ApiUploadChallengeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  ApiUploadChallengeRoute: ApiUploadChallengeRoute,
+  ApiUploadPrepareRoute: ApiUploadPrepareRoute,
+  ApiUploadStatusRoute: ApiUploadStatusRoute,
   QuestRoute: QuestRoute,
   ReferralRoute: ReferralRoute,
 }
