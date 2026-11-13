@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as ReferralRouteImport } from './routes/referral'
 import { Route as QuestRouteImport } from './routes/quest'
+import { Route as CreateRouteImport } from './routes/create'
 import { Route as ApiUploadStatusRouteImport } from './routes/api/upload/status'
 import { Route as ApiUploadPrepareRouteImport } from './routes/api/upload/prepare'
 import { Route as ApiUploadChallengeRouteImport } from './routes/api/upload/challenge'
@@ -41,6 +42,11 @@ const ApiUploadChallengeRoute = ApiUploadChallengeRouteImport.update({
   path: '/api/upload/challenge',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CreateRoute = CreateRouteImport.update({
+  id: '/create',
+  path: '/create',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
@@ -53,6 +59,7 @@ export interface FileRoutesByFullPath {
   '/api/upload/prepare': typeof ApiUploadPrepareRoute
   '/api/upload/status': typeof ApiUploadStatusRoute
   '/quest': typeof QuestRoute
+  '/create': typeof CreateRoute
   '/referral': typeof ReferralRoute
 }
 export interface FileRoutesByTo {
@@ -61,6 +68,7 @@ export interface FileRoutesByTo {
   '/api/upload/prepare': typeof ApiUploadPrepareRoute
   '/api/upload/status': typeof ApiUploadStatusRoute
   '/quest': typeof QuestRoute
+  '/create': typeof CreateRoute
   '/referral': typeof ReferralRoute
 }
 export interface FileRoutesById {
@@ -70,14 +78,15 @@ export interface FileRoutesById {
   '/api/upload/prepare': typeof ApiUploadPrepareRoute
   '/api/upload/status': typeof ApiUploadStatusRoute
   '/quest': typeof QuestRoute
+  '/create': typeof CreateRoute
   '/referral': typeof ReferralRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/api/upload/challenge' | '/api/upload/prepare' | '/api/upload/status' | '/quest' | '/referral'
+  fullPaths: '/' | '/api/upload/challenge' | '/api/upload/prepare' | '/api/upload/status' | '/quest' | '/create' | '/referral'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/api/upload/challenge' | '/api/upload/prepare' | '/api/upload/status' | '/quest' | '/referral'
-  id: '__root__' | '/' | '/api/upload/challenge' | '/api/upload/prepare' | '/api/upload/status' | '/quest' | '/referral'
+  to: '/' | '/api/upload/challenge' | '/api/upload/prepare' | '/api/upload/status' | '/quest' | '/create' | '/referral'
+  id: '__root__' | '/' | '/api/upload/challenge' | '/api/upload/prepare' | '/api/upload/status' | '/quest' | '/create' | '/referral'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -86,6 +95,7 @@ export interface RootRouteChildren {
   ApiUploadPrepareRoute: typeof ApiUploadPrepareRoute
   ApiUploadStatusRoute: typeof ApiUploadStatusRoute
   QuestRoute: typeof QuestRoute
+  CreateRoute: typeof CreateRoute
   ReferralRoute: typeof ReferralRoute
 }
 
@@ -103,6 +113,13 @@ declare module '@tanstack/react-router' {
       path: '/quest'
       fullPath: '/quest'
       preLoaderRoute: typeof QuestRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/create': {
+      id: '/create'
+      path: '/create'
+      fullPath: '/create'
+      preLoaderRoute: typeof CreateRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/referral': {
@@ -142,6 +159,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiUploadPrepareRoute: ApiUploadPrepareRoute,
   ApiUploadStatusRoute: ApiUploadStatusRoute,
   QuestRoute: QuestRoute,
+  CreateRoute: CreateRoute,
   ReferralRoute: ReferralRoute,
 }
 export const routeTree = rootRouteImport

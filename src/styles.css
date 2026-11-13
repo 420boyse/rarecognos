@@ -321,8 +321,12 @@
   color: var(--color-fg);
   font-size: 14px;
 }
-.market-section,
-.studio-section {
+.create-page {
+  padding-top: 88px;
+}
+.create-page .market-section:first-child {
+  padding-top: 32px;
+}
   max-width: 1360px;
   margin: auto;
   padding: 72px 40px;

@@ -211,7 +211,7 @@ export function NFTCreate({
             </button>
             {kind === "edition" && !dropsConfigured && <p className="market-notice">The new drop factory is not deployed/configured on this network. Existing NFT creation remains available.</p>}
             {!!minted.data && (
-              <a className="text-link" href={`#token/${minted.data}`}>
+              <a className="text-link" href={`/#token/${minted.data}`}>
                 View minted token #{String(minted.data)}
               </a>
             )}

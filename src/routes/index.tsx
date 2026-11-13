@@ -6,7 +6,7 @@ import { works, type Work } from "@/data/works";
 import { type Availability, NFTMarket } from "@/components/nft-market";
 import { NFTDeploy } from "@/components/nft-deploy";
 import { MarketHeader } from "@/components/market-header";
-import { CreatorDashboard, NFTDropMint } from "@/components/nft-drops";
+import { NFTDropMint } from "@/components/nft-drops";
 import { FanStackNFT } from "@/components/fan-stack-nft";
 import { SiteFooter } from "@/components/site-footer";
 import { isAddress, type Address } from "viem";
@@ -16,18 +16,21 @@ function Home() {
   const [availability, setAvailability] = useState<Availability>("loading");
   const [active, setActive] = useState<Work | null>(null);
   useEffect(() => {
-    const update = () =>
+    const update = () => {
+      if (location.hash === "#create" || location.hash === "#drops") {
+        location.replace("/create");
+        return;
+      }
       setView(
         /^#token\/[1-9][0-9]{0,76}$/.test(location.hash)
           ? "Token:" + location.hash.slice(7)
           : /^#drop\/0x[0-9a-fA-F]{40}$/.test(location.hash) && isAddress(location.hash.slice(6))
             ? "Drop:" + location.hash.slice(6)
-            : location.hash === "#create" || location.hash === "#drops"
-            ? "Create"
             : location.hash === "#my-nfts"
               ? "My NFTs"
               : "Explore",
       );
+    };
     update();
     window.addEventListener("hashchange", update);
     return () => window.removeEventListener("hashchange", update);
@@ -93,7 +96,7 @@ function Home() {
               >
                 Explore NFTs <ArrowRight size={18} />
               </a>
-              <a className="secondary-action" href="#create">
+              <a className="secondary-action" href="/create">
                 Create NFT
               </a>
             </div>
@@ -104,14 +107,12 @@ function Home() {
           </div>
         </section>
         {view.startsWith("Drop:") && <NFTDropMint address={view.slice(5) as Address} />}
-        {view === "Create" && <CreatorDashboard />}
         <NFTMarket
           tab={view}
           onAvailability={setAvailability}
           onViewChange={(next) => {
             setView(next);
-            location.hash =
-              next === "My NFTs" ? "my-nfts" : next === "Create" ? "create" : "explore";
+            location.hash = next === "My NFTs" ? "my-nfts" : "explore";
           }}
         />
         {view === "Explore" && (

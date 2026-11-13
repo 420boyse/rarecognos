@@ -47,7 +47,7 @@ export function MarketHeader({ view }: { view: string }) {
           <a href="/#explore" aria-current={view === "Explore" ? "page" : undefined}>
             Explore
           </a>
-          <a href="/#create" aria-current={view === "Create" ? "page" : undefined}>
+          <a href="/create" aria-current={view === "Create" ? "page" : undefined}>
             Create
           </a>
           {member && (

@@ -235,7 +235,7 @@ export function NFTMarket({
             </a>
           )}
           {status.token && (
-            <a className="text-link" href={`#token/${status.token}`}>
+            <a className="text-link" href={`/#token/${status.token}`}>
               View token #{status.token}
             </a>
           )}
@@ -282,7 +282,7 @@ export function NFTMarket({
           {address && configured && !owned.isPending && !owned.error && !own.length && (
             <p>
               No NFTs in this wallet yet.{" "}
-              <a className="text-link" href="#create">
+              <a className="text-link" href="/create">
                 Create a work
               </a>
             </p>
