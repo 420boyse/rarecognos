@@ -263,10 +263,10 @@ export function FanStackNFT({
             type="button"
             className="fan-secondary"
             onClick={() => {
-              window.location.href = "/eyed";
+              window.location.href = "/";
             }}
           >
-            Collect
+            Back
           </button>
         </div>
       </div>

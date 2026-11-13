@@ -3,12 +3,10 @@ import { ArrowRight, ArrowUpRight, X } from "lucide-react";
 import { useEffect, useId, useRef, useState } from "react";
 import { EyeMark } from "@/components/wordmark";
 import { works, type Work } from "@/data/works";
-import { eyed, eyedNetwork, eyedPrice } from "@/data/eyed";
 import { NFTMarket } from "@/components/nft-market";
 import { NFTDeploy } from "@/components/nft-deploy";
 import { MarketHeader } from "@/components/market-header";
 import { NFTDropMint } from "@/components/nft-drops";
-import { FanStackNFT } from "@/components/fan-stack-nft";
 import { SiteFooter } from "@/components/site-footer";
 import { isAddress, type Address } from "viem";
 export const Route = createFileRoute("/")({ component: Home });
@@ -102,21 +100,6 @@ function Home() {
             <span>Blackened chrome, 2026</span>
           </div>
         </section>
-        {view === "Explore" && (
-          <FanStackNFT
-            items={eyed.map((face) => ({
-              id: face.id,
-              title: face.name,
-              image: `/art/eyed/${face.id}.jpg`,
-              medium: "100 editions",
-              price: eyedPrice,
-              network: eyedNetwork,
-            }))}
-            onSelectWork={() => {
-              window.location.href = "/eyed";
-            }}
-          />
-        )}
         {view.startsWith("Drop:") && <NFTDropMint address={view.slice(5) as Address} />}
         <NFTMarket
           tab={view}
