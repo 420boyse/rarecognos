@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { ArrowRight, ArrowUpRight, X } from "lucide-react";
 import { useEffect, useId, useRef, useState } from "react";
 import { EyeMark } from "@/components/wordmark";
+import { eyed } from "@/data/eyed";
 import { works, type Work } from "@/data/works";
 import { NFTMarket } from "@/components/nft-market";
 import { NFTDeploy } from "@/components/nft-deploy";
@@ -115,18 +116,21 @@ function Home() {
             <div className="section-heading">
               <div>
                 <h2 id="collection-title">Eyed</h2>
-                <p>Nine original faces. A first look, not a listing wall.</p>
+                <p>A set of nine. Not a listing wall.</p>
               </div>
+              <a className="text-link" href="/eyed">
+                Open the set
+              </a>
             </div>
             <ul className="face-grid">
-              {Array.from({ length: 9 }, (_, i) => {
-                const n = String(i + 1).padStart(2, "0");
-                return (
-                  <li key={n}>
-                    <img src={`/art/faces/${n}.png`} alt="" />
-                  </li>
-                );
-              })}
+              {eyed.map((face) => (
+                <li key={face.id}>
+                  <a href="/eyed">
+                    <img src={`/art/eyed/${face.id}.jpg`} alt={face.name} />
+                    <span>{face.name}</span>
+                  </a>
+                </li>
+              ))}
             </ul>
           </section>
         )}
