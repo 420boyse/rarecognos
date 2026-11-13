@@ -14,7 +14,6 @@ import {
 } from "@/lib/nft/transaction";
 import { NFTCreate } from "./nft-create";
 import { NFTToken } from "./nft-token";
-import { DailyCheckIn } from "./daily-check-in";
 export type Availability = "loading" | "available" | "empty" | "error" | "unconfigured";
 export function NFTMarket({
   tab,
@@ -174,6 +173,7 @@ export function NFTMarket({
     }
   }, [address, client, history]);
   const tokenId = tab.startsWith("Token:") ? tab.slice(6) : "";
+  if (!tokenId && tab !== "Create" && tab !== "My NFTs") return null;
   const ownListings =
     listings.data?.pages
       .flatMap((p) => p.listings)
@@ -323,14 +323,8 @@ export function NFTMarket({
               Load older listings
             </button>
           )}
-          <p className="market-notice">
-            Cancel removes a sale listing. Open an artwork to change its price or revoke its
-            transfer permissions.
-          </p>
         </>
-      ) : (
-        <DailyCheckIn />
-      )}
+      ) : null}
     </section>
   );
 }

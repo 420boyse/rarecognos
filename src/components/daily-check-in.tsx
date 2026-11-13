@@ -2,23 +2,23 @@ import { useState } from "react";
 import { useAccount, usePublicClient, useWalletClient } from "wagmi";
 import { parseEther } from "viem";
 import { chain } from "@/lib/nft/config";
-import { memberKey, progressFor, saveProgress, utcDay } from "@/lib/member";
+import { progressFor, saveProgress, utcDay } from "@/lib/member";
 import { transactionError } from "@/lib/nft/transaction";
 
 const TREASURY = "0x06e53d74751392ee4ac7139f611b8db3f98591f9";
 const FEE = parseEther("0.0001");
 
-export function DailyCheckIn() {
+export function DailyCheckIn({ member }: { member: string }) {
   const account = useAccount();
   const client = usePublicClient({ chainId: chain.id });
   const wallet = useWalletClient();
   const [note, setNote] = useState("");
   const [busy, setBusy] = useState(false);
-  const key = memberKey(account.address);
-  const done = key ? progressFor(key).checkin === utcDay() : false;
+  const done = member ? progressFor(member).checkin === utcDay() : false;
+  const locked = !account.address;
 
   async function checkIn() {
-    if (!account.address || !client || !wallet.data || done || busy) return;
+    if (!account.address || !member || !client || !wallet.data || done || busy) return;
     setBusy(true);
     setNote("Confirm 0.0001 zkLTC in your wallet. The network fee is separate and small.");
     try {
@@ -38,8 +38,12 @@ export function DailyCheckIn() {
       setNote("Waiting for the check-in…");
       const receipt = await client.waitForTransactionReceipt({ hash });
       if (receipt.status !== "success") throw Error("Check-in was not confirmed.");
-      const current = progressFor(key);
-      saveProgress(key, { ...current, checkin: utcDay() });
+      const current = progressFor(member);
+      saveProgress(member, {
+        ...current,
+        checkin: utcDay(),
+        xp: current.xp + (current.checkin === utcDay() ? 0 : 10),
+      });
       setNote("Checked in for today.");
     } catch (error) {
       setNote(transactionError(error));
@@ -48,16 +52,18 @@ export function DailyCheckIn() {
     }
   }
 
+  const state = done ? "done" : locked ? "locked" : "ready";
   return (
-    <div className="check-in">
+    <li className={`quest-row ${state}`}>
       <div>
-        <h3>Daily check-in</h3>
-        <p>0.0001 zkLTC, once a day. Your wallet also shows the network fee.</p>
+        <h2>Daily check-in</h2>
+        <p>{locked ? "Needs a wallet." : "0.0001 zkLTC, once a day."}</p>
+        {note && <p role="status">{note}</p>}
       </div>
-      <button className="nft-button" disabled={!account.address || done || busy} onClick={() => void checkIn()}>
-        {!account.address ? "Connect a wallet" : done ? "Checked in today" : busy ? "Confirming…" : "Check in"}
+      <span className="xp-chip">10 XP</span>
+      <button className="primary-action" disabled={locked || done || busy} onClick={() => void checkIn()}>
+        {done ? "Done" : locked ? "Locked" : busy ? "Confirming…" : "Check in"}
       </button>
-      {note && <p role="status">{note}</p>}
-    </div>
+    </li>
   );
 }

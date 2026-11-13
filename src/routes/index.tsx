@@ -3,7 +3,7 @@ import { ArrowRight, ArrowUpRight, X } from "lucide-react";
 import { useEffect, useId, useRef, useState } from "react";
 import { EyeMark } from "@/components/wordmark";
 import { works, type Work } from "@/data/works";
-import { type Availability, NFTMarket } from "@/components/nft-market";
+import { NFTMarket } from "@/components/nft-market";
 import { NFTDeploy } from "@/components/nft-deploy";
 import { MarketHeader } from "@/components/market-header";
 import { NFTDropMint } from "@/components/nft-drops";
@@ -13,7 +13,6 @@ import { isAddress, type Address } from "viem";
 export const Route = createFileRoute("/")({ component: Home });
 function Home() {
   const [view, setView] = useState("Explore");
-  const [availability, setAvailability] = useState<Availability>("loading");
   const [active, setActive] = useState<Work | null>(null);
   useEffect(() => {
     const update = () => {
@@ -88,11 +87,7 @@ function Home() {
             <div className="hero-actions">
               <a
                 className="primary-action"
-                href={
-                  availability === "empty" || availability === "unconfigured"
-                    ? "#studio"
-                    : "#explore"
-                }
+                href="#collection"
               >
                 Explore NFTs <ArrowRight size={18} />
               </a>
@@ -109,12 +104,32 @@ function Home() {
         {view.startsWith("Drop:") && <NFTDropMint address={view.slice(5) as Address} />}
         <NFTMarket
           tab={view}
-          onAvailability={setAvailability}
+          onAvailability={() => {}}
           onViewChange={(next) => {
             setView(next);
             location.hash = next === "My NFTs" ? "my-nfts" : "explore";
           }}
         />
+        {view === "Explore" && (
+          <section id="collection" className="studio-section" aria-labelledby="collection-title">
+            <div className="section-heading">
+              <div>
+                <h2 id="collection-title">Eyed</h2>
+                <p>Nine original faces. A first look, not a listing wall.</p>
+              </div>
+            </div>
+            <ul className="face-grid">
+              {Array.from({ length: 9 }, (_, i) => {
+                const n = String(i + 1).padStart(2, "0");
+                return (
+                  <li key={n}>
+                    <img src={`/art/faces/${n}.png`} alt="" />
+                  </li>
+                );
+              })}
+            </ul>
+          </section>
+        )}
         {view === "Explore" && (
           <FanStackNFT
             items={works.map((w) => ({

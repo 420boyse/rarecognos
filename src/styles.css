@@ -479,52 +479,84 @@
   border: 1px solid var(--color-line);
   border-radius: 999px;
 }
-.find-work,
-.check-in,
-.quest-card {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: end;
-  justify-content: space-between;
-  gap: 16px 24px;
+.quest-page {
+  padding-top: 128px;
 }
-.check-in,
-.quest-card {
-  width: min(720px, 100%);
-  margin-bottom: 28px;
-  padding: 20px;
+.quest-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-width: 760px;
+  list-style: none;
+}
+.quest-row {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: 16px;
+  align-items: center;
+  padding: 18px 20px;
   border: 1px solid var(--color-line);
   border-radius: 12px;
 }
-.check-in h3,
-.quest-card h2 {
+.quest-row.done,
+.quest-row.locked {
+  opacity: 0.62;
+}
+.quest-row h2 {
   font-size: 22px;
   font-weight: 500;
 }
-.check-in p,
-.quest-card p {
+.quest-row p {
+  margin-top: 4px;
   color: rgb(245 244 239 / 0.65);
-  margin-top: 6px;
 }
-.find-work form {
-  display: flex;
-  gap: 12px;
-  align-items: end;
-  width: min(520px, 100%);
+.xp-chip {
+  font-size: 13px;
+  letter-spacing: 0.04em;
 }
-.find-work label {
-  display: flex;
-  flex-direction: column;
+.xp-track {
+  width: 160px;
+  height: 4px;
+  background: var(--color-line);
+}
+.xp-track span {
+  display: block;
+  height: 100%;
+  background: var(--color-fg);
+}
+.face-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
   gap: 8px;
-  flex: 1;
-  font-size: 14px;
+  margin: 0;
+  padding: 8px;
+  list-style: none;
+  background: #f3eee4;
 }
-.find-work input {
-  min-height: 44px;
-  border: 1px solid var(--color-line);
-  border-radius: 8px;
-  background: var(--color-surface);
-  padding: 12px;
+.face-grid img {
+  display: block;
+  width: 100%;
+  height: auto;
+  image-rendering: pixelated;
+}
+.token-more {
+  margin-top: 12px;
+}
+.token-more summary {
+  cursor: pointer;
+  color: rgb(245 244 239 / 0.65);
+}
+.token-more p,
+.token-more .nft-button {
+  margin-top: 12px;
+}
+@media (max-width: 720px) {
+  .quest-row {
+    grid-template-columns: 1fr;
+  }
+  .face-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
 }
 input,
 select {

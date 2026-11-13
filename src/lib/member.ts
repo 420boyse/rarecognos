@@ -6,7 +6,7 @@ export const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID?.trim() ||
 
 export type GmailUser = { email: string; name: string };
 
-type Progress = { xp: number; hello: boolean; checkin?: string };
+type Progress = { xp: number; hello: boolean; checkin?: string; held?: boolean };
 
 function readProgress(): Record<string, Progress> {
   try {

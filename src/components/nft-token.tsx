@@ -195,7 +195,6 @@ export function NFTToken({ id, detail = false, ready, run }: Props) {
             )}
             {isOwner && t.saleReady ? (
               <div className="token-actions">
-                <h4>Manage this work</h4><p className="uri-text">Transfer operator: {contracts.market}</p>
                 <label>
                   Price in zkLTC
                   <input
@@ -205,28 +204,9 @@ export function NFTToken({ id, detail = false, ready, run }: Props) {
                     placeholder="0.01"
                   />
                 </label>
-                {amount > 0n && (
-                  <p>Marketplace fee (0.25%, rounded down): {formatEther(amount * 25n / 10000n)} zkLTC · Seller receives: {formatEther(amount - amount * 25n / 10000n)} zkLTC on sale. Listing itself has no marketplace fee.</p>
-                )}
-                <p>1. Set a price. 2. Approve this token if needed. 3. Create the listing.</p>
-                <p>
-                  Token-specific permission:{" "}
-                  <strong>{t.tokenApproved ? "Granted" : "Not granted"}</strong>
-                  <br />
-                  Collection-wide permission:{" "}
-                  <strong>
-                    {t.allApproval
-                      ? "Granted — covers every token in this collection"
-                      : "Not granted"}
-                  </strong>
-                </p>
-                <p>
-                  Effective transfer permission:{" "}
-                  {t.tokenApproved || t.allApproval ? "Active" : "None (confirmed from chain)"}
-                </p>
-                {!(t.tokenApproved || t.allApproval) && (
+                {!(t.tokenApproved || t.allApproval) ? (
                   <button
-                    className="nft-button"
+                    className="primary-action"
                     disabled={!ready}
                     onClick={() =>
                       void run({
@@ -238,19 +218,27 @@ export function NFTToken({ id, detail = false, ready, run }: Props) {
                   >
                     Approve this token
                   </button>
+                ) : (
+                  <button
+                    className="primary-action"
+                    disabled={!ready || amount <= 0n}
+                    onClick={() =>
+                      void run({ ...marketCall, functionName: "list", args: [id, amount] })
+                    }
+                  >
+                    {t.active ? "Replace listing" : "List artwork"}
+                    {amount > 0n ? ` · ${price} zkLTC` : ""}
+                  </button>
                 )}
-                <button
-                  className="primary-action"
-                  disabled={!ready || amount <= 0n || !(t.tokenApproved || t.allApproval)}
-                  onClick={() =>
-                    void run({ ...marketCall, functionName: "list", args: [id, amount] })
-                  }
-                >
-                  {t.active ? "Replace listing" : "List artwork"}
-                  {amount > 0n ? ` · ${price} zkLTC` : ""}
-                </button>
-                {t.listing?.[3] &&
-                  t.listing[0].toLowerCase() === account.address?.toLowerCase() && (
+                <details className="token-more">
+                  <summary>More</summary>
+                  {amount > 0n && (
+                    <p>
+                      Fee 0.25%. You receive {formatEther(amount - (amount * 25n) / 10000n)} zkLTC
+                      on a sale.
+                    </p>
+                  )}
+                  {t.listing?.[3] && t.listing[0].toLowerCase() === account.address?.toLowerCase() && (
                     <button
                       className="nft-button"
                       disabled={!ready}
@@ -261,90 +249,49 @@ export function NFTToken({ id, detail = false, ready, run }: Props) {
                       Cancel listing
                     </button>
                   )}
-                <p>
-                  Cancelling removes the listing. It does not revoke transfer permissions. A
-                  replacement listing invalidates the previous price.
-                </p>
-                {t.tokenApproved && (
-                  <button
-                    className="nft-button"
-                    disabled={!ready}
-                    onClick={() =>
-                      void run({ ...nftCall, functionName: "approve", args: [zeroAddress, id] })
-                    }
-                  >
-                    Revoke this token’s permission
-                  </button>
-                )}
-                {t.allApproval && (
-                  <button
-                    className="nft-button"
-                    disabled={!ready}
-                    onClick={() => setConfirmAll(true)}
-                  >
-                    Revoke collection-wide permission
-                  </button>
-                )}
-                {confirmAll && t.allApproval && (
-                  <div className="permission-confirm">
-                    <p>
-                      This removes the marketplace’s permission for every NFT you own in this
-                      collection. Existing token-specific permissions remain and must be revoked
-                      separately.
-                    </p>
+                  {t.tokenApproved && (
                     <button
                       className="nft-button"
                       disabled={!ready}
-                      onClick={() => {
-                        setConfirmAll(false);
-                        void run({
-                          ...nftCall,
-                          functionName: "setApprovalForAll",
-                          args: [contracts.market!, false],
-                        });
-                      }}
+                      onClick={() =>
+                        void run({ ...nftCall, functionName: "approve", args: [zeroAddress, id] })
+                      }
                     >
-                      Confirm revoke for entire collection
+                      Revoke this token’s permission
                     </button>
-                    <button className="nft-button" onClick={() => setConfirmAll(false)}>
-                      Keep permission
+                  )}
+                  {t.allApproval && (
+                    <button className="nft-button" disabled={!ready} onClick={() => setConfirmAll(true)}>
+                      Revoke collection-wide permission
                     </button>
-                  </div>
-                )}
+                  )}
+                  {confirmAll && t.allApproval && (
+                    <div className="permission-confirm">
+                      <p>This removes marketplace permission for every NFT you own here.</p>
+                      <button
+                        className="nft-button"
+                        disabled={!ready}
+                        onClick={() => {
+                          setConfirmAll(false);
+                          void run({
+                            ...nftCall,
+                            functionName: "setApprovalForAll",
+                            args: [contracts.market!, false],
+                          });
+                        }}
+                      >
+                        Confirm revoke
+                      </button>
+                      <button className="nft-button" onClick={() => setConfirmAll(false)}>
+                        Keep permission
+                      </button>
+                    </div>
+                  )}
+                </details>
               </div>
             ) : (
               t.active && (
                 <div className="token-actions">
-                  <h4>Collect this work</h4>
-                  <p>Price: {formatEther(salePrice!)} zkLTC</p>
-                  <p>Marketplace fee included in price (0.25%, rounded down): {formatEther(salePrice! * 25n / 10000n)} zkLTC · Seller receives: {formatEther(salePrice! - salePrice! * 25n / 10000n)} zkLTC.</p>
-                  <p>
-                    Estimated network fee:{" "}
-                    {fee.data !== undefined
-                      ? `${formatEther(fee.data)} zkLTC`
-                      : account.address
-                        ? fee.error
-                          ? "Estimate unavailable"
-                          : "Estimating…"
-                        : "connect wallet for estimate"}
-                  </p>
-                  <p>
-                    Estimated total:{" "}
-                    {fee.data !== undefined ? `${formatEther(salePrice! + fee.data)} zkLTC` : "—"}
-                  </p>
-                  <p>
-                    The network fee is an estimate; your wallet shows the final fee. No ERC-20
-                    allowance is required. Payment contract:{" "}
-                    <span className="uri-text">{contracts.market}</span>
-                  </p>
-                  {fee.error && (
-                    <p role="alert">
-                      {transactionError(fee.error)}{" "}
-                      <button className="nft-button" onClick={() => void fee.refetch()}>
-                        Retry estimate
-                      </button>
-                    </p>
-                  )}
                   <button
                     className="primary-action"
                     disabled={!ready || fee.data === undefined}
@@ -352,6 +299,13 @@ export function NFTToken({ id, detail = false, ready, run }: Props) {
                   >
                     Buy for {formatEther(salePrice!)} zkLTC
                   </button>
+                  <details className="token-more">
+                    <summary>More</summary>
+                    <p>
+                      Includes a 0.25% fee. Network fee
+                      {fee.data !== undefined ? `: ${formatEther(fee.data)} zkLTC` : " estimated in your wallet"}.
+                    </p>
+                  </details>
                 </div>
               )
             )}
