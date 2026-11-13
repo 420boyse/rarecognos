@@ -2,7 +2,6 @@ import { createFileRoute } from "@tanstack/react-router";
 import { ArrowRight, ArrowUpRight, X } from "lucide-react";
 import { useEffect, useId, useRef, useState } from "react";
 import { EyeMark } from "@/components/wordmark";
-import { eyed } from "@/data/eyed";
 import { works, type Work } from "@/data/works";
 import { NFTMarket } from "@/components/nft-market";
 import { NFTDeploy } from "@/components/nft-deploy";
@@ -88,7 +87,7 @@ function Home() {
             <div className="hero-actions">
               <a
                 className="primary-action"
-                href="#collection"
+                href="/eyed"
               >
                 Explore NFTs <ArrowRight size={18} />
               </a>
@@ -111,29 +110,6 @@ function Home() {
             location.hash = next === "My NFTs" ? "my-nfts" : "explore";
           }}
         />
-        {view === "Explore" && (
-          <section id="collection" className="studio-section" aria-labelledby="collection-title">
-            <div className="section-heading">
-              <div>
-                <h2 id="collection-title">Eyed</h2>
-                <p>A set of nine. Not a listing wall.</p>
-              </div>
-              <a className="text-link" href="/eyed">
-                Open the set
-              </a>
-            </div>
-            <ul className="face-grid">
-              {eyed.map((face) => (
-                <li key={face.id}>
-                  <a href="/eyed">
-                    <img src={`/art/eyed/${face.id}.jpg`} alt={face.name} />
-                    <span>{face.name}</span>
-                  </a>
-                </li>
-              ))}
-            </ul>
-          </section>
-        )}
         {view === "Explore" && (
           <FanStackNFT
             items={works.map((w) => ({

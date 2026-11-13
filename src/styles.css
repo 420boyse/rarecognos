@@ -556,12 +556,22 @@
 }
 .eyed-set {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 140px));
-  gap: 18px 16px;
-  max-width: 480px;
+  grid-template-columns: repeat(3, 112px);
+  gap: 16px 14px;
+  width: max-content;
+  max-width: 100%;
   margin: 0;
   padding: 0;
   list-style: none;
+}
+.eyed-set li {
+  width: 112px;
+}
+.eyed-set img {
+  width: 112px;
+  height: 112px;
+  object-fit: cover;
+  background: #f3eee4;
 }
 .eyed-set span {
   color: var(--color-fg);
