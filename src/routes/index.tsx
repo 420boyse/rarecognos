@@ -3,6 +3,7 @@ import { ArrowRight, ArrowUpRight, X } from "lucide-react";
 import { useEffect, useId, useRef, useState } from "react";
 import { EyeMark } from "@/components/wordmark";
 import { works, type Work } from "@/data/works";
+import { eyed, eyedNetwork, eyedPrice } from "@/data/eyed";
 import { NFTMarket } from "@/components/nft-market";
 import { NFTDeploy } from "@/components/nft-deploy";
 import { MarketHeader } from "@/components/market-header";
@@ -101,6 +102,21 @@ function Home() {
             <span>Blackened chrome, 2026</span>
           </div>
         </section>
+        {view === "Explore" && (
+          <FanStackNFT
+            items={eyed.map((face) => ({
+              id: face.id,
+              title: face.name,
+              image: `/art/eyed/${face.id}.jpg`,
+              medium: "100 editions",
+              price: eyedPrice,
+              network: eyedNetwork,
+            }))}
+            onSelectWork={() => {
+              window.location.href = "/eyed";
+            }}
+          />
+        )}
         {view.startsWith("Drop:") && <NFTDropMint address={view.slice(5) as Address} />}
         <NFTMarket
           tab={view}
@@ -110,21 +126,6 @@ function Home() {
             location.hash = next === "My NFTs" ? "my-nfts" : "explore";
           }}
         />
-        {view === "Explore" && (
-          <FanStackNFT
-            items={works.map((w) => ({
-              id: w.id,
-              title: w.title,
-              image: w.image,
-              medium: w.medium,
-              price: undefined,
-            }))}
-            onSelectWork={(id) => {
-              const found = works.find((w) => w.id === id);
-              if (found) setActive(found);
-            }}
-          />
-        )}
         <section id="studio" className="studio-section" aria-labelledby="studio-title">
           <div className="section-heading">
             <div>

@@ -7,6 +7,7 @@ type NFTCard = {
   image: string;
   price?: string;
   medium?: string;
+  network?: string;
 };
 
 const CARD_SIZE_BASE = 280;
@@ -80,15 +81,19 @@ export function FanStackNFT({
       const size = sizeRef.current;
       const spread = size * FAN_SPREAD;
       const half = n / 2;
-      const fadeBand = Math.min(0.9, Math.max(0.45, half * 0.42));
       for (let i = 0; i < n; i++) {
         const el = cardRefs.current[i];
         if (!el) continue;
         let offset = i - scrollPos.current;
         offset = ((offset + half) % n + n) % n - half;
         const abs = Math.abs(offset);
-        const room = half - abs;
-        const fade = room >= fadeBand ? 1 : Math.max(0, room / fadeBand);
+        if (abs > 2.15) {
+          el.style.opacity = "0";
+          el.style.visibility = "hidden";
+          el.style.zIndex = "0";
+          continue;
+        }
+        const fade = abs < 0.35 ? 1 : Math.max(0, 1 - (abs - 0.35) / 1.8);
         const scale = Math.max(0.72, 1 - abs * SCALE_STEP);
         el.style.transform = `translate3d(${offset * spread}px, 0, 0) rotate(${offset * FAN_ROTATION}deg) scale(${scale})`;
         el.style.opacity = `${fade}`;
@@ -227,6 +232,11 @@ export function FanStackNFT({
           >
             <div data-image className="fan-card-image">
               <img src={card.image} alt={card.title} draggable={false} />
+              <div className="fan-card-label">
+                <strong>{card.title}</strong>
+                <span>{card.price || "—"}</span>
+                <span>{card.network || "LiteForge"}</span>
+              </div>
               <div data-overlay className="fan-card-overlay" />
             </div>
             <div data-ghost className="fan-card-ghost" />
@@ -236,7 +246,7 @@ export function FanStackNFT({
       </div>
 
       <div className="fan-detail">
-        <div className="fan-meta">{current?.medium || "Digital Art"} · RareCognos</div>
+        <div className="fan-meta">{current?.network || "LiteForge"} · {current?.medium || "Eyed"}</div>
         <h3 className="fan-title">{current?.title || "Untitled"}</h3>
         {current?.price && <div className="fan-price">{current.price}</div>}
         <div className="fan-actions">
@@ -253,8 +263,7 @@ export function FanStackNFT({
             type="button"
             className="fan-secondary"
             onClick={() => {
-              const el = document.getElementById("studio");
-              if (el) el.scrollIntoView({ behavior: "smooth" });
+              window.location.href = "/eyed";
             }}
           >
             Collect
@@ -298,8 +307,32 @@ export function FanStackNFT({
         .fan-card-image img {
           width: 100%;
           height: 100%;
-          object-fit: cover;
+          object-fit: contain;
+          background: #f3eee4;
+          image-rendering: pixelated;
           pointer-events: none;
+        }
+        .fan-card-label {
+          position: absolute;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          display: grid;
+          gap: 2px;
+          padding: 28px 14px 12px;
+          background: linear-gradient(to top, rgba(5,5,5,0.92), transparent);
+          color: #f5f4ef;
+          text-align: left;
+          pointer-events: none;
+        }
+        .fan-card-label strong {
+          font-size: 16px;
+          font-weight: 560;
+        }
+        .fan-card-label span {
+          font-size: 12px;
+          letter-spacing: 0.04em;
+          color: rgba(245,244,239,0.78);
         }
         .fan-card-overlay {
           position: absolute;

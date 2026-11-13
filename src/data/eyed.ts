@@ -1,3 +1,6 @@
+export const eyedPrice = "0.01 zkLTC";
+export const eyedNetwork = "LiteForge";
+
 export const eyed = [
   { id: "01", name: "Vanta" },
   { id: "02", name: "Lobe" },
