@@ -40,8 +40,6 @@ export function NFTMarket({
       token?: string;
     }>({ message: "" }),
     [history, setHistory] = useState<Pending[]>([]);
-  const [query, setQuery] = useState("");
-  const [queryNote, setQueryNote] = useState("");
   const address = account.address?.toLowerCase();
   const active = listings.data?.pages.flatMap((p) => p.listings).filter((l) => l.valid) || [];
   const own = owned.data?.pages.flatMap((p) => p.ids) || [];
@@ -194,6 +192,7 @@ export function NFTMarket({
       className="market-section"
       aria-labelledby="market-title"
     >
+      {(tokenId || tab === "Create" || tab === "My NFTs") && (
       <div className="section-heading">
         <div>
           <h2 id="market-title">
@@ -201,21 +200,18 @@ export function NFTMarket({
               ? "Artwork"
               : tab === "Create"
                 ? "Create an NFT"
-                : tab === "My NFTs"
-                  ? "My NFTs"
-                  : "Find a work"}
+                : "My NFTs"}
           </h2>
           <p>
             {tokenId
               ? "The artwork and its on-chain record."
               : tab === "Create"
                 ? "Your image. Your name. Your work."
-                : tab === "My NFTs"
-                  ? "Your collection and active listings."
-                  : "Search by token number. Works are not listed here on their own."}
+                : "Your collection and active listings."}
           </p>
         </div>
       </div>
+      )}
       {account.isConnected && account.chainId !== chain.id && (
         <p className="market-notice" role="alert">
           Wrong network. Switch in the top bar; your artwork and form stay here.
@@ -264,7 +260,7 @@ export function NFTMarket({
         )
       ) : tab === "My NFTs" ? (
         <>
-          {!address && <p>Connect your wallet in the top bar to see your collection.</p>}
+          {!address && <p>Log in with a wallet to see your collection.</p>}
           {owned.isLoading && <p role="status">Reading your NFTs…</p>}
           {owned.error && (
             <p role="alert">
@@ -333,35 +329,7 @@ export function NFTMarket({
           </p>
         </>
       ) : (
-        <div className="find-work">
-          <DailyCheckIn />
-          <form
-            onSubmit={(event) => {
-              event.preventDefault();
-              const value = query.trim();
-              if (!/^[1-9]\d{0,6}$/.test(value)) {
-                setQueryNote("Enter a token number.");
-                return;
-              }
-              setQueryNote("");
-              location.hash = `token/${value}`;
-            }}
-          >
-            <label>
-              Token number
-              <input
-                inputMode="numeric"
-                value={query}
-                onChange={(event) => setQuery(event.target.value)}
-                placeholder="2"
-              />
-            </label>
-            <button className="primary-action" type="submit">
-              Find
-            </button>
-          </form>
-          {queryNote && <p role="status">{queryNote}</p>}
-        </div>
+        <DailyCheckIn />
       )}
     </section>
   );

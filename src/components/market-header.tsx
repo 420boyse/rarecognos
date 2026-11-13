@@ -6,6 +6,16 @@ import { EyeMark, Wordmark } from "./wordmark";
 import { chain } from "@/lib/nft/config";
 import { transactionError } from "@/lib/nft/transaction";
 import { signInGmail, useGmail, writeGmail } from "@/lib/member";
+function GoogleMark() {
+  return (
+    <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+      <path fill="#4285F4" d="M23.49 12.27c0-.79-.07-1.54-.19-2.27H12v4.51h6.47a5.54 5.54 0 0 1-2.4 3.63v3h3.88c2.27-2.09 3.54-5.17 3.54-8.87z" />
+      <path fill="#34A853" d="M12 24c3.24 0 5.96-1.07 7.95-2.91l-3.88-3c-1.08.72-2.46 1.16-4.07 1.16-3.13 0-5.78-2.11-6.73-4.96H1.26v3.09A12 12 0 0 0 12 24z" />
+      <path fill="#FBBC05" d="M5.27 14.29A7.2 7.2 0 0 1 4.89 12c0-.79.14-1.56.38-2.29V6.62H1.26A12 12 0 0 0 0 12c0 1.94.46 3.77 1.26 5.38l4.01-3.09z" />
+      <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.45-3.45C17.95 1.19 15.24 0 12 0 7.31 0 3.26 2.69 1.26 6.62l4.01 3.09C6.22 6.86 8.87 4.75 12 4.75z" />
+    </svg>
+  );
+}
 export function MarketHeader({ view }: { view: string }) {
   const account = useAccount(),
     connect = useConnect(),
@@ -60,21 +70,6 @@ export function MarketHeader({ view }: { view: string }) {
           </a>
         </nav>
         <div className="market-wallet">
-          {gmail ? (
-            <button className="wallet-button" onClick={() => writeGmail(null)} title={gmail.email}>
-              {gmail.email.split("@")[0]}
-            </button>
-          ) : (
-            <button
-              className="wallet-button"
-              onClick={() => {
-                setError("");
-                void signInGmail().catch((e) => setError(transactionError(e)));
-              }}
-            >
-              Gmail
-            </button>
-          )}
           <span className="network-indicator">
             <span aria-hidden="true" />
             {chain.id === 4441 ? "LiteForge Testnet" : "Local Testnet"}
@@ -92,7 +87,7 @@ export function MarketHeader({ view }: { view: string }) {
             <Dropdown.Root>
               <Dropdown.Trigger
                 className={"wallet-button " + (wrong ? "wallet-address-compact" : "")}
-                aria-label={`Wallet ${address}`}
+                aria-label={`Account ${address}`}
               >
                 <span>{address}</span>
                 <ChevronDown size={14} />
@@ -100,51 +95,86 @@ export function MarketHeader({ view }: { view: string }) {
               <Dropdown.Portal>
                 <Dropdown.Content className="wallet-menu" align="end" sideOffset={12}>
                   <Dropdown.Label className="wallet-menu-label">
-                    Connected wallet<span>{address}</span>
+                    Wallet<span>{address}</span>
                   </Dropdown.Label>
+                  {gmail && (
+                    <Dropdown.Label className="wallet-menu-label">
+                      Gmail<span>{gmail.email}</span>
+                    </Dropdown.Label>
+                  )}
                   <Dropdown.Item asChild>
                     <a href="/#my-nfts">
                       <Grid2X2 size={16} />
                       My NFTs
                     </a>
                   </Dropdown.Item>
+                  {!gmail && (
+                    <Dropdown.Item
+                      onSelect={() => {
+                        setError("");
+                        void signInGmail().catch((e) => setError(transactionError(e)));
+                      }}
+                    >
+                      <GoogleMark />
+                      Continue with Gmail
+                    </Dropdown.Item>
+                  )}
+                  {gmail && (
+                    <Dropdown.Item onSelect={() => writeGmail(null)}>
+                      <LogOut size={16} />
+                      Sign out of Gmail
+                    </Dropdown.Item>
+                  )}
                   <Dropdown.Separator className="wallet-menu-divider" />
                   <Dropdown.Item onSelect={() => disconnect.disconnect()}>
                     <LogOut size={16} />
-                    Disconnect
+                    Disconnect wallet
                   </Dropdown.Item>
                 </Dropdown.Content>
               </Dropdown.Portal>
             </Dropdown.Root>
-          ) : connect.connectors.length > 1 ? (
+          ) : (
             <Dropdown.Root>
               <Dropdown.Trigger className="wallet-button" disabled={connecting}>
-                <Wallet size={16} />
-                {connecting ? "Connecting..." : "Connect wallet"}
+                {gmail ? gmail.email.split("@")[0] : connecting ? "Logging in..." : "Log in"}
+                <ChevronDown size={14} />
               </Dropdown.Trigger>
               <Dropdown.Portal>
-                <Dropdown.Content className="wallet-menu" align="end" sideOffset={12}>
-                  {connect.connectors.map((c) => (
-                    <Dropdown.Item key={c.uid} onSelect={() => void connectWallet(c)}>
-                      {c.name}
+                <Dropdown.Content className="wallet-menu login-menu" align="end" sideOffset={12}>
+                  <Dropdown.Label className="wallet-menu-label">Log in</Dropdown.Label>
+                  {gmail ? (
+                    <Dropdown.Item onSelect={() => writeGmail(null)}>
+                      <LogOut size={16} />
+                      Sign out of Gmail
                     </Dropdown.Item>
-                  ))}
+                  ) : (
+                    <Dropdown.Item
+                      onSelect={() => {
+                        setError("");
+                        void signInGmail().catch((e) => setError(transactionError(e)));
+                      }}
+                    >
+                      <GoogleMark />
+                      Continue with Gmail
+                    </Dropdown.Item>
+                  )}
+                  <Dropdown.Separator className="wallet-menu-divider" />
+                  {connect.connectors.length ? (
+                    connect.connectors.map((c) => (
+                      <Dropdown.Item key={c.uid} onSelect={() => void connectWallet(c)}>
+                        <Wallet size={16} />
+                        {c.name}
+                      </Dropdown.Item>
+                    ))
+                  ) : (
+                    <Dropdown.Item onSelect={() => setError("Install a browser wallet to connect.")}>
+                      <Wallet size={16} />
+                      Connect wallet
+                    </Dropdown.Item>
+                  )}
                 </Dropdown.Content>
               </Dropdown.Portal>
             </Dropdown.Root>
-          ) : (
-            <button
-              className="wallet-button"
-              disabled={connecting}
-              onClick={() => {
-                const c = connect.connectors[0];
-                if (c) void connectWallet(c);
-                else setError("Install an injected browser wallet to connect.");
-              }}
-            >
-              <Wallet size={16} />
-              {connecting ? "Connecting..." : "Connect wallet"}
-            </button>
           )}
         </div>
       </div>
