@@ -1,4 +1,4 @@
-export const haloPrice = "Not live yet";
+export const haloPrice = "0.01 zkLTC";
 export const haloNetwork = "LiteForge";
 
 export const halo = [

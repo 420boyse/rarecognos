@@ -1,0 +1,15 @@
+{
+  "name": "Ash",
+  "description": "Ash is one figure in Halo, a set of six on LiteForge.",
+  "image": "https://rarecognos.vercel.app/art/halo/06.png",
+  "attributes": [
+    {
+      "trait_type": "Collection",
+      "value": "Halo"
+    },
+    {
+      "trait_type": "Network",
+      "value": "LiteForge"
+    }
+  ]
+}

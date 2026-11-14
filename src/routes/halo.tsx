@@ -1,8 +1,14 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
+import { useAccount, usePublicClient, useWalletClient } from "wagmi";
 import { MarketHeader } from "@/components/market-header";
 import { SiteFooter } from "@/components/site-footer";
 import { halo, haloNetwork, haloPrice } from "@/data/halo";
+import { chain } from "@/lib/nft/config";
+import { haloTreasury, haloUris, readHaloAddress, saveHaloAddress } from "@/lib/nft/halo-address";
+import { abi } from "@/lib/nft/RareCognosHalo";
+import { transactionError } from "@/lib/nft/transaction";
+import type { Address } from "viem";
 
 export const Route = createFileRoute("/halo")({
   component: HaloPage,
@@ -10,13 +16,27 @@ export const Route = createFileRoute("/halo")({
 
 function HaloPage() {
   const params = new URLSearchParams(typeof window === "undefined" ? "" : window.location.search);
-  const pieceId = params.get("piece") || "";
-  const [open, setOpen] = useState(pieceId);
+  const pieceId = params.get("piece") || halo[0].id;
+  const canLaunch = params.get("setup") === "1";
+  const [open, setOpen] = useState(params.get("piece") || "");
+  const [address, setAddress] = useState<Address | undefined>();
+  const [status, setStatus] = useState("");
+  const [busy, setBusy] = useState(false);
   const cardRef = useRef<HTMLDivElement>(null);
-  const piece = halo.find((item) => item.id === open);
+  const account = useAccount();
+  const client = usePublicClient({ chainId: chain.id });
+  const wallet = useWalletClient();
+  const piece = halo.find((item) => item.id === (open || pieceId)) || halo[0];
+  const index = Math.max(0, halo.findIndex((item) => item.id === piece.id));
+  const wrong = account.isConnected && account.chainId !== chain.id;
 
   useEffect(() => {
-    if (!piece) return;
+    const saved = readHaloAddress();
+    if (saved) setAddress(saved);
+  }, []);
+
+  useEffect(() => {
+    if (!open) return;
     const node = cardRef.current;
     const previous = document.activeElement as HTMLElement | null;
     node?.querySelector<HTMLElement>("button")?.focus();
@@ -40,7 +60,60 @@ function HaloPage() {
       window.removeEventListener("keydown", onKey);
       previous?.focus();
     };
-  }, [piece]);
+  }, [open]);
+
+  const launch = async () => {
+    if (!wallet.data || !client) return;
+    setBusy(true);
+    setStatus("");
+    try {
+      const artifact = await fetch("/contracts/RareCognosHalo.json").then((res) => res.json());
+      const hash = await wallet.data.deployContract({
+        abi,
+        bytecode: artifact.bytecode,
+        args: [wallet.data.account.address, haloTreasury, haloUris()],
+      });
+      const receipt = await client.waitForTransactionReceipt({ hash });
+      if (!receipt.contractAddress) throw Error("Deployment did not return a contract.");
+      saveHaloAddress(receipt.contractAddress);
+      setAddress(receipt.contractAddress);
+    } catch (error) {
+      setStatus(transactionError(error));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const mint = async () => {
+    if (!wallet.data || !address) return;
+    setBusy(true);
+    setStatus("");
+    try {
+      await wallet.data.writeContract({
+        address,
+        abi,
+        functionName: "mint",
+        args: [BigInt(index)],
+        value: 10_000_000_000_000_000n,
+      });
+      setStatus("Mint sent.");
+    } catch (error) {
+      setStatus(transactionError(error));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const onPrimary = () => {
+    if (!address && !canLaunch) return;
+    if (!account.isConnected || wrong) {
+      setOpen("");
+      window.dispatchEvent(new Event("rarecognos-login"));
+      return;
+    }
+    if (!address) void launch();
+    else void mint();
+  };
 
   return (
     <div>
@@ -49,8 +122,13 @@ function HaloPage() {
         <div className="section-heading">
           <div>
             <h1>Halo</h1>
-            <p>Six figures. One set. Not live yet.</p>
+            <p>Six figures. 100 each. 0.01 zkLTC.</p>
           </div>
+          {canLaunch && !address && (
+            <button className="primary-action" type="button" disabled={busy} onClick={onPrimary}>
+              {busy ? "Confirming…" : "Open the drop"}
+            </button>
+          )}
         </div>
         <ul className="halo-set">
           {halo.map((item) => (
@@ -70,7 +148,8 @@ function HaloPage() {
             </li>
           ))}
         </ul>
-        {piece && (
+        {status && <p className="eyed-note" role="status">{status}</p>}
+        {open && (
           <div className="eyed-story" role="dialog" aria-modal="true" aria-labelledby="halo-story-title">
             <button type="button" className="eyed-story-backdrop" aria-label="Close" onClick={() => setOpen("")} />
             <div className="eyed-story-card" ref={cardRef}>
@@ -84,8 +163,13 @@ function HaloPage() {
                 <p>
                   {haloPrice} · {haloNetwork}
                 </p>
-                <button className="primary-action" type="button" disabled>
-                  Not live yet
+                <button
+                  className="primary-action"
+                  type="button"
+                  disabled={busy || (!address && !canLaunch)}
+                  onClick={onPrimary}
+                >
+                  {busy ? "Confirming…" : !address ? (canLaunch ? "Open the drop" : "Not live yet") : `Mint ${piece.name}`}
                 </button>
               </div>
             </div>

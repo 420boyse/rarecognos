@@ -1,0 +1,15 @@
+{
+  "name": "Lux",
+  "description": "Lux is one figure in Halo, a set of six on LiteForge.",
+  "image": "https://rarecognos.vercel.app/art/halo/01.png",
+  "attributes": [
+    {
+      "trait_type": "Collection",
+      "value": "Halo"
+    },
+    {
+      "trait_type": "Network",
+      "value": "LiteForge"
+    }
+  ]
+}
