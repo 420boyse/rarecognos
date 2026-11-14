@@ -47,11 +47,15 @@ export function FanStackNFT({
   onSelectWork,
   initialId,
   onCenter,
+  primaryLabel,
+  onPrimary,
 }: {
   items: NFTCard[];
   onSelectWork?: (id: string) => void;
   initialId?: string;
   onCenter?: (id: string) => void;
+  primaryLabel?: string;
+  onPrimary?: () => void;
 }) {
   const cards = useMemo(() => {
     const source = items.length > 0 ? items : [placeholder];
@@ -272,19 +276,21 @@ export function FanStackNFT({
             type="button"
             className="fan-primary"
             onClick={() => {
-              if (current) onSelectWork?.(current.origId || current.id);
+              if (onPrimary) onPrimary();
+              else if (current) onSelectWork?.(current.origId || current.id);
             }}
           >
-            View Details
+            {primaryLabel || "View Details"}
           </button>
           <button
             type="button"
             className="fan-secondary"
             onClick={() => {
-              window.location.href = "/";
+              if (onPrimary && current) onSelectWork?.(current.origId || current.id);
+              else window.location.href = "/";
             }}
           >
-            Back
+            {onPrimary ? "View Details" : "Back"}
           </button>
         </div>
       </div>

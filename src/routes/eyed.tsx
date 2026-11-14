@@ -1,9 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { useAccount, usePublicClient, useReadContract, useWalletClient } from "wagmi";
+import { useAccount, usePublicClient, useWalletClient } from "wagmi";
 import { FanStackNFT } from "@/components/fan-stack-nft";
 import { MarketHeader } from "@/components/market-header";
-import { NetworkHelp } from "@/components/network-help";
 import { SiteFooter } from "@/components/site-footer";
 import { eyed, eyedNetwork, eyedPrice } from "@/data/eyed";
 import { chain } from "@/lib/nft/config";
@@ -23,6 +22,7 @@ function EyedPage() {
   const [address, setAddress] = useState<Address | undefined>();
   const [status, setStatus] = useState("");
   const [busy, setBusy] = useState(false);
+  const [story, setStory] = useState(false);
   useEffect(() => {
     const saved = readEyedAddress();
     if (saved) setAddress(saved);
@@ -30,16 +30,9 @@ function EyedPage() {
   const account = useAccount();
   const client = usePublicClient({ chainId: chain.id });
   const wallet = useWalletClient();
-  const piece = Math.max(0, eyed.findIndex((face) => face.id === center));
-  const minted = useReadContract({
-    address,
-    abi,
-    functionName: "mintedOf",
-    args: [BigInt(piece)],
-    query: { enabled: Boolean(address) },
-  });
+  const piece = Math.max(0, eyed.findIndex((item) => item.id === center));
   const wrong = account.isConnected && account.chainId !== chain.id;
-  const left = minted.data === undefined ? null : 100 - Number(minted.data);
+  const face = eyed[piece];
 
   const launch = async () => {
     if (!wallet.data || !client) return;
@@ -56,7 +49,7 @@ function EyedPage() {
       if (!receipt.contractAddress) throw Error("Deployment did not return a contract.");
       saveEyedAddress(receipt.contractAddress);
       setAddress(receipt.contractAddress);
-      setStatus(`Eyed is live at ${receipt.contractAddress}`);
+      setStatus("");
     } catch (e) {
       setStatus(transactionError(e));
     } finally {
@@ -76,7 +69,7 @@ function EyedPage() {
         args: [BigInt(piece)],
         value: 10_000_000_000_000_000n,
       });
-      setStatus(`Mint sent. ${hash}`);
+      setStatus("Mint sent.");
     } catch (e) {
       setStatus(transactionError(e));
     } finally {
@@ -90,32 +83,57 @@ function EyedPage() {
       <main className="eyed-page">
         <FanStackNFT
           initialId={pieceId}
-          onCenter={setCenter}
-          items={eyed.map((face) => ({
-            id: face.id,
-            title: face.name,
-            image: `/art/eyed/${face.id}.jpg`,
+          onCenter={(id) => {
+            setCenter(id);
+            setStory(false);
+          }}
+          primaryLabel={busy ? "Confirming…" : !address ? "Mint" : `Mint ${face?.name || ""}`}
+          onPrimary={() => {
+            if (!account.isConnected || wrong) {
+              setStatus("Connect a wallet on LiteForge.");
+              return;
+            }
+            if (!address) void launch();
+            else void mint();
+          }}
+          onSelectWork={() => setStory(true)}
+          items={eyed.map((item) => ({
+            id: item.id,
+            title: item.name,
+            image: `/art/eyed/${item.id}.jpg`,
             medium: "100 editions",
             price: eyedPrice,
             network: eyedNetwork,
           }))}
         />
-        <div className="eyed-mint">
-          {!address && <p>Not on testnet yet. Your wallet launches the collection once.</p>}
-          {address && <p>{left === null ? "Reading supply…" : `${left} of 100 left`} · {eyedPrice} · {eyedNetwork}</p>}
-          {wrong || !account.isConnected ? (
-            <NetworkHelp />
-          ) : !address ? (
-            <button className="primary-action" type="button" disabled={busy} onClick={() => void launch()}>
-              {busy ? "Launching…" : "Launch Eyed"}
-            </button>
-          ) : (
-            <button className="primary-action" type="button" disabled={busy || left === 0} onClick={() => void mint()}>
-              {busy ? "Minting…" : `Mint ${eyed[piece]?.name || "this piece"}`}
-            </button>
-          )}
-          {status && <p role="status">{status}</p>}
-        </div>
+        {status && <p className="eyed-note" role="status">{status}</p>}
+        {story && face && (
+          <div className="eyed-story" role="dialog" aria-modal="true" aria-labelledby="eyed-story-title">
+            <button type="button" className="eyed-story-backdrop" aria-label="Close" onClick={() => setStory(false)} />
+            <div className="eyed-story-card">
+              <img src={`/art/eyed/${face.id}.jpg`} alt="" />
+              <div>
+                <h2 id="eyed-story-title">{face.name}</h2>
+                <p>{face.story}</p>
+                <button
+                  className="primary-action"
+                  type="button"
+                  disabled={busy}
+                  onClick={() => {
+                    if (!account.isConnected || wrong) {
+                      setStatus("Connect a wallet on LiteForge.");
+                      return;
+                    }
+                    if (!address) void launch();
+                    else void mint();
+                  }}
+                >
+                  {busy ? "Confirming…" : `Mint ${face.name}`}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </main>
       <SiteFooter exploreHref="/explore" />
     </div>
