@@ -86,7 +86,7 @@ function Home() {
             <div className="hero-actions">
               <a
                 className="primary-action"
-                href="/eyed"
+                href="/explore"
               >
                 Explore NFTs <ArrowRight size={18} />
               </a>

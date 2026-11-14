@@ -1,6 +1,6 @@
 import { Wordmark } from "./wordmark";
 
-export function SiteFooter({ exploreHref = "/#explore" }: { exploreHref?: string }) {
+export function SiteFooter({ exploreHref = "/explore" }: { exploreHref?: string }) {
   return (
     <footer className="market-footer">
       <Wordmark />

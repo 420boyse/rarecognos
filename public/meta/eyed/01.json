@@ -1,0 +1,15 @@
+{
+  "name": "Vanta",
+  "description": "Vanta is one face in Eyed, a set of nine on LiteForge.",
+  "image": "https://rarecognos.vercel.app/art/eyed/01.jpg",
+  "attributes": [
+    {
+      "trait_type": "Collection",
+      "value": "Eyed"
+    },
+    {
+      "trait_type": "Network",
+      "value": "LiteForge"
+    }
+  ]
+}

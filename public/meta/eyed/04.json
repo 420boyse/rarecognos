@@ -1,0 +1,15 @@
+{
+  "name": "Spire",
+  "description": "Spire is one face in Eyed, a set of nine on LiteForge.",
+  "image": "https://rarecognos.vercel.app/art/eyed/04.jpg",
+  "attributes": [
+    {
+      "trait_type": "Collection",
+      "value": "Eyed"
+    },
+    {
+      "trait_type": "Network",
+      "value": "LiteForge"
+    }
+  ]
+}

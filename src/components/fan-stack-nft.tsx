@@ -45,9 +45,13 @@ const placeholder: NFTCard = {
 export function FanStackNFT({
   items,
   onSelectWork,
+  initialId,
+  onCenter,
 }: {
   items: NFTCard[];
   onSelectWork?: (id: string) => void;
+  initialId?: string;
+  onCenter?: (id: string) => void;
 }) {
   const cards = useMemo(() => {
     const source = items.length > 0 ? items : [placeholder];
@@ -68,10 +72,13 @@ export function FanStackNFT({
   const sizeRef = useRef(CARD_SIZE_BASE);
   const countRef = useRef(cards.length);
   const centeredRef = useRef(0);
+  const started = useRef(false);
 
   const [cardSize, setCardSize] = useState(CARD_SIZE_BASE);
   const [centered, setCentered] = useState(0);
 
+  const onCenterRef = useRef(onCenter);
+  onCenterRef.current = onCenter;
   sizeRef.current = cardSize;
   countRef.current = cards.length;
 
@@ -110,6 +117,8 @@ export function FanStackNFT({
       if (next !== centeredRef.current) {
         centeredRef.current = next;
         setCentered(next);
+        const id = cards[next]?.origId || cards[next]?.id;
+        if (id) onCenterRef.current?.(id);
       }
     };
 
@@ -136,7 +145,7 @@ export function FanStackNFT({
     };
     raf = requestAnimationFrame(loop);
     return () => cancelAnimationFrame(raf);
-  }, []);
+  }, [cards]);
 
   useEffect(() => {
     const el = containerRef.current;
@@ -151,6 +160,15 @@ export function FanStackNFT({
     el.addEventListener("wheel", onWheel, { passive: false });
     return () => el.removeEventListener("wheel", onWheel);
   }, []);
+
+  useEffect(() => {
+    if (started.current || !initialId) return;
+    const index = cards.findIndex((card) => (card.origId || card.id) === initialId);
+    if (index >= 0) {
+      scrollPos.current = index;
+      started.current = true;
+    }
+  }, [cards, initialId]);
 
   useEffect(() => {
     const onResize = () => setCardSize(getCardSize());
