@@ -83,6 +83,7 @@ function Home() {
               <br />
               Yours to discover, create, and collect.
             </p>
+            <p className="hero-testnet">LiteForge testnet. zkLTC has no value.</p>
             <div className="hero-actions">
               <a className="primary-action" href="/explore">
                 Explore NFTs <ArrowRight size={18} />

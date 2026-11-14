@@ -276,6 +276,13 @@
   color: rgb(245 244 239 / 0.75);
   font-size: 16px;
 }
+.hero-testnet {
+  margin-top: 12px;
+  font-size: 13px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: rgb(245 244 239 / 0.5);
+}
 .hero-actions {
   display: flex;
   gap: 12px;
