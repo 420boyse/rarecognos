@@ -177,7 +177,7 @@ export function NFTCreate({
         )}
       </div>
       <div className="creation-form">
-        <div className="kind-toggle" role="group" aria-label="Creation type"><button type="button" aria-pressed={kind === "single"} onClick={() => setKind("single")}>1/1 artwork</button><button type="button" aria-pressed={kind === "edition"} onClick={() => setKind("edition")}>Limited edition</button></div>
+        <div className="kind-toggle" role="group" aria-label="Creation type"><button type="button" aria-pressed={kind === "single"} onClick={() => setKind("single")}>1/1 artwork</button>{dropsConfigured && <button type="button" aria-pressed={kind === "edition"} onClick={() => setKind("edition")}>Limited edition</button>}</div>
         <h3>{prepared ? (kind === "edition" ? "Ready to launch" : "Ready to mint") : kind === "edition" ? "Create a limited edition" : "Create a 1/1 work"}</h3>
         <p>
           {kind === "edition"

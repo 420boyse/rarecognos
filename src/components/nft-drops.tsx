@@ -93,8 +93,9 @@ export function CreatorDashboard() {
     try { await transact(client as PublicClient, wallet.data as WalletClient, { ...dropCall(address), functionName: "setMintingActive", args: [!active] }, setStatus); await cache.invalidateQueries({ queryKey: ["drop"] }); setStatus("Drop status confirmed on-chain."); }
     catch (e) { setStatus(transactionError(e)); } finally { setBusy(false); }
   }
+  if (!dropsConfigured) return null;
   return <section id="drops" className="market-section" aria-labelledby="drops-title"><div className="section-heading"><div><h2 id="drops-title">Your drops</h2><p>Creator-owned editions, independent of the existing marketplace.</p></div></div>
-    {!dropsConfigured ? <p className="market-notice">Drop factory is not configured on this network. No drop transactions can be sent.</p> : !account.address ? <p>Connect your wallet to view your drops.</p> : drops.isPending ? <p>Reading your drops…</p> : drops.error ? <p role="alert">Could not read drops. <button className="nft-button" onClick={() => void drops.refetch()}>Retry</button></p> : !drops.data?.length ? <p>No drops yet. Use Create → Limited edition to launch one.</p> : <div className="owned-grid">{drops.data.map(address => <DashboardDrop key={address} address={address} busy={busy} toggle={toggle} />)}</div>}
+    {!account.address ? <p>Connect your wallet to view your drops.</p> : drops.isPending ? <p>Reading your drops…</p> : drops.error ? <p role="alert">Could not read drops. <button className="nft-button" onClick={() => void drops.refetch()}>Retry</button></p> : !drops.data?.length ? <p>No drops yet. Use Create → Limited edition to launch one.</p> : <div className="owned-grid">{drops.data.map(address => <DashboardDrop key={address} address={address} busy={busy} toggle={toggle} />)}</div>}
     {status && <p className="market-notice" role="status">{status}</p>}
   </section>;
 }

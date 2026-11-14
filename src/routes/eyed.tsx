@@ -18,6 +18,7 @@ export const Route = createFileRoute("/eyed")({
 function EyedPage() {
   const params = new URLSearchParams(typeof window === "undefined" ? "" : window.location.search);
   const pieceId = params.get("piece") || eyed[0].id;
+  const canLaunch = params.get("setup") === "1";
   const [center, setCenter] = useState(pieceId);
   const [address, setAddress] = useState<Address | undefined>();
   const [status, setStatus] = useState("");
@@ -27,6 +28,14 @@ function EyedPage() {
     const saved = readEyedAddress();
     if (saved) setAddress(saved);
   }, []);
+  useEffect(() => {
+    if (!story) return;
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setStory(false);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [story]);
   const account = useAccount();
   const client = usePublicClient({ chainId: chain.id });
   const wallet = useWalletClient();
@@ -86,11 +95,16 @@ function EyedPage() {
           onCenter={(id) => {
             setCenter(id);
             setStory(false);
+            const next = new URLSearchParams(window.location.search);
+            next.set("piece", id);
+            history.replaceState(null, "", `${window.location.pathname}?${next}`);
           }}
-          primaryLabel={busy ? "Confirming…" : !address ? "Open the drop" : `Mint ${face?.name || ""}`}
+          primaryLabel={busy ? "Confirming…" : !address ? (canLaunch ? "Open the drop" : "Not live yet") : `Mint ${face?.name || ""}`}
           onPrimary={() => {
+            if (!address && !canLaunch) return;
             if (!account.isConnected || wrong) {
-              setStatus("Connect a wallet on LiteForge.");
+              setStory(false);
+              window.dispatchEvent(new Event("rarecognos-login"));
               return;
             }
             if (!address) void launch();
@@ -111,6 +125,9 @@ function EyedPage() {
           <div className="eyed-story" role="dialog" aria-modal="true" aria-labelledby="eyed-story-title">
             <button type="button" className="eyed-story-backdrop" aria-label="Close" onClick={() => setStory(false)} />
             <div className="eyed-story-card">
+              <button type="button" className="eyed-story-close" aria-label="Close" onClick={() => setStory(false)}>
+                ×
+              </button>
               <img src={`/art/eyed/${face.id}.jpg`} alt="" />
               <div>
                 <h2 id="eyed-story-title">{face.name}</h2>
@@ -118,17 +135,19 @@ function EyedPage() {
                 <button
                   className="primary-action"
                   type="button"
-                  disabled={busy}
+                  disabled={busy || (!address && !canLaunch)}
                   onClick={() => {
+                    if (!address && !canLaunch) return;
                     if (!account.isConnected || wrong) {
-                      setStatus("Connect a wallet on LiteForge.");
+                      setStory(false);
+                      window.dispatchEvent(new Event("rarecognos-login"));
                       return;
                     }
                     if (!address) void launch();
                     else void mint();
                   }}
                 >
-                  {busy ? "Confirming…" : `Mint ${face.name}`}
+                  {busy ? "Confirming…" : !address ? "Not live yet" : `Mint ${face.name}`}
                 </button>
               </div>
             </div>

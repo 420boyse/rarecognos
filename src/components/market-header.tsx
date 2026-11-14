@@ -1,12 +1,12 @@
 import * as Dropdown from "@radix-ui/react-dropdown-menu";
 import { ChevronDown, LogOut, Grid2X2, Wallet, X } from "lucide-react";
 import { useAccount, useConnect, useDisconnect, useSwitchChain } from "wagmi";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { EyeMark, Wordmark } from "./wordmark";
 import { chain } from "@/lib/nft/config";
 import { addLiteForge, faucetUrl } from "@/lib/nft/network";
 import { transactionError } from "@/lib/nft/transaction";
-import { signInGmail, useGmail, writeGmail } from "@/lib/member";
+import { signInGmail, useGmail, writeGmail, GOOGLE_CLIENT_ID } from "@/lib/member";
 function GoogleMark() {
   return (
     <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
@@ -23,6 +23,7 @@ export function MarketHeader({ view }: { view: string }) {
     disconnect = useDisconnect(),
     network = useSwitchChain();
   const [error, setError] = useState("");
+  const [loginOpen, setLoginOpen] = useState(false);
   const gmail = useGmail();
   const member = Boolean(account.address || gmail);
   const wrong = account.isConnected && account.chainId !== chain.id;
@@ -47,6 +48,11 @@ export function MarketHeader({ view }: { view: string }) {
       setError(transactionError(e));
     }
   };
+  useEffect(() => {
+    const open = () => setLoginOpen(true);
+    window.addEventListener("rarecognos-login", open);
+    return () => window.removeEventListener("rarecognos-login", open);
+  }, []);
   return (
     <header className="market-header">
       <div className="market-header-inner">
@@ -122,7 +128,7 @@ export function MarketHeader({ view }: { view: string }) {
                       My NFTs
                     </a>
                   </Dropdown.Item>
-                  {!gmail && (
+                  {!gmail && GOOGLE_CLIENT_ID && (
                     <Dropdown.Item
                       onSelect={() => {
                         setError("");
@@ -148,7 +154,7 @@ export function MarketHeader({ view }: { view: string }) {
               </Dropdown.Portal>
             </Dropdown.Root>
           ) : (
-            <Dropdown.Root>
+            <Dropdown.Root open={loginOpen} onOpenChange={setLoginOpen}>
               <Dropdown.Trigger className="wallet-button" disabled={connecting}>
                 {gmail ? gmail.email.split("@")[0] : connecting ? "Logging in..." : "Log in"}
                 <ChevronDown size={14} />
@@ -161,7 +167,7 @@ export function MarketHeader({ view }: { view: string }) {
                       <LogOut size={16} />
                       Sign out of Gmail
                     </Dropdown.Item>
-                  ) : (
+                  ) : GOOGLE_CLIENT_ID ? (
                     <Dropdown.Item
                       onSelect={() => {
                         setError("");
@@ -171,7 +177,7 @@ export function MarketHeader({ view }: { view: string }) {
                       <GoogleMark />
                       Continue with Gmail
                     </Dropdown.Item>
-                  )}
+                  ) : null}
                   <Dropdown.Separator className="wallet-menu-divider" />
                   {connect.connectors.length ? (
                     connect.connectors.map((c) => (
