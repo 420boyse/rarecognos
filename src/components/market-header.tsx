@@ -81,7 +81,10 @@ export function MarketHeader({ view }: { view: string }) {
               className="network-link"
               onClick={() => {
                 setError("");
-                void addLiteForge().catch((e) => setError(transactionError(e)));
+                void (async () => {
+                  const provider = account.connector ? await account.connector.getProvider() : null;
+                  await addLiteForge(provider);
+                })().catch((e) => setError(transactionError(e)));
               }}
             >
               Add LiteForge

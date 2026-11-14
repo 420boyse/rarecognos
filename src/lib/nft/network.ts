@@ -2,8 +2,26 @@ import { liteforge } from "./config";
 
 export const faucetUrl = "https://faucet.testnet.liteforge.zeeve.net/";
 
-export async function addLiteForge() {
-  const provider = (window as Window & { ethereum?: { request: (args: unknown) => Promise<unknown> } }).ethereum;
+type WalletProvider = {
+  request: (args: { method: string; params?: unknown[] }) => Promise<unknown>;
+  isMetaMask?: boolean;
+  isPhantom?: boolean;
+  providers?: WalletProvider[];
+};
+
+function installed(): WalletProvider[] {
+  const ethereum = (window as Window & { ethereum?: WalletProvider }).ethereum;
+  if (ethereum?.providers?.length) return ethereum.providers;
+  return ethereum ? [ethereum] : [];
+}
+
+function preferMetaMask(): WalletProvider | undefined {
+  const list = installed();
+  return list.find((provider) => provider.isMetaMask && !provider.isPhantom) || list.find((provider) => !provider.isPhantom) || list[0];
+}
+
+export async function addLiteForge(preferred?: WalletProvider | null) {
+  const provider = preferred ?? preferMetaMask();
   if (!provider) throw Error("No browser wallet found.");
   await provider.request({
     method: "wallet_addEthereumChain",

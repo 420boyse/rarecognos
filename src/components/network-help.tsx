@@ -1,7 +1,9 @@
 import { useState } from "react";
+import { useAccount } from "wagmi";
 import { addLiteForge, faucetUrl } from "@/lib/nft/network";
 
 export function NetworkHelp({ add = true }: { add?: boolean }) {
+  const account = useAccount();
   const [error, setError] = useState("");
   return (
     <p className="network-help">
@@ -10,7 +12,10 @@ export function NetworkHelp({ add = true }: { add?: boolean }) {
           type="button"
           onClick={() => {
             setError("");
-            void addLiteForge().catch((e: unknown) => setError(e instanceof Error ? e.message : "Could not add the network."));
+            void (async () => {
+              const provider = account.connector ? await account.connector.getProvider() : null;
+              await addLiteForge(provider);
+            })().catch((e: unknown) => setError(e instanceof Error ? e.message : "Could not add the network."));
           }}
         >
           Add LiteForge
