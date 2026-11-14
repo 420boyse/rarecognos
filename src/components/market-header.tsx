@@ -4,7 +4,6 @@ import { useAccount, useConnect, useDisconnect, useSwitchChain } from "wagmi";
 import { useState } from "react";
 import { EyeMark, Wordmark } from "./wordmark";
 import { chain } from "@/lib/nft/config";
-import { addLiteForge, faucetUrl } from "@/lib/nft/network";
 import { transactionError } from "@/lib/nft/transaction";
 import { signInGmail, useGmail, writeGmail } from "@/lib/member";
 function GoogleMark() {
@@ -66,33 +65,12 @@ export function MarketHeader({ view }: { view: string }) {
               Quest
             </a>
           )}
-          <a href="/referral" aria-current={view === "Referral" ? "page" : undefined}>
-            Referral
-          </a>
         </nav>
         <div className="market-wallet">
           <span className="network-indicator">
             <span aria-hidden="true" />
             {chain.id === 4441 ? "LiteForge Testnet" : "Local Testnet"}
           </span>
-          {(!account.isConnected || wrong) && (
-            <button
-              type="button"
-              className="network-link"
-              onClick={() => {
-                setError("");
-                void (async () => {
-                  const provider = account.connector ? await account.connector.getProvider() : null;
-                  await addLiteForge(provider);
-                })().catch((e) => setError(transactionError(e)));
-              }}
-            >
-              Add LiteForge
-            </button>
-          )}
-          <a className="network-link" href={faucetUrl} target="_blank" rel="noreferrer">
-            Get zkLTC
-          </a>
           {wrong && (
             <button
               className="wallet-button switch-button"

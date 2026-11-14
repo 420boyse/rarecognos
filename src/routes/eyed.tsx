@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { useAccount, usePublicClient, useWalletClient } from "wagmi";
 import { FanStackNFT } from "@/components/fan-stack-nft";
 import { MarketHeader } from "@/components/market-header";
+import { NetworkHelp } from "@/components/network-help";
 import { SiteFooter } from "@/components/site-footer";
 import { eyed, eyedNetwork, eyedPrice } from "@/data/eyed";
 import { chain } from "@/lib/nft/config";
@@ -87,7 +88,7 @@ function EyedPage() {
             setCenter(id);
             setStory(false);
           }}
-          primaryLabel={busy ? "Confirming…" : !address ? "Mint" : `Mint ${face?.name || ""}`}
+          primaryLabel={busy ? "Confirming…" : !address ? "Open the drop" : `Mint ${face?.name || ""}`}
           onPrimary={() => {
             if (!account.isConnected || wrong) {
               setStatus("Connect a wallet on LiteForge.");
@@ -107,6 +108,7 @@ function EyedPage() {
           }))}
         />
         {status && <p className="eyed-note" role="status">{status}</p>}
+        <NetworkHelp />
         {story && face && (
           <div className="eyed-story" role="dialog" aria-modal="true" aria-labelledby="eyed-story-title">
             <button type="button" className="eyed-story-backdrop" aria-label="Close" onClick={() => setStory(false)} />

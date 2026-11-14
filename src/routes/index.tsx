@@ -3,6 +3,7 @@ import { ArrowRight, ArrowUpRight, X } from "lucide-react";
 import { useEffect, useId, useRef, useState } from "react";
 import { EyeMark } from "@/components/wordmark";
 import { works, type Work } from "@/data/works";
+import { eyed, eyedPrice } from "@/data/eyed";
 import { NFTMarket } from "@/components/nft-market";
 import { NFTDeploy } from "@/components/nft-deploy";
 import { MarketHeader } from "@/components/market-header";
@@ -84,11 +85,8 @@ function Home() {
               Yours to discover, create, and collect.
             </p>
             <div className="hero-actions">
-              <a
-                className="primary-action"
-                href="/explore"
-              >
-                Explore NFTs <ArrowRight size={18} />
+              <a className="primary-action" href="/eyed">
+                View Eyed <ArrowRight size={18} />
               </a>
               <a className="secondary-action" href="/create">
                 Create NFT
@@ -109,6 +107,27 @@ function Home() {
             location.hash = next === "My NFTs" ? "my-nfts" : "explore";
           }}
         />
+        <section className="studio-section" aria-labelledby="eyed-title">
+          <div className="section-heading">
+            <div>
+              <h2 id="eyed-title">Eyed</h2>
+              <p>Nine faces. 100 editions each. {eyedPrice} on LiteForge.</p>
+            </div>
+            <a className="primary-action" href="/eyed">
+              Open
+            </a>
+          </div>
+          <ul className="eyed-set">
+            {eyed.map((face) => (
+              <li key={face.id}>
+                <a href={`/eyed?piece=${face.id}`}>
+                  <img src={`/art/eyed/${face.id}.jpg`} alt="" />
+                  <span>{face.name}</span>
+                </a>
+              </li>
+            ))}
+          </ul>
+        </section>
         <section id="studio" className="studio-section" aria-labelledby="studio-title">
           <div className="section-heading">
             <div>
@@ -127,7 +146,7 @@ function Home() {
         </section>
         <NFTDeploy />
       </main>
-      <SiteFooter exploreHref="#explore" />
+      <SiteFooter exploreHref="/explore" />
       {active && <WorkDialog work={active} onClose={() => setActive(null)} />}
     </div>
   );

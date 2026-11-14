@@ -57,6 +57,20 @@ function ExplorePage() {
               </a>
             </li>
           )}
+          {!showPiece && collectionHit && (
+            <li>
+              <ul className="eyed-set">
+                {eyed.map((face) => (
+                  <li key={face.id}>
+                    <a href={`/eyed?piece=${face.id}`}>
+                      <img src={`/art/eyed/${face.id}.jpg`} alt="" />
+                      <span>{face.name}</span>
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </li>
+          )}
           {!showPiece && !collectionHit && <li className="explore-empty">Nothing matches.</li>}
         </ul>
       </main>
