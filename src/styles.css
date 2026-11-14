@@ -627,7 +627,7 @@
   gap: 12px;
   max-width: 720px;
 }
-.explore-list a {
+.explore-list > li > a {
   display: grid;
   grid-template-columns: 64px 1fr auto auto;
   gap: 16px;
@@ -820,11 +820,11 @@ select {
   .create-page {
     padding-top: 148px;
   }
-  .explore-list a {
+  .explore-list > li > a {
     grid-template-columns: 56px minmax(0, 1fr);
     gap: 12px;
   }
-  .explore-list a > span:nth-child(n + 3) {
+  .explore-list > li > a > span:nth-child(n + 3) {
     grid-column: 2;
   }
   .eyed-set {

@@ -3,7 +3,6 @@ import { useState } from "react";
 import { MarketHeader } from "@/components/market-header";
 import { SiteFooter } from "@/components/site-footer";
 import { eyed, eyedNetwork, eyedPrice } from "@/data/eyed";
-import { halo, haloNetwork, haloPrice } from "@/data/halo";
 
 export const Route = createFileRoute("/explore")({
   component: ExplorePage,
@@ -48,32 +47,6 @@ function ExplorePage() {
               </a>
             </li>
           )}
-          {!showPiece && !showHalo && haloHit && (
-            <li>
-              <a href="/halo">
-                <img src="/art/halo/01.png" alt="" />
-                <span>
-                  <strong>Halo</strong>
-                  <em>6 pieces</em>
-                </span>
-                <span>{haloPrice}</span>
-                <span>{haloNetwork}</span>
-              </a>
-            </li>
-          )}
-          {showHalo && figure && (
-            <li>
-              <a href={`/halo?piece=${figure.id}`}>
-                <img src={`/art/halo/${figure.id}.png`} alt="" />
-                <span>
-                  <strong>{figure.name}</strong>
-                  <em>Halo</em>
-                </span>
-                <span>{haloPrice}</span>
-                <span>{haloNetwork}</span>
-              </a>
-            </li>
-          )}
           {!showPiece && collectionHit && (
             <li>
               <a href="/eyed">
@@ -101,7 +74,7 @@ function ExplorePage() {
               </ul>
             </li>
           )}
-          {!showPiece && !showHalo && !collectionHit && !haloHit && <li className="explore-empty">Nothing matches.</li>}
+          {!showPiece && !collectionHit && <li className="explore-empty">Nothing matches.</li>}
         </ul>
       </main>
       <SiteFooter exploreHref="/explore" />
