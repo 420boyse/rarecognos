@@ -3,6 +3,7 @@ import { useState } from "react";
 import { MarketHeader } from "@/components/market-header";
 import { SiteFooter } from "@/components/site-footer";
 import { eyed, eyedNetwork, eyedPrice } from "@/data/eyed";
+import { halo, haloNetwork, haloPrice } from "@/data/halo";
 
 export const Route = createFileRoute("/explore")({
   component: ExplorePage,
@@ -12,8 +13,11 @@ function ExplorePage() {
   const [query, setQuery] = useState("");
   const q = query.trim().toLowerCase();
   const collectionHit = !q || "eyed".includes(q) || q.includes("eyed");
+  const haloHit = !q || "halo".includes(q) || q.includes("halo");
   const piece = eyed.find((face) => face.name.toLowerCase().includes(q));
+  const figure = halo.find((item) => item.name.toLowerCase().includes(q));
   const showPiece = Boolean(q && piece && !collectionHit);
+  const showHalo = Boolean(q && figure && !haloHit);
   return (
     <div>
       <MarketHeader view="Explore" />
@@ -27,7 +31,7 @@ function ExplorePage() {
         <input
           className="explore-search"
           value={query}
-          placeholder="Eyed, Vanta, a collection name"
+          placeholder="Eyed, Halo, a piece name"
           onChange={(event) => setQuery(event.target.value)}
         />
         <ul className="explore-list">
@@ -41,6 +45,32 @@ function ExplorePage() {
                 </span>
                 <span>{eyedPrice}</span>
                 <span>{eyedNetwork}</span>
+              </a>
+            </li>
+          )}
+          {!showPiece && !showHalo && haloHit && (
+            <li>
+              <a href="/halo">
+                <img src="/art/halo/01.png" alt="" />
+                <span>
+                  <strong>Halo</strong>
+                  <em>6 pieces</em>
+                </span>
+                <span>{haloPrice}</span>
+                <span>{haloNetwork}</span>
+              </a>
+            </li>
+          )}
+          {showHalo && figure && (
+            <li>
+              <a href={`/halo?piece=${figure.id}`}>
+                <img src={`/art/halo/${figure.id}.png`} alt="" />
+                <span>
+                  <strong>{figure.name}</strong>
+                  <em>Halo</em>
+                </span>
+                <span>{haloPrice}</span>
+                <span>{haloNetwork}</span>
               </a>
             </li>
           )}
@@ -71,7 +101,7 @@ function ExplorePage() {
               </ul>
             </li>
           )}
-          {!showPiece && !collectionHit && <li className="explore-empty">Nothing matches.</li>}
+          {!showPiece && !showHalo && !collectionHit && !haloHit && <li className="explore-empty">Nothing matches.</li>}
         </ul>
       </main>
       <SiteFooter exploreHref="/explore" />
