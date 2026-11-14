@@ -7,7 +7,7 @@ import { SiteFooter } from "@/components/site-footer";
 import { eyed, eyedNetwork, eyedPrice } from "@/data/eyed";
 
 const faces = eyed.filter((item) => item.id !== "01");
-import { chain } from "@/lib/nft/config";
+import { chain, explorer } from "@/lib/nft/config";
 import { eyedTreasury, eyedUris, readEyedAddress, saveEyedAddress } from "@/lib/nft/eyed-address";
 import { abi } from "@/lib/nft/RareCognosEyed";
 import { transactionError } from "@/lib/nft/transaction";
@@ -23,7 +23,7 @@ function EyedPage() {
   const canLaunch = params.get("setup") === "1";
   const [center, setCenter] = useState(pieceId);
   const [address, setAddress] = useState<Address | undefined>();
-  const [status, setStatus] = useState("");
+  const [receipt, setReceipt] = useState<{ hash: string; left: number } | null>(null);
   const [busy, setBusy] = useState(false);
   const [story, setStory] = useState(false);
   const storyRef = useRef<HTMLDivElement>(null);
@@ -88,9 +88,10 @@ function EyedPage() {
   };
 
   const mint = async () => {
-    if (!wallet.data || !address) return;
+    if (!wallet.data || !address || !client) return;
     setBusy(true);
     setStatus("");
+    setReceipt(null);
     try {
       const hash = await wallet.data.writeContract({
         address,
@@ -99,7 +100,12 @@ function EyedPage() {
         args: [BigInt(piece)],
         value: 10_000_000_000_000_000n,
       });
-      setStatus("Mint sent.");
+      const confirmed = await client.waitForTransactionReceipt({ hash });
+      if (confirmed.status !== "success") throw Error("Mint was not confirmed.");
+      const minted = await client.readContract({ address, abi, functionName: "mintedOf", args: [BigInt(piece)] });
+      const left = 100 - Number(minted);
+      setReceipt({ hash, left });
+      setStory(false);
     } catch (e) {
       setStatus(transactionError(e));
     } finally {
@@ -142,6 +148,27 @@ function EyedPage() {
           }))}
         />
         {status && <p className="eyed-note" role="status">{status}</p>}
+        {receipt && face && (
+          <div className="eyed-story" role="dialog" aria-modal="true" aria-labelledby="mint-receipt-title">
+            <button type="button" className="eyed-story-backdrop" aria-label="Close" onClick={() => setReceipt(null)} />
+            <div className="eyed-story-card">
+              <button type="button" className="eyed-story-close" aria-label="Close" onClick={() => setReceipt(null)}>
+                ×
+              </button>
+              <img src={`/art/eyed/${face.id}.jpg`} alt="" />
+              <div>
+                <h2 id="mint-receipt-title">Minted</h2>
+                <p>{face.name} is in this wallet.</p>
+                <p>{eyedPrice} · {receipt.left} left of 100</p>
+                {explorer && (
+                  <a href={`${explorer}/tx/${receipt.hash}`} target="_blank" rel="noreferrer">
+                    View transaction
+                  </a>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
         {story && face && (
           <div className="eyed-story" role="dialog" aria-modal="true" aria-labelledby="eyed-story-title">
             <button type="button" className="eyed-story-backdrop" aria-label="Close" onClick={() => setStory(false)} />

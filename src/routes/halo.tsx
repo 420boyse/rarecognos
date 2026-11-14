@@ -4,7 +4,7 @@ import { useAccount, usePublicClient, useWalletClient } from "wagmi";
 import { MarketHeader } from "@/components/market-header";
 import { SiteFooter } from "@/components/site-footer";
 import { halo, haloNetwork, haloPrice } from "@/data/halo";
-import { chain } from "@/lib/nft/config";
+import { chain, explorer } from "@/lib/nft/config";
 import { haloTreasury, haloUris, readHaloAddress, saveHaloAddress } from "@/lib/nft/halo-address";
 import { abi } from "@/lib/nft/RareCognosHalo";
 import { transactionError } from "@/lib/nft/transaction";
@@ -20,7 +20,7 @@ function HaloPage() {
   const canLaunch = params.get("setup") === "1";
   const [open, setOpen] = useState(params.get("piece") || "");
   const [address, setAddress] = useState<Address | undefined>();
-  const [status, setStatus] = useState("");
+  const [receipt, setReceipt] = useState<{ hash: string; left: number; name: string; id: string } | null>(null);
   const [busy, setBusy] = useState(false);
   const cardRef = useRef<HTMLDivElement>(null);
   const account = useAccount();
@@ -85,18 +85,23 @@ function HaloPage() {
   };
 
   const mint = async () => {
-    if (!wallet.data || !address) return;
+    if (!wallet.data || !address || !client) return;
     setBusy(true);
     setStatus("");
+    setReceipt(null);
     try {
-      await wallet.data.writeContract({
+      const hash = await wallet.data.writeContract({
         address,
         abi,
         functionName: "mint",
         args: [BigInt(index)],
         value: 10_000_000_000_000_000n,
       });
-      setStatus("Mint sent.");
+      const confirmed = await client.waitForTransactionReceipt({ hash });
+      if (confirmed.status !== "success") throw Error("Mint was not confirmed.");
+      const minted = await client.readContract({ address, abi, functionName: "mintedOf", args: [BigInt(index)] });
+      setReceipt({ hash, left: 100 - Number(minted), name: piece.name, id: piece.id });
+      setOpen("");
     } catch (error) {
       setStatus(transactionError(error));
     } finally {
@@ -149,6 +154,27 @@ function HaloPage() {
           ))}
         </ul>
         {status && <p className="eyed-note" role="status">{status}</p>}
+        {receipt && (
+          <div className="eyed-story" role="dialog" aria-modal="true" aria-labelledby="halo-receipt-title">
+            <button type="button" className="eyed-story-backdrop" aria-label="Close" onClick={() => setReceipt(null)} />
+            <div className="eyed-story-card">
+              <button type="button" className="eyed-story-close" aria-label="Close" onClick={() => setReceipt(null)}>
+                ×
+              </button>
+              <img src={`/art/halo/${receipt.id}.png`} alt="" />
+              <div>
+                <h2 id="halo-receipt-title">Minted</h2>
+                <p>{receipt.name} is in this wallet.</p>
+                <p>{haloPrice} · {receipt.left} left of 100</p>
+                {explorer && (
+                  <a href={`${explorer}/tx/${receipt.hash}`} target="_blank" rel="noreferrer">
+                    View transaction
+                  </a>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
         {open && (
           <div className="eyed-story" role="dialog" aria-modal="true" aria-labelledby="halo-story-title">
             <button type="button" className="eyed-story-backdrop" aria-label="Close" onClick={() => setOpen("")} />
