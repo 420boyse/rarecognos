@@ -17,6 +17,14 @@ function GoogleMark() {
     </svg>
   );
 }
+const appUrl = typeof window === "undefined" ? "https://rarecognos.vercel.app" : window.location.href;
+const walletApps = [
+  { name: "MetaMask", href: `https://metamask.app.link/dapp/${typeof window === "undefined" ? "rarecognos.vercel.app" : window.location.host}` },
+  { name: "Trust Wallet", href: `https://link.trustwallet.com/open_url?coin_id=60&url=${encodeURIComponent(appUrl)}` },
+  { name: "Rainbow", href: `https://rnbwapp.com/dapp?url=${encodeURIComponent(appUrl)}` },
+  { name: "OKX", href: `okx://wallet/dapp/url?dappUrl=${encodeURIComponent(appUrl)}` },
+];
+const mobile = typeof navigator !== "undefined" && /Android|iPhone|iPad/i.test(navigator.userAgent);
 export function MarketHeader({ view }: { view: string }) {
   const account = useAccount(),
     connect = useConnect(),
@@ -192,6 +200,15 @@ export function MarketHeader({ view }: { view: string }) {
                       Connect wallet
                     </Dropdown.Item>
                   )}
+                  {mobile &&
+                    walletApps.map((app) => (
+                      <Dropdown.Item key={app.name} asChild>
+                        <a href={app.href}>
+                          <Wallet size={16} />
+                          {app.name}
+                        </a>
+                      </Dropdown.Item>
+                    ))}
                   <Dropdown.Separator className="wallet-menu-divider" />
                   <Dropdown.Item
                     onSelect={() => {
