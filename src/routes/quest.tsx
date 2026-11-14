@@ -3,7 +3,7 @@ import { useEffect } from "react";
 import { useAccount, useReadContract } from "wagmi";
 import { MarketHeader } from "@/components/market-header";
 import { SiteFooter } from "@/components/site-footer";
-import { DailyCheckIn } from "@/components/daily-check-in";
+import { DailyCheckIn, CheckInBoard } from "@/components/daily-check-in";
 import { memberKey, saveProgress, useGmail, useProgress } from "@/lib/member";
 import { configured } from "@/lib/nft/config";
 import { nftCall } from "@/lib/nft/data";
@@ -49,6 +49,7 @@ function QuestPage() {
                 <span style={{ width: `${fill}%` }} />
               </div>
             </div>
+            <CheckInBoard />
             <ul className="quest-list">
               <li className={`quest-row ${progress.hello ? "done" : "ready"}`}>
                 <div>

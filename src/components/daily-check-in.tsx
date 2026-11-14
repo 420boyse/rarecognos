@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAccount, usePublicClient, useReadContract, useWalletClient } from "wagmi";
 import { NetworkHelp } from "@/components/network-help";
 import { chain } from "@/lib/nft/config";
@@ -9,11 +10,95 @@ import { transactionError } from "@/lib/nft/transaction";
 import type { Address } from "viem";
 
 const FEE = 100_000_000_000_000n;
+const DAY = 86_400_000;
+
+function utcDayNumber(date = Date.now()) {
+  return Math.floor(date / DAY);
+}
+
+function labelForDay(day: number) {
+  return new Date(day * DAY).toLocaleDateString("en-GB", { day: "2-digit", month: "short", timeZone: "UTC" });
+}
+
+export function CheckInBoard() {
+  const account = useAccount();
+  const client = usePublicClient({ chainId: chain.id });
+  const [address, setAddress] = useState<Address | undefined>();
+  const today = utcDayNumber();
+
+  useEffect(() => {
+    const saved = readCheckInAddress();
+    if (saved) setAddress(saved);
+  }, []);
+
+  const logs = useQuery({
+    queryKey: ["checkin-board", address, account.address],
+    enabled: Boolean(client && address && account.address),
+    queryFn: async () => {
+      const latest = await client!.getBlockNumber();
+      const fromBlock = latest > 750_000n ? latest - 750_000n : 0n;
+      return client!.getLogs({
+        address,
+        event: {
+          type: "event",
+          name: "CheckedIn",
+          inputs: [
+            { type: "address", name: "account", indexed: true },
+            { type: "uint256", name: "day", indexed: true },
+            { type: "uint256", name: "fee", indexed: false },
+          ],
+        },
+        args: { account: account.address },
+        fromBlock,
+      });
+    },
+  });
+
+  const days = new Set(
+    (logs.data || [])
+      .map((log) => (log.args as { day?: bigint }).day)
+      .filter((day): day is bigint => typeof day === "bigint")
+      .map(Number),
+  );
+  const windowDays = Array.from({ length: 14 }, (_, i) => today - 13 + i);
+  let streak = 0;
+  for (let day = days.has(today) ? today : today - 1; days.has(day); day -= 1) streak += 1;
+
+  if (!account.address) return null;
+
+  return (
+    <section className="checkin-board" aria-label="Check-in record">
+      <div className="checkin-board-head">
+        <h2>Check-in</h2>
+        <p>{logs.isPending ? "Reading the chain…" : streak ? `${streak} day streak` : "No streak yet."}</p>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Day</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          {windowDays.map((day) => (
+            <tr key={day} className={day === today ? "today" : undefined}>
+              <td>{labelForDay(day)}</td>
+              <td>{day}</td>
+              <td>{days.has(day) ? "Checked in" : day === today ? "Open" : "Missed"}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </section>
+  );
+}
 
 export function DailyCheckIn({ member }: { member: string }) {
   const account = useAccount();
   const client = usePublicClient({ chainId: chain.id });
   const wallet = useWalletClient();
+  const cache = useQueryClient();
   const [note, setNote] = useState("");
   const [busy, setBusy] = useState(false);
   const [address, setAddress] = useState<Address | undefined>();
@@ -78,6 +163,7 @@ export function DailyCheckIn({ member }: { member: string }) {
         checkin: utcDay(),
         xp: current.xp + (current.checkin === utcDay() ? 0 : 10),
       });
+      await cache.invalidateQueries({ queryKey: ["checkin-board", address, account.address] });
       setNote("");
     } catch (error) {
       setNote(transactionError(error));
