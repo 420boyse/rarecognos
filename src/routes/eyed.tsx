@@ -5,6 +5,8 @@ import { FanStackNFT } from "@/components/fan-stack-nft";
 import { MarketHeader } from "@/components/market-header";
 import { SiteFooter } from "@/components/site-footer";
 import { eyed, eyedNetwork, eyedPrice } from "@/data/eyed";
+
+const faces = eyed.filter((item) => item.id !== "01");
 import { chain } from "@/lib/nft/config";
 import { eyedTreasury, eyedUris, readEyedAddress, saveEyedAddress } from "@/lib/nft/eyed-address";
 import { abi } from "@/lib/nft/RareCognosEyed";
@@ -17,7 +19,7 @@ export const Route = createFileRoute("/eyed")({
 
 function EyedPage() {
   const params = new URLSearchParams(typeof window === "undefined" ? "" : window.location.search);
-  const pieceId = params.get("piece") || eyed[0].id;
+  const pieceId = faces.some((item) => item.id === params.get("piece")) ? params.get("piece")! : faces[0].id;
   const canLaunch = params.get("setup") === "1";
   const [center, setCenter] = useState(pieceId);
   const [address, setAddress] = useState<Address | undefined>();
@@ -130,7 +132,7 @@ function EyedPage() {
             else void mint();
           }}
           onSelectWork={() => setStory(true)}
-          items={eyed.map((item) => ({
+          items={faces.map((item) => ({
             id: item.id,
             title: item.name,
             image: `/art/eyed/${item.id}.jpg`,
