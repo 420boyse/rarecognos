@@ -49,6 +49,7 @@ export function NFTCreate({
   const currentAccount = useRef(account.address);
   currentAccount.current = account.address;
   const fileRef = useRef<HTMLInputElement>(null);
+  const draftReady = useRef(false);
   const key = `rarecognos.prepared.v2:${chain.id}:${contracts.collection}:${account.address?.toLowerCase()}`;
   const service = useQuery({
     queryKey: ["upload-status", uploadAPI],
@@ -67,6 +68,48 @@ export function NFTCreate({
       setPrepared(undefined);
     }
   }, [key]);
+  useEffect(() => {
+    try {
+      const saved = JSON.parse(localStorage.getItem("rarecognos.create.draft") || "null");
+      if (saved) {
+        if (saved.name) setName(saved.name);
+        if (saved.description) setDescription(saved.description);
+        if (saved.rights) setRights(true);
+        if (saved.file && saved.fileName && saved.file.length < 1_800_000) {
+          fetch(saved.file)
+            .then((res) => res.blob())
+            .then((blob) => setFile(new File([blob], saved.fileName, { type: saved.type || blob.type })))
+            .catch(() => {});
+        }
+      }
+    } catch {
+      /* ignore a broken draft */
+    }
+    draftReady.current = true;
+  }, []);
+  useEffect(() => {
+    if (!draftReady.current) return;
+    const write = (fileData?: string) => {
+      localStorage.setItem(
+        "rarecognos.create.draft",
+        JSON.stringify({
+          name,
+          description,
+          rights,
+          file: fileData,
+          fileName: file?.name,
+          type: file?.type,
+        }),
+      );
+    };
+    if (!file || file.size > 1_200_000) {
+      write();
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => write(typeof reader.result === "string" ? reader.result : undefined);
+    reader.readAsDataURL(file);
+  }, [name, description, rights, file]);
   useEffect(() => {
     if (!file) {
       setPreview("");
@@ -310,7 +353,7 @@ export function NFTCreate({
           </>
         )}
         {!account.address && (
-          <p>Use Connect wallet in the top bar to continue. Your form stays here.</p>
+          <p>Use Log in in the top bar to continue. Your form stays here.</p>
         )}
         <p role="status" aria-live="polite">
           {progress}

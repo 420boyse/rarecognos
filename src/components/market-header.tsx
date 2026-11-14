@@ -183,7 +183,7 @@ export function MarketHeader({ view }: { view: string }) {
                     connect.connectors.map((c) => (
                       <Dropdown.Item key={c.uid} onSelect={() => void connectWallet(c)}>
                         <Wallet size={16} />
-                        {c.name}
+                        {c.name === "Injected" ? "Browser wallet" : c.name}
                       </Dropdown.Item>
                     ))
                   ) : (
@@ -192,6 +192,23 @@ export function MarketHeader({ view }: { view: string }) {
                       Connect wallet
                     </Dropdown.Item>
                   )}
+                  <Dropdown.Separator className="wallet-menu-divider" />
+                  <Dropdown.Item
+                    onSelect={() => {
+                      setError("");
+                      void (async () => {
+                        const provider = account.connector ? await account.connector.getProvider() : null;
+                        await addLiteForge(provider);
+                      })().catch((e) => setError(transactionError(e)));
+                    }}
+                  >
+                    Add LiteForge
+                  </Dropdown.Item>
+                  <Dropdown.Item asChild>
+                    <a href={faucetUrl} target="_blank" rel="noreferrer">
+                      Get zkLTC
+                    </a>
+                  </Dropdown.Item>
                 </Dropdown.Content>
               </Dropdown.Portal>
             </Dropdown.Root>

@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useAccount, usePublicClient, useWalletClient } from "wagmi";
 import { FanStackNFT } from "@/components/fan-stack-nft";
 import { MarketHeader } from "@/components/market-header";
@@ -24,17 +24,36 @@ function EyedPage() {
   const [status, setStatus] = useState("");
   const [busy, setBusy] = useState(false);
   const [story, setStory] = useState(false);
+  const storyRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     const saved = readEyedAddress();
     if (saved) setAddress(saved);
   }, []);
   useEffect(() => {
     if (!story) return;
+    const node = storyRef.current;
+    const previous = document.activeElement as HTMLElement | null;
+    node?.querySelector<HTMLElement>("button")?.focus();
     const onKey = (event: KeyboardEvent) => {
       if (event.key === "Escape") setStory(false);
+      if (event.key !== "Tab" || !node) return;
+      const items = [...node.querySelectorAll<HTMLElement>("button, a, input, textarea")];
+      if (!items.length) return;
+      const first = items[0];
+      const last = items[items.length - 1];
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
     };
     window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      previous?.focus();
+    };
   }, [story]);
   const account = useAccount();
   const client = usePublicClient({ chainId: chain.id });
@@ -124,7 +143,7 @@ function EyedPage() {
         {story && face && (
           <div className="eyed-story" role="dialog" aria-modal="true" aria-labelledby="eyed-story-title">
             <button type="button" className="eyed-story-backdrop" aria-label="Close" onClick={() => setStory(false)} />
-            <div className="eyed-story-card">
+            <div className="eyed-story-card" ref={storyRef}>
               <button type="button" className="eyed-story-close" aria-label="Close" onClick={() => setStory(false)}>
                 ×
               </button>
