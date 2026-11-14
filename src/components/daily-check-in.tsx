@@ -48,7 +48,7 @@ export function DailyCheckIn({ member }: { member: string }) {
       if (!receipt.contractAddress) throw Error("Deployment did not return a contract.");
       saveCheckInAddress(receipt.contractAddress);
       setAddress(receipt.contractAddress);
-      setNote(`Check-in is live at ${receipt.contractAddress}`);
+      setNote("");
     } catch (error) {
       setNote(transactionError(error));
     } finally {
@@ -59,7 +59,7 @@ export function DailyCheckIn({ member }: { member: string }) {
   async function checkIn() {
     if (!account.address || !member || !client || !wallet.data || !address || done || busy) return;
     setBusy(true);
-    setNote("Confirm the check-in. 0.0001 zkLTC goes to the platform.");
+    setNote("");
     try {
       if ((await wallet.data.getChainId()) !== chain.id) throw Error("Switch to LiteForge first.");
       const hash = await wallet.data.writeContract({
@@ -69,7 +69,7 @@ export function DailyCheckIn({ member }: { member: string }) {
         args: [],
         value: FEE,
       });
-      setNote("Waiting for the check-in…");
+      setNote("");
       const receipt = await client.waitForTransactionReceipt({ hash });
       if (receipt.status !== "success") throw Error("Check-in was not confirmed.");
       const current = progressFor(member);
@@ -78,7 +78,7 @@ export function DailyCheckIn({ member }: { member: string }) {
         checkin: utcDay(),
         xp: current.xp + (current.checkin === utcDay() ? 0 : 10),
       });
-      setNote("Checked in for today.");
+      setNote("");
     } catch (error) {
       setNote(transactionError(error));
     } finally {
@@ -94,7 +94,7 @@ export function DailyCheckIn({ member }: { member: string }) {
     <li className={`quest-row ${finished ? "done" : locked ? "locked" : "ready"}`}>
       <div>
         <h2>Daily check-in</h2>
-        <p>{locked ? "Needs a wallet." : address ? "0.0001 zkLTC, once a day. The platform keeps it." : "The check-in contract is not on testnet yet."}</p>
+        <p>{locked ? "Needs a wallet." : "Once a day."}</p>
         {(wrong || !account.isConnected) && <NetworkHelp />}
         {note && <p role="status">{note}</p>}
       </div>
