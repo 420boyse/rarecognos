@@ -7,7 +7,16 @@ import { CreatorDashboard } from "@/components/nft-drops";
 import { SiteFooter } from "@/components/site-footer";
 import { chain } from "@/lib/nft/config";
 
+import { pageMeta } from "@/lib/site-meta";
+
 export const Route = createFileRoute("/create")({
+  head: () =>
+    pageMeta({
+      title: "Create · RareCognos",
+      description: "Prepare an image, then mint it. Uploading is not the same as minting.",
+      path: "/create",
+      image: "/og.jpg",
+    }),
   component: CreatePage,
 });
 

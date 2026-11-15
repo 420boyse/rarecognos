@@ -195,13 +195,11 @@ export function NFTMarket({
       {(tokenId || tab === "Create" || tab === "My NFTs") && (
       <div className="section-heading">
         <div>
-          <h2 id="market-title">
-            {tokenId
-              ? "Artwork"
-              : tab === "Create"
-                ? "Create an NFT"
-                : "My NFTs"}
-          </h2>
+          {tab === "Create" ? (
+            <h1 id="market-title">Create an NFT</h1>
+          ) : (
+            <h2 id="market-title">{tokenId ? "Artwork" : "My NFTs"}</h2>
+          )}
           <p>
             {tokenId
               ? "The artwork and its on-chain record."
@@ -260,7 +258,7 @@ export function NFTMarket({
         )
       ) : tab === "My NFTs" ? (
         <>
-          {!address && <p>Log in with a wallet to see your collection.</p>}
+          {!address && <p>Connect a wallet to see your collection.</p>}
           {owned.isLoading && <p role="status">Reading your NFTs…</p>}
           {owned.error && (
             <p role="alert">

@@ -5,6 +5,8 @@ export function SiteFooter({ exploreHref = "/explore" }: { exploreHref?: string 
     <footer className="market-footer">
       <Wordmark />
       <p>For the way you see.</p>
+      <a href="/about">About</a>
+      <a href="/how">How it works</a>
       <a href={exploreHref}>Explore NFTs</a>
       <a
         className="footer-x"

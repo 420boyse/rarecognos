@@ -46,15 +46,19 @@ export function FanStackNFT({
   items,
   onSelectWork,
   initialId,
+  focusId,
   onCenter,
   primaryLabel,
+  primaryDisabled,
   onPrimary,
 }: {
   items: NFTCard[];
   onSelectWork?: (id: string) => void;
   initialId?: string;
+  focusId?: string;
   onCenter?: (id: string) => void;
   primaryLabel?: string;
+  primaryDisabled?: boolean;
   onPrimary?: () => void;
 }) {
   const cards = useMemo(() => {
@@ -68,18 +72,19 @@ export function FanStackNFT({
 
   const containerRef = useRef<HTMLDivElement>(null);
   const cardRefs = useRef<(HTMLDivElement | null)[]>([]);
-  const scrollPos = useRef(0);
+  const startIndex = Math.max(0, cards.findIndex((card) => (card.origId || card.id) === initialId));
+  const scrollPos = useRef(startIndex);
   const velocity = useRef(0);
   const isDragging = useRef(false);
   const dragStart = useRef({ x: 0, y: 0, lastX: 0, lastTime: 0 });
   const axisLocked = useRef<"h" | "v" | null>(null);
   const sizeRef = useRef(CARD_SIZE_BASE);
   const countRef = useRef(cards.length);
-  const centeredRef = useRef(0);
-  const started = useRef(false);
+  const centeredRef = useRef(startIndex);
+  const seenFocus = useRef(initialId);
 
   const [cardSize, setCardSize] = useState(CARD_SIZE_BASE);
-  const [centered, setCentered] = useState(0);
+  const [centered, setCentered] = useState(startIndex);
 
   const onCenterRef = useRef(onCenter);
   onCenterRef.current = onCenter;
@@ -122,7 +127,10 @@ export function FanStackNFT({
         centeredRef.current = next;
         setCentered(next);
         const id = cards[next]?.origId || cards[next]?.id;
-        if (id) onCenterRef.current?.(id);
+        if (id) {
+          seenFocus.current = id;
+          onCenterRef.current?.(id);
+        }
       }
     };
 
@@ -166,13 +174,27 @@ export function FanStackNFT({
   }, []);
 
   useEffect(() => {
-    if (started.current || !initialId) return;
-    const index = cards.findIndex((card) => (card.origId || card.id) === initialId);
+    if (!focusId || focusId === seenFocus.current) return;
+    seenFocus.current = focusId;
+    const index = cards.findIndex((card) => (card.origId || card.id) === focusId);
     if (index >= 0) {
       scrollPos.current = index;
-      started.current = true;
+      velocity.current = 0;
+      centeredRef.current = index;
+      setCentered(index);
     }
-  }, [cards, initialId]);
+  }, [cards, focusId]);
+
+  const nudge = (dir: number) => {
+    const next = wrapIndex(Math.round(scrollPos.current) + dir, Math.max(1, countRef.current));
+    scrollPos.current = next;
+    velocity.current = 0;
+    const id = cards[next]?.origId || cards[next]?.id;
+    if (id) {
+      seenFocus.current = id;
+      onCenterRef.current?.(id);
+    }
+  };
 
   useEffect(() => {
     const onResize = () => setCardSize(getCardSize());
@@ -232,6 +254,18 @@ export function FanStackNFT({
       <div
         ref={containerRef}
         className="fan-container"
+        tabIndex={0}
+        aria-label="Eyed works"
+        onKeyDown={(event) => {
+          if (event.key === "ArrowLeft") {
+            event.preventDefault();
+            nudge(-1);
+          }
+          if (event.key === "ArrowRight") {
+            event.preventDefault();
+            nudge(1);
+          }
+        }}
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
         onPointerUp={onPointerUp}
@@ -269,12 +303,16 @@ export function FanStackNFT({
 
       <div className="fan-detail">
         <div className="fan-meta">{current?.network || "LiteForge"} · {current?.medium || "Eyed"}</div>
-        <h3 className="fan-title">{current?.title || "Untitled"}</h3>
-        {current?.price && <div className="fan-price">{current.price}</div>}
+        <h2 className="fan-title">{current?.title || "Untitled"}</h2>
+        {current?.price && <div className="fan-price">{current.price} · {current.medium}</div>}
         <div className="fan-actions">
+          <button type="button" className="fan-secondary" aria-label="Previous work" onClick={() => nudge(-1)}>
+            Previous
+          </button>
           <button
             type="button"
             className="fan-primary"
+            disabled={primaryDisabled}
             onClick={() => {
               if (onPrimary) onPrimary();
               else if (current) onSelectWork?.(current.origId || current.id);
@@ -292,7 +330,13 @@ export function FanStackNFT({
           >
             {onPrimary ? "View Details" : "Back"}
           </button>
+          <button type="button" className="fan-secondary" aria-label="Next work" onClick={() => nudge(1)}>
+            Next
+          </button>
         </div>
+        <p className="sr-only" aria-live="polite">
+          {current?.title || "Untitled"}
+        </p>
       </div>
 
       <style>{`
@@ -405,6 +449,7 @@ export function FanStackNFT({
         }
         .fan-actions {
           display: flex;
+          flex-wrap: wrap;
           gap: 12px;
           justify-content: center;
         }
@@ -423,6 +468,7 @@ export function FanStackNFT({
           border: none;
         }
         .fan-primary:hover { background: white; }
+        .fan-primary:disabled { opacity: 0.45; cursor: not-allowed; }
         .fan-secondary {
           background: transparent;
           color: #f5f4ef;

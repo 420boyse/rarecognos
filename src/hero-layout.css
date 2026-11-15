@@ -21,8 +21,8 @@
 .market-hero:not(.market-hero--compact) {
   position: relative;
   display: block;
-  margin-top: 88px;
-  height: calc(100svh - 88px);
+  margin-top: var(--header-block);
+  height: calc(100svh - var(--header-block));
   min-height: 560px;
   max-height: 820px;
   padding: 0;

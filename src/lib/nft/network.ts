@@ -20,8 +20,9 @@ function preferMetaMask(): WalletProvider | undefined {
   return list.find((provider) => provider.isMetaMask && !provider.isPhantom) || list.find((provider) => !provider.isPhantom) || list[0];
 }
 
-export async function addLiteForge(preferred?: WalletProvider | null) {
-  const provider = preferred ?? preferMetaMask();
+export async function addLiteForge(preferred?: unknown) {
+  const given = preferred as WalletProvider | null | undefined;
+  const provider = given?.request ? given : preferMetaMask();
   if (!provider) throw Error("No browser wallet found.");
   await provider.request({
     method: "wallet_addEthereumChain",

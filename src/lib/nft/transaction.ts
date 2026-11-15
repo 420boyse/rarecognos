@@ -157,7 +157,7 @@ export async function transact(
   const priced =
     "maxFeePerGas" in fees
       ? { maxFeePerGas: fees.maxFeePerGas, maxPriorityFeePerGas: fees.maxPriorityFeePerGas }
-      : { gasPrice: fees.gasPrice };
+      : { gasPrice: (fees as { gasPrice?: bigint }).gasPrice };
   assertChain(await wallet.getChainId(), chainId);
   const addresses = await wallet.getAddresses();
   if (addresses[0]?.toLowerCase() !== address.toLowerCase())
@@ -168,7 +168,7 @@ export async function transact(
     ...request,
     ...priced,
     chain: publicClient.chain,
-  });
+  } as Parameters<WalletClient["writeContract"]>[0]);
   const r: Pending = {
     id: hash,
     chainId,

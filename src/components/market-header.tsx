@@ -17,14 +17,16 @@ function GoogleMark() {
     </svg>
   );
 }
-const appUrl = typeof window === "undefined" ? "https://rarecognos.vercel.app" : window.location.href;
-const walletApps = [
-  { name: "MetaMask", href: `https://metamask.app.link/dapp/${typeof window === "undefined" ? "rarecognos.vercel.app" : window.location.host}` },
-  { name: "Trust Wallet", href: `https://link.trustwallet.com/open_url?coin_id=60&url=${encodeURIComponent(appUrl)}` },
-  { name: "Rainbow", href: `https://rnbwapp.com/dapp?url=${encodeURIComponent(appUrl)}` },
-  { name: "OKX", href: `okx://wallet/dapp/url?dappUrl=${encodeURIComponent(appUrl)}` },
-];
-const mobile = typeof navigator !== "undefined" && /Android|iPhone|iPad/i.test(navigator.userAgent);
+const walletAppLinks = () => {
+  const host = window.location.host;
+  const href = window.location.href;
+  return [
+    { name: "MetaMask", href: `https://metamask.app.link/dapp/${host}` },
+    { name: "Trust Wallet", href: `https://link.trustwallet.com/open_url?coin_id=60&url=${encodeURIComponent(href)}` },
+    { name: "Rainbow", href: `https://rnbwapp.com/dapp?url=${encodeURIComponent(href)}` },
+    { name: "OKX", href: `okx://wallet/dapp/url?dappUrl=${encodeURIComponent(href)}` },
+  ];
+};
 export function MarketHeader({ view }: { view: string }) {
   const account = useAccount(),
     connect = useConnect(),
@@ -32,6 +34,9 @@ export function MarketHeader({ view }: { view: string }) {
     network = useSwitchChain();
   const [error, setError] = useState("");
   const [loginOpen, setLoginOpen] = useState(false);
+  const [onMobile, setOnMobile] = useState(false);
+  const [walletApps, setWalletApps] = useState<{ name: string; href: string }[]>([]);
+  const [available, setAvailable] = useState<typeof connect.connectors>([]);
   const gmail = useGmail();
   const member = Boolean(account.address || gmail);
   const wrong = account.isConnected && account.chainId !== chain.id;
@@ -61,6 +66,26 @@ export function MarketHeader({ view }: { view: string }) {
     window.addEventListener("rarecognos-login", open);
     return () => window.removeEventListener("rarecognos-login", open);
   }, []);
+  useEffect(() => {
+    const phone = /Android|iPhone|iPad/i.test(navigator.userAgent);
+    setOnMobile(phone);
+    if (phone) setWalletApps(walletAppLinks());
+  }, []);
+  useEffect(() => {
+    let cancel = false;
+    void (async () => {
+      const list = [];
+      for (const connector of connect.connectors) {
+        if (connector.type === "injected") {
+          if (await connector.getProvider()) list.push(connector);
+        } else list.push(connector);
+      }
+      if (!cancel) setAvailable(list);
+    })();
+    return () => {
+      cancel = true;
+    };
+  }, [connect.connectors]);
   return (
     <header className="market-header">
       <div className="market-header-inner">
@@ -164,12 +189,12 @@ export function MarketHeader({ view }: { view: string }) {
           ) : (
             <Dropdown.Root open={loginOpen} onOpenChange={setLoginOpen}>
               <Dropdown.Trigger className="wallet-button" disabled={connecting}>
-                {gmail ? gmail.email.split("@")[0] : connecting ? "Logging in..." : "Log in"}
+                {gmail ? gmail.email.split("@")[0] : connecting ? "Connecting…" : "Connect wallet"}
                 <ChevronDown size={14} />
               </Dropdown.Trigger>
               <Dropdown.Portal>
                 <Dropdown.Content className="wallet-menu login-menu" align="end" sideOffset={12}>
-                  <Dropdown.Label className="wallet-menu-label">Log in</Dropdown.Label>
+                  <Dropdown.Label className="wallet-menu-label">Connect wallet</Dropdown.Label>
                   {gmail ? (
                     <Dropdown.Item onSelect={() => writeGmail(null)}>
                       <LogOut size={16} />
@@ -187,20 +212,20 @@ export function MarketHeader({ view }: { view: string }) {
                     </Dropdown.Item>
                   ) : null}
                   <Dropdown.Separator className="wallet-menu-divider" />
-                  {connect.connectors.length ? (
-                    connect.connectors.map((c) => (
+                  {available.length ? (
+                    available.map((c) => (
                       <Dropdown.Item key={c.uid} onSelect={() => void connectWallet(c)}>
                         <Wallet size={16} />
-                        {c.name === "Injected" ? "Browser wallet" : c.name}
+                        {c.name === "Injected" ? "Browser wallet" : c.name.replace(/\(injected\)/i, "").trim()}
                       </Dropdown.Item>
                     ))
                   ) : (
-                    <Dropdown.Item onSelect={() => setError("Install a browser wallet to connect.")}>
+                    <Dropdown.Item onSelect={() => setError(onMobile ? "Open this page in a wallet app." : "No browser wallet found. Open this page in a wallet browser.")}>
                       <Wallet size={16} />
-                      Connect wallet
+                      {onMobile ? "Use a wallet app" : "No browser wallet"}
                     </Dropdown.Item>
                   )}
-                  {mobile &&
+                  {onMobile &&
                     walletApps.map((app) => (
                       <Dropdown.Item key={app.name} asChild>
                         <a href={app.href}>

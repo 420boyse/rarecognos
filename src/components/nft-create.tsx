@@ -122,12 +122,19 @@ export function NFTCreate({
 
   function acceptFile(next?: File) {
     if (!next) return;
-    if (!["image/png", "image/jpeg", "image/webp"].includes(next.type) || next.size > 3 * 1024 * 1024) {
-      setProgress("Choose PNG, JPEG or WebP up to 3 MB");
-      return;
-    }
-    setFile(next);
-    setProgress("");
+    void (async () => {
+      const buf = new Uint8Array(await next.slice(0, 12).arrayBuffer());
+      const png = buf[0] === 0x89 && buf[1] === 0x50 && buf[2] === 0x4e && buf[3] === 0x47;
+      const jpg = buf[0] === 0xff && buf[1] === 0xd8 && buf[2] === 0xff;
+      const webp = buf[0] === 0x52 && buf[1] === 0x49 && buf[8] === 0x57 && buf[9] === 0x45;
+      if ((!png && !jpg && !webp) || next.size > 3 * 1024 * 1024) {
+        setFile(undefined);
+        setProgress("Choose a real PNG, JPEG, or WebP file up to 3 MB.");
+        return;
+      }
+      setFile(next);
+      setProgress("");
+    })();
   }
   async function prepare() {
     if (!file || !account.address || !wallet.data || !rights || uploading) return;
@@ -220,6 +227,12 @@ export function NFTCreate({
         )}
       </div>
       <div className="creation-form">
+        <ol className="steps">
+          <li>Choose an image. PNG, JPEG, or WebP, up to 3 MB.</li>
+          <li>Name it. The name and description stay in this browser. An image over about 1.2 MB is not stored in the draft, so you choose it again.</li>
+          <li>Upload and prepare. The wallet signature allows storage. It does not mint and it does not send zkLTC.</li>
+          <li>Mint is a second transaction, after the artwork is prepared.</li>
+        </ol>
         <div className="kind-toggle" role="group" aria-label="Creation type"><button type="button" aria-pressed={kind === "single"} onClick={() => setKind("single")}>1/1 artwork</button>{dropsConfigured && <button type="button" aria-pressed={kind === "edition"} onClick={() => setKind("edition")}>Limited edition</button>}</div>
         <h3>{prepared ? (kind === "edition" ? "Ready to launch" : "Ready to mint") : kind === "edition" ? "Create a limited edition" : "Create a 1/1 work"}</h3>
         <p>
@@ -322,16 +335,19 @@ export function NFTCreate({
             </label>
             {!service.data?.enabled && (
               <div className="market-notice" role="status">
-                {service.isLoading
+                {service.isPending
                   ? "Checking storage…"
                   : service.isError
                     ? "Upload service could not be reached."
-                    : "Permanent storage needs a Pinata key on the server (PINATA_JWT)."}
-                <button type="button" className="nft-button" onClick={() => void service.refetch()}>
-                  Retry
-                </button>
+                    : "Permanent storage is not available on this server."}
+                {!service.isPending && (
+                  <button type="button" className="nft-button" onClick={() => void service.refetch()}>
+                    Retry
+                  </button>
+                )}
               </div>
             )}
+            {service.data?.enabled && <p className="market-notice">Storage is available. Uploading is not minting.</p>}
             {service.data?.mode === "local-demo" && (
               <p className="market-notice">Local demo storage. These files are not on public IPFS.</p>
             )}
@@ -350,10 +366,24 @@ export function NFTCreate({
             >
               {uploading ? "Preparing artwork…" : "Upload & prepare NFT"}
             </button>
+            {!account.address && (
+              <p>
+                Connect a wallet to prepare. The form stays here.{" "}
+                <button type="button" className="nft-button" onClick={() => window.dispatchEvent(new Event("rarecognos-login"))}>
+                  Connect wallet
+                </button>
+              </p>
+            )}
+            {account.address && account.chainId !== chain.id && (
+              <p>Wrong network. Switch to LiteForge in the header. The form stays here.</p>
+            )}
+            {file && file.size > 1_200_000 && (
+              <p>This image is too large for the saved draft. You will need to choose it again if you leave.</p>
+            )}
           </>
         )}
-        {!account.address && (
-          <p>Use Log in in the top bar to continue. Your form stays here.</p>
+        {!account.address && prepared && (
+          <p>Connect a wallet to mint. This prepared record stays in the browser.</p>
         )}
         <p role="status" aria-live="polite">
           {progress}

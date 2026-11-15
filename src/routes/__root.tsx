@@ -16,17 +16,17 @@ export const Route = createRootRoute({
       { title: APP_NAME },
       {
         name: "description",
-        content:
-          "RareCognos is a marketplace for distinctive digital art. Discover a work, view its record, and build a collection.",
+        content: "An eye for the rare. Distinctive digital art. Yours to discover, create, and collect.",
       },
       { name: "theme-color", content: "#0A0A0A" },
     ],
     links: [
       { rel: "icon", type: "image/svg+xml", href: "/favicon.svg" },
+      { rel: "icon", type: "image/png", sizes: "192x192", href: "/icon-192.png" },
       { rel: "stylesheet", href: appCss },
       { rel: "stylesheet", href: heroCss },
       { rel: "manifest", href: "/__grok/manifest.webmanifest" },
-      { rel: "apple-touch-icon", href: "/__grok/icon-180.png" },
+      { rel: "apple-touch-icon", href: "/apple-touch-icon.png" },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
       {

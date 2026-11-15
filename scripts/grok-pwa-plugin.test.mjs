@@ -302,6 +302,47 @@ test("vercel Host without a public hostname emits no og:image", () => {
   }
 });
 
+test("keeps a page absolute share card when the host cannot supply og:image", () => {
+  const prev = process.env.VITE_PUBLIC_HOSTNAME;
+  delete process.env.VITE_PUBLIC_HOSTNAME;
+  try {
+    const html = `<html><head><title>Spire · Eyed · RareCognos</title><meta property="og:title" content="Old"><meta property="og:description" content="Spire wears its crown too tall."><meta property="og:image" content="https://rarecognos.vercel.app/art/eyed/04.jpg"><meta property="og:url" content="https://rarecognos.vercel.app/eyed?piece=04"><meta name="twitter:card" content="summary"><meta name="twitter:description" content="Spire wears its crown too tall."><meta name="twitter:image" content="https://rarecognos.vercel.app/art/eyed/04.jpg"></head></html>`;
+    const ctx = {
+      host: "rarecognos.vercel.app",
+      site: { title: "RareCognos", description: "An eye for the rare.", card: "custom" },
+    };
+    const out = injectGrokPwaHead(html, ctx);
+    assert.match(out, /property="og:title" content="Spire · Eyed · RareCognos"/);
+    assert.doesNotMatch(out, /content="Old"/);
+    assert.match(out, /property="og:description" content="Spire wears its crown too tall\."/);
+    assert.doesNotMatch(out, /A marketplace for distinctive digital art/);
+    assert.match(out, /property="og:image" content="https:\/\/rarecognos\.vercel\.app\/art\/eyed\/04\.jpg"/);
+    assert.match(out, /property="og:url" content="https:\/\/rarecognos\.vercel\.app\/eyed\?piece=04"/);
+    assert.match(out, /name="twitter:card" content="summary_large_image"/);
+    assert.match(out, /name="twitter:image" content="https:\/\/rarecognos\.vercel\.app\/art\/eyed\/04\.jpg"/);
+    assert.doesNotMatch(out, /content="summary"/);
+    assert.equal(out.split('property="og:image"').length - 1, 1);
+    assert.equal(out.split('property="og:description"').length - 1, 1);
+    assert.equal(injectGrokPwaHead(out, ctx), out);
+  } finally {
+    if (prev === undefined) delete process.env.VITE_PUBLIC_HOSTNAME;
+    else process.env.VITE_PUBLIC_HOSTNAME = prev;
+  }
+});
+
+test("a public host card still replaces a page og:image", () => {
+  const html =
+    '<html><head><meta property="og:image" content="https://rarecognos.vercel.app/art/eyed/04.jpg"><meta property="og:description" content="Piece story"></head></html>';
+  const out = injectGrokPwaHead(html, {
+    host: "wild-race.grok.me",
+    site: { title: "Wild Race", description: "Platform line", card: "custom", image: "/og.jpg" },
+  });
+  assert.match(out, /property="og:image" content="https:\/\/wild-race\.grok\.me\/og\.jpg"/);
+  assert.doesNotMatch(out, /rarecognos\.vercel\.app/);
+  assert.match(out, /property="og:description" content="Piece story"/);
+  assert.equal(out.split('property="og:image"').length - 1, 1);
+});
+
 test("emits og:image for a public host and prefers a custom card", () => {
   const placeholder = injectGrokPwaHead("<html><head></head></html>", {
     appName: "Wild Race",

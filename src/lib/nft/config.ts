@@ -28,7 +28,7 @@ export const config = createConfig({
   multiInjectedProviderDiscovery: true,
   connectors: [
     injected(),
-    injected({ target: { id: "okx-legacy", name: "OKX Wallet (injected)", provider: (window) => (window as typeof window & { okxwallet?: EIP1193Provider })?.okxwallet } }),
+    injected({ target: { id: "okx-legacy", name: "OKX Wallet", provider: (window) => (window as typeof window & { okxwallet?: EIP1193Provider })?.okxwallet } }),
     ...(walletConnectProjectId
       ? [
           walletConnect({

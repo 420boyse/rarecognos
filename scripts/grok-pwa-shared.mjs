@@ -158,7 +158,9 @@ export function renderInstallPageHtml(template, { host, url } = {}) {
 }
 
 export function renderWebManifest(hostHeader) {
-  const name = appNameFromHost(hostHeader);
+  const fromHost = appNameFromHost(hostHeader);
+  const siteTitle = String(readOgSite().title ?? "").trim();
+  const name = fromHost !== DEFAULT_APP_NAME ? fromHost : siteTitle || fromHost;
   return JSON.stringify(
     {
       name,
@@ -173,6 +175,16 @@ export function renderWebManifest(hostHeader) {
         {
           src: "/__grok/icon-180.png",
           sizes: "180x180",
+          type: "image/png",
+        },
+        {
+          src: "/icon-192.png",
+          sizes: "192x192",
+          type: "image/png",
+        },
+        {
+          src: "/icon-512.png",
+          sizes: "512x512",
           type: "image/png",
         },
       ],
@@ -441,8 +453,70 @@ export function normalizeHeadContext(ctx = {}) {
   };
 }
 
+const PAGE_SHARE_KEYS = new Set([
+  "og:description",
+  "og:image",
+  "og:url",
+  "twitter:title",
+  "twitter:description",
+  "twitter:image",
+]);
+
+function metaAttribute(tag, name) {
+  const match = tag.match(new RegExp(`\\b${name}\\s*=\\s*["']([^"']*)["']`, "i"));
+  return match ? unescapeHtml(match[1]).trim() : "";
+}
+
+/** Share tags the page authored, before platform chrome replaces them. */
+export function readPageShareMeta(html) {
+  const found = {};
+  for (const tag of String(html).match(/<meta\b[^>]*>/gi) || []) {
+    const key = (metaAttribute(tag, "property") || metaAttribute(tag, "name")).toLowerCase();
+    if (!PAGE_SHARE_KEYS.has(key)) continue;
+    const content = metaAttribute(tag, "content");
+    if (content) found[key] = content;
+  }
+  return found;
+}
+
+function isAbsoluteHttps(value) {
+  return /^https:\/\/[^\s<>"']+$/i.test(value);
+}
+
+function upsertShareMeta(html, key, content) {
+  const attr = key.startsWith("twitter:") ? "name" : "property";
+  const tag = `<meta ${attr}="${key}" content="${escapeHtml(content)}">`;
+  const re = new RegExp(
+    `<meta\\b[^>]*\\b(?:property|name)\\s*=\\s*["']${key.replaceAll(":", "\\:")}["'][^>]*>`,
+    "i",
+  );
+  if (re.test(html)) return html.replace(re, tag);
+  return insertBeforeHeadClose(html, tag);
+}
+
+/**
+ * Keep a route's own description, canonical URL, and absolute image when the
+ * platform cannot emit an image (Vercel system hosts). Never replaces an
+ * og:image the platform already emitted for a public host.
+ */
+function applyPageShareMeta(html, authored, { keepPlatformImage }) {
+  let next = html;
+  for (const key of ["og:description", "twitter:title", "twitter:description"]) {
+    if (authored[key]) next = upsertShareMeta(next, key, authored[key]);
+  }
+  if (isAbsoluteHttps(authored["og:url"] || "")) next = upsertShareMeta(next, "og:url", authored["og:url"]);
+  if (!keepPlatformImage && isAbsoluteHttps(authored["og:image"] || "")) {
+    next = upsertShareMeta(next, "og:image", authored["og:image"]);
+  }
+  if (isAbsoluteHttps(authored["twitter:image"] || "")) {
+    next = upsertShareMeta(next, "twitter:image", authored["twitter:image"]);
+  }
+  return next;
+}
+
 export function injectGrokPwaHead(html, ctx = {}) {
   if (typeof html !== "string") return html;
+  const authored = readPageShareMeta(html);
   const { site, projectId, creator, creatorId, host, cwd } = normalizeHeadContext(ctx);
   const documentTitle = titleFromDocument(html);
   const appName = resolveOgTitle(
@@ -462,10 +536,8 @@ export function injectGrokPwaHead(html, ctx = {}) {
     })
     .map(([, tag]) => tag);
 
-  next = insertAfterHeadOpen(
-    next,
-    grokOgHeadTags({ host, appName, site, documentTitle, cwd }).join(""),
-  );
+  const ogTags = grokOgHeadTags({ host, appName, site, documentTitle, cwd });
+  next = insertAfterHeadOpen(next, ogTags.join(""));
 
   if (readGrokExtensionsEnabled() && !next.includes("/grok-app-builder/extensions.js")) {
     missing.push(...grokExtensionsHeadTags(projectId));
@@ -488,8 +560,10 @@ export function injectGrokPwaHead(html, ctx = {}) {
     if (!next.includes('property="x:creator:id"')) missing.push(creatorTags[1]);
   }
 
-  if (missing.length === 0) return next;
-  return insertBeforeHeadClose(next, missing.join(""));
+  if (missing.length > 0) next = insertBeforeHeadClose(next, missing.join(""));
+  return applyPageShareMeta(next, authored, {
+    keepPlatformImage: ogTags.some((tag) => tag.includes('property="og:image"')),
+  });
 }
 
 function findHeadClose(buf) {

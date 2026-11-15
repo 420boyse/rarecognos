@@ -9,39 +9,32 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as ReferralRouteImport } from './routes/referral'
-import { Route as QuestRouteImport } from './routes/quest'
-import { Route as CreateRouteImport } from './routes/create'
-import { Route as EyedRouteImport } from './routes/eyed'
-import { Route as ExploreRouteImport } from './routes/explore'
-import { Route as ApiUploadStatusRouteImport } from './routes/api/upload/status'
-import { Route as ApiUploadPrepareRouteImport } from './routes/api/upload/prepare'
-import { Route as ApiUploadChallengeRouteImport } from './routes/api/upload/challenge'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AboutRouteImport } from './routes/about'
+import { Route as CreateRouteImport } from './routes/create'
+import { Route as ExploreRouteImport } from './routes/explore'
+import { Route as EyedRouteImport } from './routes/eyed'
+import { Route as HaloRouteImport } from './routes/halo'
+import { Route as HowRouteImport } from './routes/how'
+import { Route as QuestRouteImport } from './routes/quest'
+import { Route as ReferralRouteImport } from './routes/referral'
+import { Route as ApiUploadChallengeRouteImport } from './routes/api/upload/challenge'
+import { Route as ApiUploadPrepareRouteImport } from './routes/api/upload/prepare'
+import { Route as ApiUploadStatusRouteImport } from './routes/api/upload/status'
 
-const ReferralRoute = ReferralRouteImport.update({
-  id: '/referral',
-  path: '/referral',
+const IndexRoute = IndexRouteImport.update({
+  id: '/',
+  path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const QuestRoute = QuestRouteImport.update({
-  id: '/quest',
-  path: '/quest',
+const AboutRoute = AboutRouteImport.update({
+  id: '/about',
+  path: '/about',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiUploadStatusRoute = ApiUploadStatusRouteImport.update({
-  id: '/api/upload/status',
-  path: '/api/upload/status',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiUploadPrepareRoute = ApiUploadPrepareRouteImport.update({
-  id: '/api/upload/prepare',
-  path: '/api/upload/prepare',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiUploadChallengeRoute = ApiUploadChallengeRouteImport.update({
-  id: '/api/upload/challenge',
-  path: '/api/upload/challenge',
+const CreateRoute = CreateRouteImport.update({
+  id: '/create',
+  path: '/create',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ExploreRoute = ExploreRouteImport.update({
@@ -54,69 +47,143 @@ const EyedRoute = EyedRouteImport.update({
   path: '/eyed',
   getParentRoute: () => rootRouteImport,
 } as any)
-const CreateRoute = CreateRouteImport.update({
-  id: '/create',
-  path: '/create',
+const HaloRoute = HaloRouteImport.update({
+  id: '/halo',
+  path: '/halo',
   getParentRoute: () => rootRouteImport,
 } as any)
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
+const HowRoute = HowRouteImport.update({
+  id: '/how',
+  path: '/how',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const QuestRoute = QuestRouteImport.update({
+  id: '/quest',
+  path: '/quest',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ReferralRoute = ReferralRouteImport.update({
+  id: '/referral',
+  path: '/referral',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiUploadChallengeRoute = ApiUploadChallengeRouteImport.update({
+  id: '/api/upload/challenge',
+  path: '/api/upload/challenge',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiUploadPrepareRoute = ApiUploadPrepareRouteImport.update({
+  id: '/api/upload/prepare',
+  path: '/api/upload/prepare',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiUploadStatusRoute = ApiUploadStatusRouteImport.update({
+  id: '/api/upload/status',
+  path: '/api/upload/status',
   getParentRoute: () => rootRouteImport,
 } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/about': typeof AboutRoute
+  '/create': typeof CreateRoute
+  '/explore': typeof ExploreRoute
+  '/eyed': typeof EyedRoute
+  '/halo': typeof HaloRoute
+  '/how': typeof HowRoute
+  '/quest': typeof QuestRoute
+  '/referral': typeof ReferralRoute
   '/api/upload/challenge': typeof ApiUploadChallengeRoute
   '/api/upload/prepare': typeof ApiUploadPrepareRoute
   '/api/upload/status': typeof ApiUploadStatusRoute
-  '/quest': typeof QuestRoute
-  '/create': typeof CreateRoute
-  '/eyed': typeof EyedRoute
-  '/explore': typeof ExploreRoute
-  '/referral': typeof ReferralRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/about': typeof AboutRoute
+  '/create': typeof CreateRoute
+  '/explore': typeof ExploreRoute
+  '/eyed': typeof EyedRoute
+  '/halo': typeof HaloRoute
+  '/how': typeof HowRoute
+  '/quest': typeof QuestRoute
+  '/referral': typeof ReferralRoute
   '/api/upload/challenge': typeof ApiUploadChallengeRoute
   '/api/upload/prepare': typeof ApiUploadPrepareRoute
   '/api/upload/status': typeof ApiUploadStatusRoute
-  '/quest': typeof QuestRoute
-  '/create': typeof CreateRoute
-  '/eyed': typeof EyedRoute
-  '/explore': typeof ExploreRoute
-  '/referral': typeof ReferralRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/about': typeof AboutRoute
+  '/create': typeof CreateRoute
+  '/explore': typeof ExploreRoute
+  '/eyed': typeof EyedRoute
+  '/halo': typeof HaloRoute
+  '/how': typeof HowRoute
+  '/quest': typeof QuestRoute
+  '/referral': typeof ReferralRoute
   '/api/upload/challenge': typeof ApiUploadChallengeRoute
   '/api/upload/prepare': typeof ApiUploadPrepareRoute
   '/api/upload/status': typeof ApiUploadStatusRoute
-  '/quest': typeof QuestRoute
-  '/create': typeof CreateRoute
-  '/eyed': typeof EyedRoute
-  '/explore': typeof ExploreRoute
-  '/referral': typeof ReferralRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/api/upload/challenge' | '/api/upload/prepare' | '/api/upload/status' | '/quest' | '/create' | '/eyed' | '/explore' | '/referral'
+  fullPaths:
+    | '/'
+    | '/about'
+    | '/create'
+    | '/explore'
+    | '/eyed'
+    | '/halo'
+    | '/how'
+    | '/quest'
+    | '/referral'
+    | '/api/upload/challenge'
+    | '/api/upload/prepare'
+    | '/api/upload/status'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/api/upload/challenge' | '/api/upload/prepare' | '/api/upload/status' | '/quest' | '/create' | '/eyed' | '/explore' | '/referral'
-  id: '__root__' | '/' | '/api/upload/challenge' | '/api/upload/prepare' | '/api/upload/status' | '/quest' | '/create' | '/eyed' | '/explore' | '/referral'
+  to:
+    | '/'
+    | '/about'
+    | '/create'
+    | '/explore'
+    | '/eyed'
+    | '/halo'
+    | '/how'
+    | '/quest'
+    | '/referral'
+    | '/api/upload/challenge'
+    | '/api/upload/prepare'
+    | '/api/upload/status'
+  id:
+    | '__root__'
+    | '/'
+    | '/about'
+    | '/create'
+    | '/explore'
+    | '/eyed'
+    | '/halo'
+    | '/how'
+    | '/quest'
+    | '/referral'
+    | '/api/upload/challenge'
+    | '/api/upload/prepare'
+    | '/api/upload/status'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AboutRoute: typeof AboutRoute
+  CreateRoute: typeof CreateRoute
+  ExploreRoute: typeof ExploreRoute
+  EyedRoute: typeof EyedRoute
+  HaloRoute: typeof HaloRoute
+  HowRoute: typeof HowRoute
+  QuestRoute: typeof QuestRoute
+  ReferralRoute: typeof ReferralRoute
   ApiUploadChallengeRoute: typeof ApiUploadChallengeRoute
   ApiUploadPrepareRoute: typeof ApiUploadPrepareRoute
   ApiUploadStatusRoute: typeof ApiUploadStatusRoute
-  QuestRoute: typeof QuestRoute
-  CreateRoute: typeof CreateRoute
-  EyedRoute: typeof EyedRoute
-  ExploreRoute: typeof ExploreRoute
-  ReferralRoute: typeof ReferralRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -128,11 +195,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/quest': {
-      id: '/quest'
-      path: '/quest'
-      fullPath: '/quest'
-      preLoaderRoute: typeof QuestRouteImport
+    '/about': {
+      id: '/about'
+      path: '/about'
+      fullPath: '/about'
+      preLoaderRoute: typeof AboutRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/create': {
@@ -142,6 +209,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CreateRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/explore': {
+      id: '/explore'
+      path: '/explore'
+      fullPath: '/explore'
+      preLoaderRoute: typeof ExploreRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/eyed': {
       id: '/eyed'
       path: '/eyed'
@@ -149,11 +223,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof EyedRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/explore': {
-      id: '/explore'
-      path: '/explore'
-      fullPath: '/explore'
-      preLoaderRoute: typeof ExploreRouteImport
+    '/halo': {
+      id: '/halo'
+      path: '/halo'
+      fullPath: '/halo'
+      preLoaderRoute: typeof HaloRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/how': {
+      id: '/how'
+      path: '/how'
+      fullPath: '/how'
+      preLoaderRoute: typeof HowRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/quest': {
+      id: '/quest'
+      path: '/quest'
+      fullPath: '/quest'
+      preLoaderRoute: typeof QuestRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/referral': {
@@ -163,11 +251,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ReferralRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/upload/status': {
-      id: '/api/upload/status'
-      path: '/api/upload/status'
-      fullPath: '/api/upload/status'
-      preLoaderRoute: typeof ApiUploadStatusRouteImport
+    '/api/upload/challenge': {
+      id: '/api/upload/challenge'
+      path: '/api/upload/challenge'
+      fullPath: '/api/upload/challenge'
+      preLoaderRoute: typeof ApiUploadChallengeRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/upload/prepare': {
@@ -177,11 +265,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiUploadPrepareRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/upload/challenge': {
-      id: '/api/upload/challenge'
-      path: '/api/upload/challenge'
-      fullPath: '/api/upload/challenge'
-      preLoaderRoute: typeof ApiUploadChallengeRouteImport
+    '/api/upload/status': {
+      id: '/api/upload/status'
+      path: '/api/upload/status'
+      fullPath: '/api/upload/status'
+      preLoaderRoute: typeof ApiUploadStatusRouteImport
       parentRoute: typeof rootRouteImport
     }
   }
@@ -189,14 +277,17 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AboutRoute: AboutRoute,
+  CreateRoute: CreateRoute,
+  ExploreRoute: ExploreRoute,
+  EyedRoute: EyedRoute,
+  HaloRoute: HaloRoute,
+  HowRoute: HowRoute,
+  QuestRoute: QuestRoute,
+  ReferralRoute: ReferralRoute,
   ApiUploadChallengeRoute: ApiUploadChallengeRoute,
   ApiUploadPrepareRoute: ApiUploadPrepareRoute,
   ApiUploadStatusRoute: ApiUploadStatusRoute,
-  QuestRoute: QuestRoute,
-  CreateRoute: CreateRoute,
-  EyedRoute: EyedRoute,
-  ExploreRoute: ExploreRoute,
-  ReferralRoute: ReferralRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

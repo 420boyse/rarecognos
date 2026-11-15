@@ -8,8 +8,21 @@ import { NFTDeploy } from "@/components/nft-deploy";
 import { MarketHeader } from "@/components/market-header";
 import { NFTDropMint } from "@/components/nft-drops";
 import { SiteFooter } from "@/components/site-footer";
+import { faucetUrl } from "@/lib/nft/network";
+import { pageMeta } from "@/lib/site-meta";
+import eyedDeployment from "../../config/eyed.json";
+import haloDeployment from "../../config/halo.json";
 import { isAddress, type Address } from "viem";
-export const Route = createFileRoute("/")({ component: Home });
+export const Route = createFileRoute("/")({
+  head: () =>
+    pageMeta({
+      title: "RareCognos",
+      description: "An eye for the rare. Distinctive digital art on LiteForge.",
+      path: "/",
+      image: "/art/nocturne-hero.jpg",
+    }),
+  component: Home,
+});
 function Home() {
   const [view, setView] = useState("Explore");
   const [active, setActive] = useState<Work | null>(null);
@@ -41,7 +54,7 @@ function Home() {
   }, [view]);
   return (
     <div id="top">
-      <MarketHeader view={view} />
+      <MarketHeader view={view === "Explore" || view.startsWith("Token:") || view.startsWith("Drop:") ? "Home" : view} />
       <main>
         <section
           className={`market-hero ${view !== "Explore" ? "market-hero--compact" : ""}`}
@@ -97,6 +110,34 @@ function Home() {
             <span>Blackened chrome, 2026</span>
           </div>
         </section>
+        <section className="studio-section home-collections" aria-labelledby="collections-home">
+          <div className="section-heading">
+            <div>
+              <h2 id="collections-home">Collections</h2>
+              <p>Open drops and what is still ahead.</p>
+            </div>
+          </div>
+          <ul className="catalog-grid catalog-grid--collections">
+            <li>
+              <a className="catalog-card" href="/eyed">
+                <img className="is-pixel" src="/art/eyed/04.jpg" alt="" width="640" height="640" loading="lazy" decoding="async" />
+                <strong>Eyed</strong>
+                <em>8 featured of 9</em>
+                <span className="status-pill">{isAddress(eyedDeployment.address) ? "Mint open" : "Coming soon"}</span>
+              </a>
+            </li>
+            <li>
+              <a className="catalog-card" href="/halo">
+                <img src="/art/halo/01.png" alt="" width="640" height="640" loading="lazy" />
+                <strong>Halo</strong>
+                <em>6 figures</em>
+                <span className="status-pill">{isAddress(haloDeployment.address || "") ? "Mint open" : "Coming soon"}</span>
+              </a>
+            </li>
+          </ul>
+        </section>
+        {view !== "Explore" && (
+        <>
         {view.startsWith("Drop:") && <NFTDropMint address={view.slice(5) as Address} />}
         <NFTMarket
           tab={view}
@@ -106,6 +147,8 @@ function Home() {
             location.hash = next === "My NFTs" ? "my-nfts" : "explore";
           }}
         />
+        </>
+        )}
         <section id="studio" className="studio-section" aria-labelledby="studio-title">
           <div className="section-heading">
             <div>
@@ -122,6 +165,17 @@ function Home() {
             ))}
           </ul>
         </section>
+        <section className="studio-section" aria-labelledby="start-title">
+          <div className="section-heading">
+            <div>
+              <h2 id="start-title">Start here</h2>
+              <p>Connect a wallet, add LiteForge, then get test zkLTC from the faucet. Pick Eyed when you are ready to mint. The network fee is separate from the mint price.</p>
+            </div>
+            <a className="primary-action" href={faucetUrl} target="_blank" rel="noreferrer">
+              Get zkLTC
+            </a>
+          </div>
+        </section>
         <NFTDeploy />
       </main>
       <SiteFooter exploreHref="/explore" />
@@ -136,9 +190,13 @@ function WorkCard({ work, onOpen }: { work: Work; onOpen: () => void }) {
       onClick={onOpen}
       className="group relative flex h-full min-h-80 w-full flex-col overflow-hidden rounded-2xl border border-line bg-surface text-left md:min-h-[28rem]"
     >
-      <img
+        <img
         src={work.image}
         alt=""
+        width="1200"
+        height="1500"
+        loading="lazy"
+        decoding="async"
         className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 ease-out group-hover:scale-105 motion-reduce:transition-none motion-reduce:group-hover:scale-100"
       />
       <span className="absolute top-4 left-4 rounded-full border border-line bg-bg/70 px-3 py-1 text-xs tracking-wide text-fg backdrop-blur-sm">
