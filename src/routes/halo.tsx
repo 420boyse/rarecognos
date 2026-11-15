@@ -245,7 +245,7 @@ function HaloPage() {
                 onClick={() => {
                   opener.current = document.activeElement as HTMLElement | null;
                   setOpen(item.id);
-                  void navigate({ search: (prev) => ({ ...prev, piece: item.id }), replace: true });
+                  void navigate({ search: (prev) => ({ ...prev, piece: item.id }), replace: true, resetScroll: false });
                 }}
               >
                 <img src={`/art/halo/${item.id}.png`} alt="" width="640" height="640" />

@@ -169,8 +169,15 @@ export function FanStackNFT({
       scrollPos.current += event.deltaX / spread;
       velocity.current = 0;
     };
+    const onTouchMove = (event: TouchEvent) => {
+      if (axisLocked.current === "h") event.preventDefault();
+    };
     el.addEventListener("wheel", onWheel, { passive: false });
-    return () => el.removeEventListener("wheel", onWheel);
+    el.addEventListener("touchmove", onTouchMove, { passive: false });
+    return () => {
+      el.removeEventListener("wheel", onWheel);
+      el.removeEventListener("touchmove", onTouchMove);
+    };
   }, []);
 
   useEffect(() => {
@@ -205,7 +212,8 @@ export function FanStackNFT({
 
   const onPointerDown = (e: React.PointerEvent) => {
     if (countRef.current < 2) return;
-    if ((e.target as HTMLElement).closest("button")) return;
+    if ((e.target as HTMLElement).closest("button, a")) return;
+    e.preventDefault();
     isDragging.current = true;
     axisLocked.current = null;
     velocity.current = 0;
@@ -354,6 +362,7 @@ export function FanStackNFT({
           width: 100%;
           max-width: 1100px;
           touch-action: pan-y;
+          overscroll-behavior: contain;
           cursor: grab;
           user-select: none;
         }

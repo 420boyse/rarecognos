@@ -57,6 +57,7 @@ function EyedPage() {
   const storyRef = useRef<HTMLDivElement>(null);
   const opener = useRef<HTMLElement | null>(null);
   const lock = useRef(false);
+  const holdScroll = useRef<number | null>(null);
   const account = useAccount();
   const network = useSwitchChain();
   const client = usePublicClient({ chainId: chain.id });
@@ -127,8 +128,32 @@ function EyedPage() {
   }, [dialogOpen]);
 
   const go = (id: string) => {
-    void navigate({ search: (prev) => ({ ...prev, piece: id }), replace: true });
+    if (id === pieceId) return;
+    holdScroll.current = window.scrollY;
+    void navigate({
+      search: (prev) => ({ ...prev, piece: id }),
+      replace: true,
+      resetScroll: false,
+    });
   };
+
+  useEffect(() => {
+    if (holdScroll.current === null) return;
+    const top = holdScroll.current;
+    const restore = () => {
+      if (Math.abs(window.scrollY - top) > 1) window.scrollTo({ top, left: 0 });
+    };
+    restore();
+    const frame = requestAnimationFrame(restore);
+    const timer = window.setTimeout(() => {
+      restore();
+      holdScroll.current = null;
+    }, 50);
+    return () => {
+      cancelAnimationFrame(frame);
+      window.clearTimeout(timer);
+    };
+  }, [pieceId]);
 
   const launch = async () => {
     if (lock.current || !wallet.data || !client) return;
