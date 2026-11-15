@@ -31,8 +31,14 @@ function QuestPage() {
     if (!pending && !allowed) location.replace("/");
   }, [pending, allowed]);
 
-  const cap = 210;
-  const fill = Math.min(100, Math.round((progress.xp / cap) * 100));
+  const helloXp = progress.hello ? 50 : 0;
+  const heldXp = progress.held ? 150 : 0;
+  const checkinXp = Math.max(0, progress.xp - helloXp - heldXp);
+  const lines = [
+    ["Say hello", helloXp],
+    ["Daily check-in", checkinXp],
+    ["Hold a work", heldXp],
+  ] as const;
 
   return (
     <div>
@@ -43,12 +49,26 @@ function QuestPage() {
             <div className="section-heading">
               <div>
                 <h1>Quest</h1>
-                <p>{progress.xp} XP</p>
-              </div>
-              <div className="xp-track" aria-hidden="true">
-                <span style={{ width: `${fill}%` }} />
               </div>
             </div>
+            <section className="xp-total" aria-label="Total XP">
+              <div>
+                <p className="checkin-kicker">Total XP</p>
+                <p className="xp-figure">{progress.xp}</p>
+              </div>
+              <dl className="xp-ledger">
+                {lines.map(([name, amount]) => (
+                  <div key={name}>
+                    <dt>{name}</dt>
+                    <dd>{amount || "—"}</dd>
+                  </div>
+                ))}
+                <div className="xp-sum">
+                  <dt>Total</dt>
+                  <dd>{progress.xp}</dd>
+                </div>
+              </dl>
+            </section>
             <ul className="quest-list">
               <li className={`quest-row ${progress.hello ? "done" : "ready"}`}>
                 <div>

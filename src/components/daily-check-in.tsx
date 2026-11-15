@@ -141,6 +141,13 @@ export function DailyCheckIn({ member }: { member: string }) {
       ? `Last recorded ${labelForDay(last)}`
       : "Once a day. 0.0001 zkLTC.";
 
+  useEffect(() => {
+    if (!member || !chainDone) return;
+    const current = progressFor(member);
+    if (current.checkin === utcDay()) return;
+    saveProgress(member, { ...current, checkin: utcDay(), xp: current.xp + 10 });
+  }, [member, chainDone]);
+
   return (
     <li className={`quest-row checkin-row ${finished ? "done" : locked ? "locked" : "ready"}`}>
       <div>

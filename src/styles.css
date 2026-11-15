@@ -196,6 +196,10 @@
 .login-menu [role="menuitem"] {
   min-height: 44px;
 }
+.wallet-menu [role="menuitem"] span {
+  margin-left: auto;
+  font-variant-numeric: tabular-nums;
+}
 .wallet-menu [data-highlighted] {
   background: var(--color-fg);
   color: var(--color-bg);
@@ -543,6 +547,42 @@
   height: 100%;
   background: var(--color-fg);
 }
+.xp-total {
+  display: grid;
+  grid-template-columns: minmax(140px, 220px) minmax(0, 1fr);
+  gap: 48px;
+  align-items: end;
+  max-width: 760px;
+  margin: 0 0 36px;
+}
+.xp-figure {
+  margin: 0;
+  font-family: var(--font-serif);
+  font-size: 88px;
+  line-height: 0.85;
+  letter-spacing: -0.04em;
+}
+.xp-ledger {
+  margin: 0;
+}
+.xp-ledger div {
+  display: flex;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 10px 0;
+  border-top: 1px solid var(--color-line);
+  font-size: 14px;
+}
+.xp-ledger dt {
+  color: rgb(245 244 239 / 0.65);
+}
+.xp-ledger dd {
+  margin: 0;
+  font-variant-numeric: tabular-nums;
+}
+.xp-ledger .xp-sum {
+  color: var(--color-fg);
+}
 .checkin-kicker {
   margin-bottom: 6px;
   font-size: 11px;
@@ -783,6 +823,13 @@
 @media (max-width: 720px) {
   .quest-row {
     grid-template-columns: 1fr;
+  }
+  .xp-total {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+  .xp-figure {
+    font-size: 64px;
   }
 }
 input,

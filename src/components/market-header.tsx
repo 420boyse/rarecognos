@@ -6,7 +6,7 @@ import { EyeMark, Wordmark } from "./wordmark";
 import { chain } from "@/lib/nft/config";
 import { addLiteForge, faucetUrl } from "@/lib/nft/network";
 import { transactionError } from "@/lib/nft/transaction";
-import { signInGmail, useGmail, writeGmail, GOOGLE_CLIENT_ID } from "@/lib/member";
+import { signInGmail, useGmail, writeGmail, GOOGLE_CLIENT_ID, memberKey, useProgress } from "@/lib/member";
 function GoogleMark() {
   return (
     <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
@@ -39,6 +39,7 @@ export function MarketHeader({ view }: { view: string }) {
   const [available, setAvailable] = useState<typeof connect.connectors>([]);
   const gmail = useGmail();
   const member = Boolean(account.address || gmail);
+  const progress = useProgress(memberKey(account.address, gmail?.email));
   const wrong = account.isConnected && account.chainId !== chain.id;
   const address = account.address
     ? `${account.address.slice(0, 6)}...${account.address.slice(-4)}`
@@ -150,6 +151,11 @@ export function MarketHeader({ view }: { view: string }) {
                   <Dropdown.Label className="wallet-menu-label">
                     Wallet<span>{address}</span>
                   </Dropdown.Label>
+                  <Dropdown.Item asChild>
+                    <a href="/quest">
+                      Total XP<span>{progress.xp}</span>
+                    </a>
+                  </Dropdown.Item>
                   {gmail && (
                     <Dropdown.Label className="wallet-menu-label">
                       Gmail<span>{gmail.email}</span>
