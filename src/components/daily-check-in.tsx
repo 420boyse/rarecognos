@@ -63,6 +63,7 @@ export function CheckInBoard() {
   const windowDays = Array.from({ length: 14 }, (_, i) => today - 13 + i);
   let streak = 0;
   for (let day = days.has(today) ? today : today - 1; days.has(day); day -= 1) streak += 1;
+  const checkedCount = windowDays.filter((day) => days.has(day)).length;
 
   if (!account.address) return null;
 
@@ -72,24 +73,26 @@ export function CheckInBoard() {
         <h2>Check-in</h2>
         <p>{logs.isPending ? "Reading the chain…" : streak ? `${streak} day streak` : "No streak yet."}</p>
       </div>
-      <table>
-        <thead>
-          <tr>
-            <th>Date</th>
-            <th>Day</th>
-            <th>Status</th>
-          </tr>
-        </thead>
-        <tbody>
-          {windowDays.map((day) => (
-            <tr key={day} className={day === today ? "today" : undefined}>
-              <td>{labelForDay(day)}</td>
-              <td>{day}</td>
-              <td>{days.has(day) ? "Checked in" : day === today ? "Open" : "Missed"}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      <div className="checkin-days" role="list">
+        {windowDays.map((day) => {
+          const hit = days.has(day);
+          const state = hit ? "Checked in" : day === today ? "Open" : "Quiet";
+          return (
+            <span
+              key={day}
+              role="listitem"
+              className={`checkin-day${hit ? " hit" : ""}${day === today ? " today" : ""}`}
+              title={`${labelForDay(day)} · ${state}`}
+              aria-label={`${labelForDay(day)}, ${state}`}
+            />
+          );
+        })}
+      </div>
+      <p className="checkin-span">
+        <span>{labelForDay(windowDays[0])}</span>
+        <span>{checkedCount} of 14</span>
+        <span>Today</span>
+      </p>
     </section>
   );
 }
