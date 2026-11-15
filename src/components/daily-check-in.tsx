@@ -20,83 +20,6 @@ function labelForDay(day: number) {
   return new Date(day * DAY).toLocaleDateString("en-GB", { day: "2-digit", month: "short", timeZone: "UTC" });
 }
 
-export function CheckInBoard() {
-  const account = useAccount();
-  const client = usePublicClient({ chainId: chain.id });
-  const [address, setAddress] = useState<Address | undefined>();
-  const today = utcDayNumber();
-
-  useEffect(() => {
-    const saved = readCheckInAddress();
-    if (saved) setAddress(saved);
-  }, []);
-
-  const logs = useQuery({
-    queryKey: ["checkin-board", address, account.address],
-    enabled: Boolean(client && address && account.address),
-    queryFn: async () => {
-      const latest = await client!.getBlockNumber();
-      const fromBlock = latest > 750_000n ? latest - 750_000n : 0n;
-      return client!.getLogs({
-        address,
-        event: {
-          type: "event",
-          name: "CheckedIn",
-          inputs: [
-            { type: "address", name: "account", indexed: true },
-            { type: "uint256", name: "day", indexed: true },
-            { type: "uint256", name: "fee", indexed: false },
-          ],
-        },
-        args: { account: account.address },
-        fromBlock,
-      });
-    },
-  });
-
-  const days = new Set(
-    (logs.data || [])
-      .map((log) => (log.args as { day?: bigint }).day)
-      .filter((day): day is bigint => typeof day === "bigint")
-      .map(Number),
-  );
-  const windowDays = Array.from({ length: 14 }, (_, i) => today - 13 + i);
-  let streak = 0;
-  for (let day = days.has(today) ? today : today - 1; days.has(day); day -= 1) streak += 1;
-  const checkedCount = windowDays.filter((day) => days.has(day)).length;
-
-  if (!account.address) return null;
-
-  return (
-    <section className="checkin-board" aria-label="Check-in record">
-      <div className="checkin-board-head">
-        <h2>Check-in</h2>
-        <p>{logs.isPending ? "Reading the chain…" : streak ? `${streak} day streak` : "No streak yet."}</p>
-      </div>
-      <div className="checkin-days" role="list">
-        {windowDays.map((day) => {
-          const hit = days.has(day);
-          const state = hit ? "Checked in" : day === today ? "Open" : "Quiet";
-          return (
-            <span
-              key={day}
-              role="listitem"
-              className={`checkin-day${hit ? " hit" : ""}${day === today ? " today" : ""}`}
-              title={`${labelForDay(day)} · ${state}`}
-              aria-label={`${labelForDay(day)}, ${state}`}
-            />
-          );
-        })}
-      </div>
-      <p className="checkin-span">
-        <span>{labelForDay(windowDays[0])}</span>
-        <span>{checkedCount} of 14</span>
-        <span>Today</span>
-      </p>
-    </section>
-  );
-}
-
 export function DailyCheckIn({ member }: { member: string }) {
   const account = useAccount();
   const client = usePublicClient({ chainId: chain.id });
@@ -167,6 +90,7 @@ export function DailyCheckIn({ member }: { member: string }) {
         xp: current.xp + (current.checkin === utcDay() ? 0 : 10),
       });
       await cache.invalidateQueries({ queryKey: ["checkin-board", address, account.address] });
+      await checked.refetch();
       setNote("");
     } catch (error) {
       setNote(transactionError(error));
@@ -177,24 +101,67 @@ export function DailyCheckIn({ member }: { member: string }) {
 
   const chainDone = typeof checked.data === "bigint" && Number(checked.data) === Math.floor(Date.now() / 86_400_000);
   const finished = done || chainDone;
-  const label = finished ? "Done" : locked ? "Locked" : !address ? "Launch" : "Check in";
+  const label = finished ? "Recorded" : locked ? "Locked" : !address ? "Launch" : "Check in";
+  const today = utcDayNumber();
+  const last = typeof checked.data === "bigint" ? Number(checked.data) : 0;
+  const logs = useQuery({
+    queryKey: ["checkin-board", address, account.address],
+    enabled: Boolean(client && address && account.address),
+    queryFn: async () => {
+      const latest = await client!.getBlockNumber();
+      const fromBlock = latest > 750_000n ? latest - 750_000n : 0n;
+      return client!.getLogs({
+        address,
+        event: {
+          type: "event",
+          name: "CheckedIn",
+          inputs: [
+            { type: "address", name: "account", indexed: true },
+            { type: "uint256", name: "day", indexed: true },
+            { type: "uint256", name: "fee", indexed: false },
+          ],
+        },
+        args: { account: account.address },
+        fromBlock,
+      });
+    },
+  });
+  const days = new Set(
+    (logs.data || [])
+      .map((log) => (log.args as { day?: bigint }).day)
+      .filter((day): day is bigint => typeof day === "bigint")
+      .map(Number),
+  );
+  if (last > 0) days.add(last);
+  let streak = 0;
+  for (let day = days.has(today) ? today : today - 1; days.has(day); day -= 1) streak += 1;
+  const detail = finished
+    ? `${labelForDay(today)}${streak > 1 ? ` · ${streak} days` : ""}`
+    : last > 0
+      ? `Last recorded ${labelForDay(last)}`
+      : "Once a day. 0.0001 zkLTC.";
 
   return (
-    <li className={`quest-row ${finished ? "done" : locked ? "locked" : "ready"}`}>
+    <li className={`quest-row checkin-row ${finished ? "done" : locked ? "locked" : "ready"}`}>
       <div>
-        <h2>Daily check-in</h2>
-        <p>{locked ? "Needs a wallet." : "Once a day."}</p>
+        <p className="checkin-kicker">Daily check-in</p>
+        <h2>{finished ? "Recorded today" : "Open today"}</h2>
+        <p>{detail}</p>
         {(wrong || !account.isConnected) && <NetworkHelp />}
         {note && <p role="status">{note}</p>}
       </div>
       <span className="xp-chip">10 XP</span>
-      <button
-        className="primary-action"
-        disabled={locked || finished || busy || wrong}
-        onClick={() => void (address ? checkIn() : launch())}
-      >
-        {busy ? "Confirming…" : label}
-      </button>
+      {finished ? (
+        <span className="checkin-recorded">Recorded</span>
+      ) : (
+        <button
+          className="primary-action"
+          disabled={locked || busy || wrong}
+          onClick={() => void (address ? checkIn() : launch())}
+        >
+          {busy ? "Confirming…" : label}
+        </button>
+      )}
     </li>
   );
 }
