@@ -10,6 +10,7 @@ import { eyed, eyedNetwork, eyedPrice } from "@/data/eyed";
 import { chain, explorer } from "@/lib/nft/config";
 import { eyedTreasury, eyedUris, readEyedAddress, saveEyedAddress } from "@/lib/nft/eyed-address";
 import eyedDeployment from "../../config/eyed.json";
+import { availabilityLabel, dropStatus } from "@/lib/nft/availability";
 import { isTimeout, phaseLabel, txFailure, type MintPhase } from "@/lib/nft/mint-phase";
 import { eyedContractIndex, eyedVisible } from "@/lib/nft/piece-index";
 import { abi } from "@/lib/nft/RareCognosEyed";
@@ -89,6 +90,17 @@ function EyedPage() {
   const minted = mintedRead.data === undefined ? undefined : Number(mintedRead.data);
   const soldOut = supply !== undefined && minted !== undefined && minted >= supply;
   const supplyState = !live ? "unopened" : mintedRead.isError || supplyRead.isError ? "unread" : mintedRead.isPending || supplyRead.isPending ? "reading" : "read";
+  const availability = dropStatus({
+    live,
+    price: priceRead.data,
+    supply: supplyRead.data,
+    minted: mintedRead.data,
+    priceError: priceRead.isError,
+    supplyError: supplyRead.isError,
+    mintedError: mintedRead.isError,
+    trackMinted: true,
+  });
+  const statusText = availabilityLabel(availability);
   const priceText = priceRead.data !== undefined ? `${formatEther(priceRead.data)} zkLTC` : eyedPrice;
 
   useEffect(() => {
@@ -282,7 +294,7 @@ function EyedPage() {
             <h1>Eyed</h1>
             <p>Eight featured works from a set of nine. 100 editions each. Vanta remains piece 1 on the contract and is not in this row.</p>
           </div>
-          <p className="status-pill">{live ? "Mint open" : "Coming soon"}</p>
+          <p className="status-pill" role="status">{statusText}</p>
         </div>
         <FanStackNFT
           initialId={pieceId}

@@ -9,6 +9,7 @@ import { halo, haloNetwork, haloPrice } from "@/data/halo";
 import { chain, explorer } from "@/lib/nft/config";
 import { haloTreasury, haloUris, readHaloAddress, saveHaloAddress } from "@/lib/nft/halo-address";
 import haloDeployment from "../../config/halo.json";
+import { availabilityLabel, dropStatus } from "@/lib/nft/availability";
 import { isTimeout, phaseLabel, txFailure, type MintPhase } from "@/lib/nft/mint-phase";
 import { abi } from "@/lib/nft/RareCognosHalo";
 import { pageMeta, siteOrigin } from "@/lib/site-meta";
@@ -72,6 +73,18 @@ function HaloPage() {
   const minted = mintedRead.data === undefined ? undefined : Number(mintedRead.data);
   const soldOut = supply !== undefined && minted !== undefined && minted >= supply;
   const supplyState = !live ? "unopened" : mintedRead.isError || supplyRead.isError ? "unread" : mintedRead.isPending ? "reading" : "read";
+  const statusText = availabilityLabel(
+    dropStatus({
+      live,
+      price: priceRead.data,
+      supply: supplyRead.data,
+      minted: mintedRead.data,
+      priceError: priceRead.isError,
+      supplyError: supplyRead.isError,
+      mintedError: mintedRead.isError,
+      trackMinted: true,
+    }),
+  );
   const priceText = priceRead.data !== undefined ? `${formatEther(priceRead.data)} zkLTC` : haloPrice;
   const dialogOpen = Boolean(open || receipt);
 
@@ -228,7 +241,7 @@ function HaloPage() {
             <h1>Halo</h1>
             <p>Six figures. 100 editions each when the drop opens.</p>
           </div>
-          <p className="status-pill">{live ? (soldOut ? "Sold out" : "Mint open") : "Coming soon"}</p>
+          <p className="status-pill" role="status">{statusText}</p>
         </div>
         {!live && <p className="market-notice">Coming soon. Planned mint price {haloPrice}. No opening date is set.</p>}
         {canLaunch && !live && (
@@ -252,7 +265,7 @@ function HaloPage() {
                 <strong>{item.name}</strong>
                 <em>Halo</em>
                 <span>{live ? priceText : `Planned ${haloPrice}`}</span>
-                <span className="status-pill">{live ? "Mint open" : "Coming soon"}</span>
+                <span className="status-pill">{statusText}</span>
               </button>
             </li>
           ))}

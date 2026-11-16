@@ -10,6 +10,7 @@ import { NFTDropMint } from "@/components/nft-drops";
 import { SiteFooter } from "@/components/site-footer";
 import { faucetUrl } from "@/lib/nft/network";
 import { pageMeta } from "@/lib/site-meta";
+import { useDropStatus } from "@/lib/nft/use-drop-status";
 import eyedDeployment from "../../config/eyed.json";
 import haloDeployment from "../../config/halo.json";
 import { isAddress, type Address } from "viem";
@@ -26,6 +27,8 @@ export const Route = createFileRoute("/")({
 function Home() {
   const [view, setView] = useState("Explore");
   const [active, setActive] = useState<Work | null>(null);
+  const eyedDrop = useDropStatus(eyedDeployment.address);
+  const haloDrop = useDropStatus(haloDeployment.address || undefined);
   useEffect(() => {
     const update = () => {
       if (location.hash === "#create" || location.hash === "#drops") {
@@ -123,7 +126,7 @@ function Home() {
                 <img className="is-pixel" src="/art/eyed/04.jpg" alt="" width="640" height="640" loading="lazy" decoding="async" />
                 <strong>Eyed</strong>
                 <em>8 featured of 9</em>
-                <span className="status-pill">{isAddress(eyedDeployment.address) ? "Mint open" : "Coming soon"}</span>
+                <span className="status-pill">{eyedDrop.label}</span>
               </a>
             </li>
             <li>
@@ -131,7 +134,7 @@ function Home() {
                 <img src="/art/halo/01.png" alt="" width="640" height="640" loading="lazy" />
                 <strong>Halo</strong>
                 <em>6 figures</em>
-                <span className="status-pill">{isAddress(haloDeployment.address || "") ? "Mint open" : "Coming soon"}</span>
+                <span className="status-pill">{haloDrop.label}</span>
               </a>
             </li>
           </ul>

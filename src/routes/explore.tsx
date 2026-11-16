@@ -1,18 +1,48 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { MarketHeader } from "@/components/market-header";
 import { SiteFooter } from "@/components/site-footer";
 import { eyedNetwork, eyedPrice } from "@/data/eyed";
 import { halo, haloPrice } from "@/data/halo";
 import eyedDeployment from "../../config/eyed.json";
 import haloDeployment from "../../config/halo.json";
-import { isAddress } from "viem";
 import { featuredEyed } from "@/lib/nft/piece-index";
+import { useDropStatus } from "@/lib/nft/use-drop-status";
 import { pageMeta } from "@/lib/site-meta";
 
 const faces = featuredEyed();
-const eyedLive = Boolean(eyedDeployment.address && isAddress(eyedDeployment.address));
-const haloLive = Boolean(haloDeployment.address && isAddress(haloDeployment.address));
+
+function DeferredArt({ src, eager = false, pixel = false }: { src: string; eager?: boolean; pixel?: boolean }) {
+  const ref = useRef<HTMLImageElement>(null);
+  const [shown, setShown] = useState(eager);
+  useEffect(() => {
+    if (eager) return;
+    const node = ref.current;
+    if (!node) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (!entry?.isIntersecting) return;
+        setShown(true);
+        observer.disconnect();
+      },
+      { rootMargin: "240px" },
+    );
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, [eager]);
+  return (
+    <img
+      ref={ref}
+      className={pixel ? "is-pixel" : undefined}
+      src={shown ? src : undefined}
+      alt=""
+      width="640"
+      height="640"
+      decoding="async"
+      loading={eager ? "eager" : "lazy"}
+    />
+  );
+}
 
 export const Route = createFileRoute("/explore")({
   head: () =>
@@ -27,6 +57,8 @@ export const Route = createFileRoute("/explore")({
 
 function ExplorePage() {
   const [query, setQuery] = useState("");
+  const eyedDrop = useDropStatus(eyedDeployment.address);
+  const haloDrop = useDropStatus(haloDeployment.address || undefined);
   const q = query.trim().toLowerCase();
   const collectionHit = !q || "eyed".includes(q) || q.includes("eyed");
   const haloHit = !q || "halo".includes(q) || q.includes("halo");
@@ -73,22 +105,22 @@ function ExplorePage() {
               {showEyedCollection && (
                 <li>
                   <a className="catalog-card" href="/eyed">
-                    <img className="is-pixel" src="/art/eyed/02.jpg" alt="" width="640" height="640" />
+                    <DeferredArt src="/art/eyed/02.jpg" eager pixel />
                     <strong>Eyed</strong>
                     <em>8 featured of 9 · 100 editions each</em>
                     <span>Mint {eyedPrice} · {eyedNetwork}</span>
-                    <span className="status-pill">{eyedLive ? "Mint open" : "Coming soon"}</span>
+                    <span className="status-pill">{eyedDrop.label}</span>
                   </a>
                 </li>
               )}
               {showHaloCollection && (
                 <li>
                   <a className="catalog-card" href="/halo">
-                    <img src="/art/halo/01.png" alt="" width="640" height="640" />
+                    <DeferredArt src="/art/halo/01.png" eager />
                     <strong>Halo</strong>
                     <em>6 pieces · 100 editions each</em>
                     <span>Planned {haloPrice}</span>
-                    <span className="status-pill">{haloLive ? "Mint open" : "Coming soon"}</span>
+                    <span className="status-pill">{haloDrop.label}</span>
                   </a>
                 </li>
               )}
@@ -102,22 +134,22 @@ function ExplorePage() {
               {showPiece && piece && (
                 <li>
                   <a className="catalog-card" href={`/eyed?piece=${piece.id}`}>
-                    <img className="is-pixel" src={`/art/eyed/${piece.id}.jpg`} alt="" width="640" height="640" />
+                    <DeferredArt src={`/art/eyed/${piece.id}.jpg`} pixel />
                     <strong>{piece.name}</strong>
                     <em>Eyed</em>
                     <span>Mint {eyedPrice}</span>
-                    <span className="status-pill">{eyedLive ? "Mint open" : "Coming soon"}</span>
+                    <span className="status-pill">{eyedDrop.label}</span>
                   </a>
                 </li>
               )}
               {showHaloPiece && figure && (
                 <li>
                   <a className="catalog-card" href={`/halo?piece=${figure.id}`}>
-                    <img src={`/art/halo/${figure.id}.png`} alt="" width="640" height="640" />
+                    <DeferredArt src={`/art/halo/${figure.id}.png`} />
                     <strong>{figure.name}</strong>
                     <em>Halo</em>
                     <span>Planned {haloPrice}</span>
-                    <span className="status-pill">{haloLive ? "Mint open" : "Coming soon"}</span>
+                    <span className="status-pill">{haloDrop.label}</span>
                   </a>
                 </li>
               )}
@@ -125,11 +157,11 @@ function ExplorePage() {
                 faces.map((face) => (
                   <li key={face.id}>
                     <a className="catalog-card" href={`/eyed?piece=${face.id}`}>
-                      <img className="is-pixel" src={`/art/eyed/${face.id}.jpg`} alt="" width="640" height="640" />
+                      <DeferredArt src={`/art/eyed/${face.id}.jpg`} pixel />
                       <strong>{face.name}</strong>
                       <em>Eyed</em>
                       <span>Mint {eyedPrice}</span>
-                      <span className="status-pill">{eyedLive ? "Mint open" : "Coming soon"}</span>
+                      <span className="status-pill">{eyedDrop.label}</span>
                     </a>
                   </li>
                 ))}
@@ -137,11 +169,11 @@ function ExplorePage() {
                 halo.map((item) => (
                   <li key={item.id}>
                     <a className="catalog-card" href={`/halo?piece=${item.id}`}>
-                      <img src={`/art/halo/${item.id}.png`} alt="" width="640" height="640" />
+                      <DeferredArt src={`/art/halo/${item.id}.png`} />
                       <strong>{item.name}</strong>
                       <em>Halo</em>
                       <span>Planned {haloPrice}</span>
-                      <span className="status-pill">{haloLive ? "Mint open" : "Coming soon"}</span>
+                      <span className="status-pill">{haloDrop.label}</span>
                     </a>
                   </li>
                 ))}
