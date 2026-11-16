@@ -1,6 +1,6 @@
 import * as Dropdown from "@radix-ui/react-dropdown-menu";
 import * as Dialog from "@radix-ui/react-dialog";
-import { ChevronDown, LogOut, Grid2X2, QrCode, Smartphone, Wallet, X } from "lucide-react";
+import { ChevronDown, LogOut, Grid2X2, QrCode, Wallet, X } from "lucide-react";
 import { useAccount, useConnect, useDisconnect, useSwitchChain } from "wagmi";
 import { useEffect, useState } from "react";
 import { EyeMark, Wordmark } from "./wordmark";
@@ -8,6 +8,11 @@ import { chain } from "@/lib/nft/config";
 import { addLiteForge, faucetUrl } from "@/lib/nft/network";
 import { transactionError } from "@/lib/nft/transaction";
 import { signInGmail, useGmail, writeGmail, GOOGLE_CLIENT_ID, memberKey, useProgress } from "@/lib/member";
+function WalletMark({ name }: { name: string }) {
+  const normalized = name.toLowerCase();
+  const icon = normalized.includes("metamask") ? "metamask" : normalized.includes("trust") ? "trust" : normalized.includes("okx") || normalized.includes("okex") ? "okx" : normalized.includes("coinbase") || normalized.includes("base account") ? "coinbase" : null;
+  return icon ? <img className="wallet-brand-icon" src={`/brand/wallets/${icon}.svg`} alt="" aria-hidden="true" /> : <Wallet size={24} aria-hidden="true" />;
+}
 function GoogleMark() {
   return (
     <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
@@ -35,6 +40,7 @@ export function MarketHeader({ view }: { view: string }) {
   const [error, setError] = useState("");
   const [loginOpen, setLoginOpen] = useState(false);
   const [walletApps, setWalletApps] = useState<{ name: string; href: string }[]>([]);
+  const [isMobile, setIsMobile] = useState(false);
   const [available, setAvailable] = useState<typeof connect.connectors | null>(null);
   const [connectionError, setConnectionError] = useState("");
   const gmail = useGmail();
@@ -75,6 +81,7 @@ export function MarketHeader({ view }: { view: string }) {
   }, [account.isConnected, connecting]);
   useEffect(() => {
     if (loginOpen && /Android|iPhone|iPad/i.test(navigator.userAgent)) {
+      setIsMobile(true);
       setWalletApps(walletAppLinks());
     }
   }, [loginOpen]);
@@ -87,6 +94,7 @@ export function MarketHeader({ view }: { view: string }) {
         if (connector.type !== "injected") return { connector };
         try {
           const provider = await connector.getProvider();
+          if (provider && (provider as { isPhantom?: boolean }).isPhantom) return null;
           return provider ? { connector, provider } : null;
         } catch {
           return null;
@@ -107,7 +115,10 @@ export function MarketHeader({ view }: { view: string }) {
     };
   }, [connect.connectors, loginOpen]);
   const qrConnector = connect.connectors.find((connector) => connector.id === "walletConnect");
-  const browserWallets = available?.filter((connector) => connector.id !== "walletConnect");
+  const browserWallets = available?.filter((connector) => connector.id !== "walletConnect" && connector.type !== "coinbaseWallet" && !connector.name.toLowerCase().includes("phantom"));
+  const coinbaseConnector = available?.find((connector) => connector.type === "coinbaseWallet");
+  const hasCoinbase = browserWallets?.some((connector) => /coinbase/i.test(connector.name));
+  const shownWalletApps = walletApps.filter((app) => !browserWallets?.some((connector) => connector.name.toLowerCase().includes(app.name.toLowerCase().replace(" wallet", ""))));
   return (
     <header className="market-header">
       <div className="market-header-inner">
@@ -238,7 +249,7 @@ export function MarketHeader({ view }: { view: string }) {
                   <div className="wallet-dialog-options">
                     {browserWallets?.map((connector) => (
                       <button type="button" key={connector.uid} disabled={connecting} onClick={() => void connectWallet(connector)}>
-                        <Wallet size={18} aria-hidden="true" />
+                        <WalletMark name={connector.name} />
                         <span>{connector.name === "Injected" ? "Browser wallet" : connector.name.replace(/\(injected\)/i, "").trim()}<small>Connect in this browser</small></span>
                       </button>
                     ))}
@@ -249,12 +260,24 @@ export function MarketHeader({ view }: { view: string }) {
                       </button>
                     )}
                     {!available && <p role="status">Checking for browser wallets…</p>}
-                    {walletApps.map((app) => (
+                    {shownWalletApps.map((app) => (
                       <a key={app.name} href={app.href}>
-                        <Smartphone size={18} aria-hidden="true" />
+                        <WalletMark name={app.name} />
                         <span>{app.name}<small>Open this page in the wallet app</small></span>
                       </a>
                     ))}
+                    {isMobile && coinbaseConnector && !hasCoinbase && (
+                      <button type="button" disabled={connecting} onClick={() => void connectWallet(coinbaseConnector)}>
+                        <WalletMark name="Coinbase" />
+                        <span>Coinbase Wallet<small>Connect with the wallet app</small></span>
+                      </button>
+                    )}
+                    {!isMobile && available && !hasCoinbase && (
+                      <a href="https://www.coinbase.com/wallet" target="_blank" rel="noreferrer">
+                        <WalletMark name="Coinbase" />
+                        <span>Coinbase Wallet<small>Get the browser wallet</small></span>
+                      </a>
+                    )}
                     {walletApps.length > 0 && (
                       <p>Using another wallet? Open RareCognos in its built-in browser, then connect there.</p>
                     )}
