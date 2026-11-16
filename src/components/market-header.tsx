@@ -24,6 +24,7 @@ const walletAppLinks = () => {
   return [
     { name: "MetaMask", href: `https://metamask.app.link/dapp/${url.host}${url.pathname}${url.search}${url.hash}` },
     { name: "Trust Wallet", href: `https://link.trustwallet.com/open_url?coin_id=60&url=${encodeURIComponent(href)}` },
+    { name: "OKX Wallet", href: `okx://wallet/dapp/url?dappUrl=${encodeURIComponent(href)}` },
   ];
 };
 export function MarketHeader({ view }: { view: string }) {
@@ -254,6 +255,9 @@ export function MarketHeader({ view }: { view: string }) {
                         <span>{app.name}<small>Open this page in the wallet app</small></span>
                       </a>
                     ))}
+                    {walletApps.length > 0 && (
+                      <p>Using another wallet? Open RareCognos in its built-in browser, then connect there.</p>
+                    )}
                     {available && !browserWallets?.length && !qrConnector && !walletApps.length && (
                       <p>No browser wallet detected. Install a browser wallet or open this page inside your wallet app on your phone.</p>
                     )}
