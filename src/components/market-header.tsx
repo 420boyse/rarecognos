@@ -1,5 +1,6 @@
 import * as Dropdown from "@radix-ui/react-dropdown-menu";
-import { ChevronDown, LogOut, Grid2X2, Wallet, X } from "lucide-react";
+import * as Dialog from "@radix-ui/react-dialog";
+import { ChevronDown, LogOut, Grid2X2, QrCode, Smartphone, Wallet, X } from "lucide-react";
 import { useAccount, useConnect, useDisconnect, useSwitchChain } from "wagmi";
 import { useEffect, useState } from "react";
 import { EyeMark, Wordmark } from "./wordmark";
@@ -18,13 +19,11 @@ function GoogleMark() {
   );
 }
 const walletAppLinks = () => {
-  const host = window.location.host;
-  const href = window.location.href;
+  const url = new URL(window.location.href);
+  const href = url.href;
   return [
-    { name: "MetaMask", href: `https://metamask.app.link/dapp/${host}` },
+    { name: "MetaMask", href: `https://metamask.app.link/dapp/${url.host}${url.pathname}${url.search}${url.hash}` },
     { name: "Trust Wallet", href: `https://link.trustwallet.com/open_url?coin_id=60&url=${encodeURIComponent(href)}` },
-    { name: "Rainbow", href: `https://rnbwapp.com/dapp?url=${encodeURIComponent(href)}` },
-    { name: "OKX", href: `okx://wallet/dapp/url?dappUrl=${encodeURIComponent(href)}` },
   ];
 };
 export function MarketHeader({ view }: { view: string }) {
@@ -34,9 +33,9 @@ export function MarketHeader({ view }: { view: string }) {
     network = useSwitchChain();
   const [error, setError] = useState("");
   const [loginOpen, setLoginOpen] = useState(false);
-  const [onMobile, setOnMobile] = useState(false);
   const [walletApps, setWalletApps] = useState<{ name: string; href: string }[]>([]);
-  const [available, setAvailable] = useState<typeof connect.connectors>([]);
+  const [available, setAvailable] = useState<typeof connect.connectors | null>(null);
+  const [connectionError, setConnectionError] = useState("");
   const gmail = useGmail();
   const member = Boolean(account.address || gmail);
   const progress = useProgress(memberKey(account.address, gmail?.email));
@@ -46,12 +45,18 @@ export function MarketHeader({ view }: { view: string }) {
     : "";
   const connecting = connect.isPending || account.status === "reconnecting";
   const connectWallet = async (connector: (typeof connect.connectors)[number]) => {
-    setError("");
+    setConnectionError("");
+    const isWalletConnect = connector.id === "walletConnect";
+    if (isWalletConnect) setLoginOpen(false);
     try {
-      if(connector.type==='injected'&&!await connector.getProvider())throw Error('No browser wallet found. Open this page in a wallet browser. QR connection requires the mobile wallet service setting.');
-      await connect.connectAsync({ connector });
+      if (connector.type === "injected" && !await connector.getProvider()) {
+        throw Error("This wallet is unavailable. Open RareCognos in your wallet app or try a different wallet.");
+      }
+      await connect.connectAsync({ connector, ...(isWalletConnect ? { chainId: chain.id } : {}) });
+      setLoginOpen(false);
     } catch (e) {
-      setError(transactionError(e));
+      setConnectionError(transactionError(e));
+      setLoginOpen(true);
     }
   };
   const switchNetwork = async () => {
@@ -63,30 +68,45 @@ export function MarketHeader({ view }: { view: string }) {
     }
   };
   useEffect(() => {
-    const open = () => setLoginOpen(true);
+    const open = () => { if (!account.isConnected && !connecting) setLoginOpen(true); };
     window.addEventListener("rarecognos-login", open);
     return () => window.removeEventListener("rarecognos-login", open);
-  }, []);
+  }, [account.isConnected, connecting]);
   useEffect(() => {
-    const phone = /Android|iPhone|iPad/i.test(navigator.userAgent);
-    setOnMobile(phone);
-    if (phone) setWalletApps(walletAppLinks());
-  }, []);
+    if (loginOpen && /Android|iPhone|iPad/i.test(navigator.userAgent)) {
+      setWalletApps(walletAppLinks());
+    }
+  }, [loginOpen]);
   useEffect(() => {
+    if (!loginOpen) return;
     let cancel = false;
     void (async () => {
-      const list = [];
-      for (const connector of connect.connectors) {
-        if (connector.type === "injected") {
-          if (await connector.getProvider()) list.push(connector);
-        } else list.push(connector);
+      setAvailable(null);
+      const detected = await Promise.all(connect.connectors.map(async (connector) => {
+        if (connector.type !== "injected") return { connector };
+        try {
+          const provider = await connector.getProvider();
+          return provider ? { connector, provider } : null;
+        } catch {
+          return null;
+        }
+      }));
+      const list: (typeof connect.connectors)[number][] = [];
+      const providers = new Set<unknown>();
+      // Prefer branded connectors when the same provider also appears as Browser wallet.
+      for (const entry of [...detected.filter((item) => item?.connector.id !== "injected"), ...detected.filter((item) => item?.connector.id === "injected")]) {
+        if (!entry || (entry.provider && providers.has(entry.provider))) continue;
+        if (entry.provider) providers.add(entry.provider);
+        list.push(entry.connector);
       }
       if (!cancel) setAvailable(list);
     })();
     return () => {
       cancel = true;
     };
-  }, [connect.connectors]);
+  }, [connect.connectors, loginOpen]);
+  const qrConnector = connect.connectors.find((connector) => connector.id === "walletConnect");
+  const browserWallets = available?.filter((connector) => connector.id !== "walletConnect");
   return (
     <header className="market-header">
       <div className="market-header-inner">
@@ -193,73 +213,66 @@ export function MarketHeader({ view }: { view: string }) {
               </Dropdown.Portal>
             </Dropdown.Root>
           ) : (
-            <Dropdown.Root open={loginOpen} onOpenChange={setLoginOpen}>
-              <Dropdown.Trigger className="wallet-button" disabled={connecting}>
+            <Dialog.Root open={loginOpen} onOpenChange={(open) => {
+              setLoginOpen(open);
+              if (open) setConnectionError("");
+            }}>
+              <Dialog.Trigger className="wallet-button" disabled={connecting}>
                 {gmail ? gmail.email.split("@")[0] : connecting ? "Connecting…" : "Connect wallet"}
                 <ChevronDown size={14} />
-              </Dropdown.Trigger>
-              <Dropdown.Portal>
-                <Dropdown.Content className="wallet-menu login-menu" align="end" sideOffset={12}>
-                  <Dropdown.Label className="wallet-menu-label">Connect wallet</Dropdown.Label>
-                  {gmail ? (
-                    <Dropdown.Item onSelect={() => writeGmail(null)}>
-                      <LogOut size={16} />
-                      Sign out of Gmail
-                    </Dropdown.Item>
-                  ) : GOOGLE_CLIENT_ID ? (
-                    <Dropdown.Item
-                      onSelect={() => {
-                        setError("");
-                        void signInGmail().catch((e) => setError(transactionError(e)));
-                      }}
-                    >
-                      <GoogleMark />
-                      Continue with Gmail
-                    </Dropdown.Item>
-                  ) : null}
-                  <Dropdown.Separator className="wallet-menu-divider" />
-                  {available.length ? (
-                    available.map((c) => (
-                      <Dropdown.Item key={c.uid} onSelect={() => void connectWallet(c)}>
-                        <Wallet size={16} />
-                        {c.name === "Injected" ? "Browser wallet" : c.name.replace(/\(injected\)/i, "").trim()}
-                      </Dropdown.Item>
-                    ))
-                  ) : (
-                    <Dropdown.Item onSelect={() => setError(onMobile ? "Open this page in a wallet app." : "No browser wallet found. Open this page in a wallet browser.")}>
-                      <Wallet size={16} />
-                      {onMobile ? "Use a wallet app" : "No browser wallet"}
-                    </Dropdown.Item>
-                  )}
-                  {onMobile &&
-                    walletApps.map((app) => (
-                      <Dropdown.Item key={app.name} asChild>
-                        <a href={app.href}>
-                          <Wallet size={16} />
-                          {app.name}
-                        </a>
-                      </Dropdown.Item>
+              </Dialog.Trigger>
+              <Dialog.Portal>
+                <Dialog.Overlay className="wallet-dialog-overlay" />
+                <Dialog.Content className="wallet-dialog">
+                  <div className="wallet-dialog-header">
+                    <div>
+                      <Dialog.Title>Connect a wallet</Dialog.Title>
+                      <Dialog.Description>Use a wallet that supports custom EVM networks to connect to RareCognos on LiteForge testnet.</Dialog.Description>
+                    </div>
+                    <Dialog.Close className="wallet-dialog-close" aria-label="Close wallet options">
+                      <X size={18} aria-hidden="true" />
+                    </Dialog.Close>
+                  </div>
+                  {connectionError && <p className="wallet-dialog-error" role="alert">{connectionError}</p>}
+                  <div className="wallet-dialog-options">
+                    {browserWallets?.map((connector) => (
+                      <button type="button" key={connector.uid} disabled={connecting} onClick={() => void connectWallet(connector)}>
+                        <Wallet size={18} aria-hidden="true" />
+                        <span>{connector.name === "Injected" ? "Browser wallet" : connector.name.replace(/\(injected\)/i, "").trim()}<small>Connect in this browser</small></span>
+                      </button>
                     ))}
-                  <Dropdown.Separator className="wallet-menu-divider" />
-                  <Dropdown.Item
-                    onSelect={() => {
-                      setError("");
-                      void (async () => {
-                        const provider = account.connector ? await account.connector.getProvider() : null;
-                        await addLiteForge(provider);
-                      })().catch((e) => setError(transactionError(e)));
-                    }}
-                  >
-                    Add LiteForge
-                  </Dropdown.Item>
-                  <Dropdown.Item asChild>
-                    <a href={faucetUrl} target="_blank" rel="noreferrer">
-                      Get zkLTC
-                    </a>
-                  </Dropdown.Item>
-                </Dropdown.Content>
-              </Dropdown.Portal>
-            </Dropdown.Root>
+                    {qrConnector && (
+                      <button type="button" disabled={connecting} onClick={() => void connectWallet(qrConnector)}>
+                        <QrCode size={18} aria-hidden="true" />
+                        <span>WalletConnect<small>Scan a QR code or open a wallet app</small></span>
+                      </button>
+                    )}
+                    {!available && <p role="status">Checking for browser wallets…</p>}
+                    {walletApps.map((app) => (
+                      <a key={app.name} href={app.href}>
+                        <Smartphone size={18} aria-hidden="true" />
+                        <span>{app.name}<small>Open this page in the wallet app</small></span>
+                      </a>
+                    ))}
+                    {available && !browserWallets?.length && !qrConnector && !walletApps.length && (
+                      <p>No browser wallet detected. Install a browser wallet or open this page inside your wallet app on your phone.</p>
+                    )}
+                  </div>
+                  <div className="wallet-dialog-footer">
+                    <a href="/how">Connection help</a>
+                    <a href={faucetUrl} target="_blank" rel="noreferrer">Get test zkLTC</a>
+                    {gmail ? (
+                      <button type="button" onClick={() => writeGmail(null)}>Sign out of Gmail</button>
+                    ) : GOOGLE_CLIENT_ID ? (
+                      <button type="button" onClick={() => {
+                        setConnectionError("");
+                        void signInGmail().catch((e) => setConnectionError(transactionError(e)));
+                      }}><GoogleMark /> Continue with Gmail</button>
+                    ) : null}
+                  </div>
+                </Dialog.Content>
+              </Dialog.Portal>
+            </Dialog.Root>
           )}
         </div>
       </div>

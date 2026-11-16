@@ -22,7 +22,7 @@ export const local = defineChain({
 export const chain = import.meta.env.VITE_NFT_LOCAL === "true" ? local : liteforge;
 const walletConnectProjectId = import.meta.env.VITE_WALLETCONNECT_PROJECT_ID?.trim();
 const publicAppUrl = import.meta.env.VITE_PUBLIC_APP_URL?.trim() ||
-  "https://rarecognos-marketplace.efe793462.chatgpt.site";
+  "https://rarecognos.vercel.app";
 export const config = createConfig({
   chains: [chain],
   multiInjectedProviderDiscovery: true,
@@ -34,6 +34,7 @@ export const config = createConfig({
           walletConnect({
             projectId: walletConnectProjectId,
             showQrModal: true,
+            qrModalOptions: { themeMode: "dark" },
             metadata: {
               name: "RareCognos",
               description: "Digital art on LiteForge",
