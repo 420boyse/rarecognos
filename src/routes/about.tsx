@@ -31,8 +31,8 @@ function AboutPage() {
             Connect your wallet to mint a published work, create your own, or list and collect supported NFTs.
           </p>
           <p>
-            Discover drops like Eyed and Halo alongside work from the RareCognos studio. Availability varies by
-            collection, and studio previews are marked separately from works available to collect.
+            Built for artists and collectors, RareCognos brings digital work and its community together in one place.
+            Explore new art, share your own, and connect with work that speaks to you.
           </p>
           <p>
             Follow{" "}
