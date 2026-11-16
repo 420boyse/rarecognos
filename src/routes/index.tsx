@@ -4,21 +4,19 @@ import { useEffect, useId, useRef, useState } from "react";
 import { EyeMark } from "@/components/wordmark";
 import { works, type Work } from "@/data/works";
 import { NFTMarket } from "@/components/nft-market";
+import { HomeMarketplace } from "@/components/home-marketplace";
 import { NFTDeploy } from "@/components/nft-deploy";
 import { MarketHeader } from "@/components/market-header";
 import { NFTDropMint } from "@/components/nft-drops";
 import { SiteFooter } from "@/components/site-footer";
 import { faucetUrl } from "@/lib/nft/network";
 import { pageMeta } from "@/lib/site-meta";
-import { useDropStatus } from "@/lib/nft/use-drop-status";
-import eyedDeployment from "../../config/eyed.json";
-import haloDeployment from "../../config/halo.json";
 import { isAddress, type Address } from "viem";
 export const Route = createFileRoute("/")({
   head: () =>
     pageMeta({
       title: "RareCognos",
-      description: "An eye for the rare. Distinctive digital art on LiteForge.",
+      description: "Discover, mint, collect and trade NFTs on LiteForge Testnet.",
       path: "/",
       image: "/art/nocturne-hero.jpg",
     }),
@@ -27,8 +25,6 @@ export const Route = createFileRoute("/")({
 function Home() {
   const [view, setView] = useState("Explore");
   const [active, setActive] = useState<Work | null>(null);
-  const eyedDrop = useDropStatus(eyedDeployment.address);
-  const haloDrop = useDropStatus(haloDeployment.address || undefined);
   useEffect(() => {
     const update = () => {
       if (location.hash === "#create" || location.hash === "#drops") {
@@ -70,35 +66,8 @@ function Home() {
             fetchPriority="high"
           />
           <div className="hero-content">
-            <h1 id="hero-title" aria-label="An eye for the rare.">
-              <span aria-hidden="true">
-                <span className="letter-wrap"><span className="hero-letter-rise" style={{ animationDelay: "0ms" }}>A</span></span>
-                <span className="letter-wrap"><span className="hero-letter-rise" style={{ animationDelay: "35ms" }}>n</span></span>
-                <span className="letter-wrap"><span className="hero-letter-rise" style={{ animationDelay: "70ms" }}>&nbsp;</span></span>
-                <span className="letter-wrap"><span className="hero-letter-rise" style={{ animationDelay: "105ms" }}>e</span></span>
-                <span className="letter-wrap"><span className="hero-letter-rise" style={{ animationDelay: "140ms" }}>y</span></span>
-                <span className="letter-wrap"><span className="hero-letter-rise" style={{ animationDelay: "175ms" }}>e</span></span>
-                <span className="letter-wrap"><span className="hero-letter-rise" style={{ animationDelay: "210ms" }}>&nbsp;</span></span>
-                <span className="letter-wrap"><span className="hero-letter-rise" style={{ animationDelay: "245ms" }}>f</span></span>
-                <span className="letter-wrap"><span className="hero-letter-rise" style={{ animationDelay: "280ms" }}>o</span></span>
-                <span className="letter-wrap"><span className="hero-letter-rise" style={{ animationDelay: "315ms" }}>r</span></span>
-                <br />
-                <span className="letter-wrap"><span className="hero-letter-rise" style={{ animationDelay: "350ms" }}>t</span></span>
-                <span className="letter-wrap"><span className="hero-letter-rise" style={{ animationDelay: "385ms" }}>h</span></span>
-                <span className="letter-wrap"><span className="hero-letter-rise" style={{ animationDelay: "420ms" }}>e</span></span>
-                <span className="letter-wrap"><span className="hero-letter-rise" style={{ animationDelay: "455ms" }}>&nbsp;</span></span>
-                <span className="letter-wrap"><span className="hero-letter-rise" style={{ animationDelay: "490ms" }}>r</span></span>
-                <span className="letter-wrap"><span className="hero-letter-rise" style={{ animationDelay: "525ms" }}>a</span></span>
-                <span className="letter-wrap"><span className="hero-letter-rise" style={{ animationDelay: "560ms" }}>r</span></span>
-                <span className="letter-wrap"><span className="hero-letter-rise" style={{ animationDelay: "595ms" }}>e</span></span>
-                <span className="letter-wrap"><span className="hero-letter-rise" style={{ animationDelay: "630ms" }}>.</span></span>
-              </span>
-            </h1>
-            <p>
-              Distinctive digital art.
-              <br />
-              Yours to discover, create, and collect.
-            </p>
+            <h1 id="hero-title">Discover.<br />Collect.<br />Trade.</h1>
+            <p>Your NFT marketplace on LiteForge Testnet.</p>
             <div className="hero-actions">
               <a className="primary-action" href="/explore">
                 Explore NFTs <ArrowRight size={18} />
@@ -108,37 +77,8 @@ function Home() {
               </a>
             </div>
           </div>
-          <div className="hero-caption">
-            <span>Nocturne</span>
-            <span>Blackened chrome, 2026</span>
-          </div>
         </section>
-        <section className="studio-section home-collections" aria-labelledby="collections-home">
-          <div className="section-heading">
-            <div>
-              <h2 id="collections-home">Collections</h2>
-              <p>Open drops and what is still ahead.</p>
-            </div>
-          </div>
-          <ul className="catalog-grid catalog-grid--collections">
-            <li>
-              <a className="catalog-card" href="/eyed">
-                <img className="is-pixel" src="/art/eyed/04.jpg" alt="" width="640" height="640" loading="lazy" decoding="async" />
-                <strong>Eyed</strong>
-                <em>8 featured of 9</em>
-                <span className="status-pill">{eyedDrop.label}</span>
-              </a>
-            </li>
-            <li>
-              <a className="catalog-card" href="/halo">
-                <img src="/art/halo/01.png" alt="" width="640" height="640" loading="lazy" />
-                <strong>Halo</strong>
-                <em>6 figures</em>
-                <span className="status-pill">{haloDrop.label}</span>
-              </a>
-            </li>
-          </ul>
-        </section>
+        {view === "Explore" && <HomeMarketplace />}
         {view !== "Explore" && (
         <>
         {view.startsWith("Drop:") && <NFTDropMint address={view.slice(5) as Address} />}
@@ -172,7 +112,7 @@ function Home() {
           <div className="section-heading">
             <div>
               <h2 id="start-title">Start here</h2>
-              <p>Connect a wallet, add LiteForge, then get test zkLTC from the faucet. Pick Eyed when you are ready to mint. The network fee is separate from the mint price.</p>
+              <p>Connect a wallet, add LiteForge, and get test zkLTC from the faucet to start exploring. Network fees are separate from NFT prices.</p>
             </div>
             <a className="primary-action" href={faucetUrl} target="_blank" rel="noreferrer">
               Get zkLTC
