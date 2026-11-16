@@ -1,5 +1,5 @@
 import { createConfig, http, injected } from "wagmi";
-import { walletConnect } from "wagmi/connectors";
+import { coinbaseWallet, walletConnect } from "wagmi/connectors";
 import { defineChain, isAddress, type Address, type EIP1193Provider } from "viem";
 import deployment from "../../../config/liteforge.json";
 export const liteforge = defineChain({
@@ -28,6 +28,7 @@ export const config = createConfig({
   multiInjectedProviderDiscovery: true,
   connectors: [
     injected(),
+    coinbaseWallet({ appName: "RareCognos", preference: "eoaOnly" }),
     injected({ target: { id: "okx-legacy", name: "OKX Wallet", provider: (window) => (window as typeof window & { okxwallet?: EIP1193Provider })?.okxwallet } }),
     ...(walletConnectProjectId
       ? [
