@@ -227,18 +227,12 @@ export function NFTCreate({
         )}
       </div>
       <div className="creation-form">
-        <ol className="steps">
-          <li>Choose an image. PNG, JPEG, or WebP, up to 3 MB.</li>
-          <li>Name it. The name and description stay in this browser. An image over about 1.2 MB is not stored in the draft, so you choose it again.</li>
-          <li>Upload and prepare. The wallet signature allows storage. It does not mint and it does not send zkLTC.</li>
-          <li>Mint is a second transaction, after the artwork is prepared.</li>
-        </ol>
-        <div className="kind-toggle" role="group" aria-label="Creation type"><button type="button" aria-pressed={kind === "single"} onClick={() => setKind("single")}>1/1 artwork</button>{dropsConfigured && <button type="button" aria-pressed={kind === "edition"} onClick={() => setKind("edition")}>Limited edition</button>}</div>
+        {dropsConfigured && <div className="kind-toggle" role="group" aria-label="Creation type"><button type="button" aria-pressed={kind === "single"} onClick={() => setKind("single")}>1/1 artwork</button><button type="button" aria-pressed={kind === "edition"} onClick={() => setKind("edition")}>Limited edition</button></div>}
         <h3>{prepared ? (kind === "edition" ? "Ready to launch" : "Ready to mint") : kind === "edition" ? "Create a limited edition" : "Create a 1/1 work"}</h3>
         <p>
           {kind === "edition"
             ? "A fixed supply from one artwork. Collectors mint from that edition."
-            : "One token for this record. Reusing an image does not prove originality."}
+            : "One artwork, one NFT."}
         </p>
         {prepared ? (
           <>
@@ -347,7 +341,6 @@ export function NFTCreate({
                 )}
               </div>
             )}
-            {service.data?.enabled && <p className="market-notice">Storage is available. Uploading is not minting.</p>}
             {service.data?.mode === "local-demo" && (
               <p className="market-notice">Local demo storage. These files are not on public IPFS.</p>
             )}
@@ -366,6 +359,7 @@ export function NFTCreate({
             >
               {uploading ? "Preparing artwork…" : "Upload & prepare NFT"}
             </button>
+            <p>Prepare first, then confirm minting in your wallet.</p>
             {!account.address && (
               <p>
                 Connect a wallet to prepare. The form stays here.{" "}
