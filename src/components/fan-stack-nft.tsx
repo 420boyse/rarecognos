@@ -8,6 +8,7 @@ type NFTCard = {
   price?: string;
   medium?: string;
   network?: string;
+  year?: string;
 };
 
 const CARD_SIZE_BASE = 280;
@@ -51,6 +52,7 @@ export function FanStackNFT({
   primaryLabel,
   primaryDisabled,
   onPrimary,
+  studio = false,
 }: {
   items: NFTCard[];
   onSelectWork?: (id: string) => void;
@@ -60,15 +62,16 @@ export function FanStackNFT({
   primaryLabel?: string;
   primaryDisabled?: boolean;
   onPrimary?: () => void;
+  studio?: boolean;
 }) {
   const cards = useMemo(() => {
-    const source = items.length > 0 ? items : [placeholder];
+    const source = items.length > 0 || studio ? items : [placeholder];
     return source.map((base, i) => ({
       ...base,
       id: `${base.id}-${i}`,
       origId: base.origId ?? base.id,
     }));
-  }, [items]);
+  }, [items, studio]);
 
   const containerRef = useRef<HTMLDivElement>(null);
   const cardRefs = useRef<(HTMLDivElement | null)[]>([]);
@@ -118,7 +121,10 @@ export function FanStackNFT({
         const borderLayer = el.querySelector("[data-border]") as HTMLElement | null;
         const overlay = el.querySelector("[data-overlay]") as HTMLElement | null;
         const ghostLayer = el.querySelector("[data-ghost]") as HTMLElement | null;
-        if (ghostLayer) ghostLayer.style.opacity = "0";
+        const imageLayer = el.querySelector("[data-image]") as HTMLElement | null;
+        const ghost = studio ? Math.min(1, Math.max(0, (abs - 1.5) * 2)) : 0;
+        if (ghostLayer) ghostLayer.style.opacity = String(ghost);
+        if (studio && imageLayer) imageLayer.style.opacity = String(1 - ghost);
         if (borderLayer) borderLayer.style.opacity = String(fade * Math.max(0, 1 - abs * 1.4));
         if (overlay) overlay.style.opacity = String(Math.min(0.45, abs * 0.2));
       }
@@ -157,7 +163,7 @@ export function FanStackNFT({
     };
     raf = requestAnimationFrame(loop);
     return () => cancelAnimationFrame(raf);
-  }, [cards]);
+  }, [cards, studio]);
 
   useEffect(() => {
     const el = containerRef.current;
@@ -213,7 +219,7 @@ export function FanStackNFT({
   const onPointerDown = (e: React.PointerEvent) => {
     if (countRef.current < 2) return;
     if ((e.target as HTMLElement).closest("button, a")) return;
-    e.preventDefault();
+    if (!e.isPrimary || e.button !== 0) return;
     isDragging.current = true;
     axisLocked.current = null;
     velocity.current = 0;
@@ -227,8 +233,9 @@ export function FanStackNFT({
     const ady = Math.abs(e.clientY - dragStart.current.y);
 
     if (!axisLocked.current) {
-      if (adx < 8 && ady < 8) return;
-      if (adx > ady * 1.15) {
+      const threshold = studio ? 10 : 8;
+      if (adx < threshold && ady < threshold) return;
+      if (adx > ady * (studio ? 1.25 : 1.15)) {
         axisLocked.current = "h";
         (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
       } else {
@@ -250,20 +257,31 @@ export function FanStackNFT({
     dragStart.current.lastTime = now;
   };
 
-  const onPointerUp = () => {
+  const onPointerUp = (event: React.PointerEvent) => {
+    if (!isDragging.current) return;
+    if (event.type !== "pointerup" || (studio && performance.now() - dragStart.current.lastTime > 120)) {
+      velocity.current = 0;
+    }
     isDragging.current = false;
     axisLocked.current = null;
   };
 
   const current = cards[centered] || cards[0];
+  if (!current) return null;
 
   return (
-    <section className="fan-section">
+    <section className={studio ? "fan-section fan-section--studio" : "fan-section"} aria-label={studio ? "Featured Studio Works" : undefined}>
+      {studio && (
+        <div className="fan-studio-header">
+          <h2>Featured Studio Works</h2>
+          <p>Drag or use the arrows to browse studio previews.</p>
+        </div>
+      )}
       <div
         ref={containerRef}
         className="fan-container"
         tabIndex={0}
-        aria-label="Eyed works"
+        aria-label={studio ? "Studio works" : "Eyed works"}
         onKeyDown={(event) => {
           if (event.key === "ArrowLeft") {
             event.preventDefault();
@@ -278,8 +296,19 @@ export function FanStackNFT({
         onPointerMove={onPointerMove}
         onPointerUp={onPointerUp}
         onPointerCancel={onPointerUp}
+        onLostPointerCapture={onPointerUp}
+        onPointerLeave={(event) => {
+          if (!event.currentTarget.hasPointerCapture(event.pointerId)) onPointerUp(event);
+        }}
         style={{ height: cardSize * CARD_ASPECT + 48 }}
       >
+        {studio && cards.length > 2 && [-1, 1].map((side) => (
+          <div key={side} className="fan-studio-slot" aria-hidden="true" style={{
+            width: cardSize * 0.62,
+            height: cardSize * CARD_ASPECT * 0.62,
+            transform: `translate(-50%, -50%) translateX(${side * cardSize * FAN_SPREAD * 1.68}px) rotate(${side * 9}deg)`,
+          }} />
+        ))}
         {cards.map((card, i) => (
           <div
             key={card.id}
@@ -295,12 +324,12 @@ export function FanStackNFT({
             }}
           >
             <div data-image className="fan-card-image">
-              <img src={card.image} alt={card.title} draggable={false} />
-              <div className="fan-card-label">
+              <img src={card.image} alt={card.title} draggable={false} loading={studio ? "lazy" : undefined} />
+              {!studio && <div className="fan-card-label">
                 <strong>{card.title}</strong>
                 <span>{card.price || "—"}</span>
                 <span>{card.network || "LiteForge"}</span>
-              </div>
+              </div>}
               <div data-overlay className="fan-card-overlay" />
             </div>
             <div data-ghost className="fan-card-ghost" />
@@ -310,8 +339,10 @@ export function FanStackNFT({
       </div>
 
       <div className="fan-detail">
-        <div className="fan-meta">{current?.network || "LiteForge"} · {current?.medium || "Eyed"}</div>
-        <h2 className="fan-title">{current?.title || "Untitled"}</h2>
+        <div className="fan-meta">{studio
+          ? [current.medium, current.year].filter(Boolean).join(" · ")
+          : `${current.network || "LiteForge"} · ${current.medium || "Eyed"}`}</div>
+        {studio ? <h3 className="fan-title">{current.title}</h3> : <h2 className="fan-title">{current.title}</h2>}
         {current?.price && <div className="fan-price">{current.price} · {current.medium}</div>}
         <div className="fan-actions">
           <button type="button" className="fan-secondary" aria-label="Previous work" onClick={() => nudge(-1)}>
@@ -328,7 +359,7 @@ export function FanStackNFT({
           >
             {primaryLabel || "View Details"}
           </button>
-          <button
+          {!studio && <button
             type="button"
             className="fan-secondary"
             onClick={() => {
@@ -337,7 +368,7 @@ export function FanStackNFT({
             }}
           >
             {onPrimary ? "View Details" : "Back"}
-          </button>
+          </button>}
           <button type="button" className="fan-secondary" aria-label="Next work" onClick={() => nudge(1)}>
             Next
           </button>
@@ -367,6 +398,28 @@ export function FanStackNFT({
           user-select: none;
         }
         .fan-container:active { cursor: grabbing; }
+        .fan-section--studio {
+          margin-block: 32px;
+          padding: 28px 8px 32px;
+          border: 1px solid var(--color-line);
+          border-radius: 20px;
+        }
+        .fan-studio-header { text-align: center; }
+        .fan-studio-header h2 { font-size: 22px; }
+        .fan-studio-header p { color: rgba(245,244,239,0.7); font-size: 13px; }
+        .fan-studio-slot {
+          position: absolute;
+          left: 50%;
+          top: 50%;
+          border: 1px solid rgba(245,244,239,0.24);
+          border-radius: 12px;
+          pointer-events: none;
+        }
+        .fan-section--studio .fan-card-image img {
+          object-fit: cover;
+          background: #0a0a0a;
+          image-rendering: auto;
+        }
         .fan-card {
           position: absolute;
           left: 50%;

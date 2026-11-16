@@ -2,8 +2,10 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { MarketHeader } from "@/components/market-header";
 import { SiteFooter } from "@/components/site-footer";
+import { FanStackNFT } from "@/components/fan-stack-nft";
 import { eyedNetwork, eyedPrice } from "@/data/eyed";
 import { halo, haloPrice } from "@/data/halo";
+import { works, type Work } from "@/data/works";
 import eyedDeployment from "../../config/eyed.json";
 import haloDeployment from "../../config/halo.json";
 import { featuredEyed } from "@/lib/nft/piece-index";
@@ -11,6 +13,8 @@ import { useDropStatus } from "@/lib/nft/use-drop-status";
 import { pageMeta } from "@/lib/site-meta";
 
 const faces = featuredEyed();
+const studioIds = ["nocturne", "blue-index", "red-aperture", "second-sight"];
+const featuredStudio = studioIds.flatMap((id) => works.filter((work) => work.id === id));
 
 function DeferredArt({ src, eager = false, pixel = false }: { src: string; eager?: boolean; pixel?: boolean }) {
   const ref = useRef<HTMLImageElement>(null);
@@ -57,6 +61,11 @@ export const Route = createFileRoute("/explore")({
 
 function ExplorePage() {
   const [query, setQuery] = useState("");
+  const [activeStudioWork, setActiveStudioWork] = useState<Work | null>(null);
+  const studioDialog = useRef<HTMLDialogElement>(null);
+  useEffect(() => {
+    if (activeStudioWork && !studioDialog.current?.open) studioDialog.current?.showModal();
+  }, [activeStudioWork]);
   const eyedDrop = useDropStatus(eyedDeployment.address);
   const haloDrop = useDropStatus(haloDeployment.address || undefined);
   const q = query.trim().toLowerCase();
@@ -127,6 +136,13 @@ function ExplorePage() {
             </ul>
           </section>
         )}
+        {!q && (
+          <FanStackNFT
+            studio
+            items={featuredStudio}
+            onSelectWork={(id) => setActiveStudioWork(featuredStudio.find((work) => work.id === id) ?? null)}
+          />
+        )}
         {(showPiece || showHaloPiece || showEyedCollection || showHaloCollection) && (
           <section aria-labelledby="works-title">
             <h2 id="works-title">Works</h2>
@@ -181,6 +197,29 @@ function ExplorePage() {
           </section>
         )}
       </main>
+      {activeStudioWork && (
+        <dialog
+          ref={studioDialog}
+          aria-labelledby="explore-studio-title"
+          className="max-h-[85dvh] overflow-y-auto rounded-2xl p-0"
+          onClose={() => setActiveStudioWork(null)}
+        >
+          <div className="grid md:grid-cols-2">
+            <img src={activeStudioWork.image} alt="" className="max-h-80 w-full object-cover md:h-full" />
+            <div className="flex flex-col gap-4 p-6">
+              <div className="flex items-start justify-between gap-4">
+                <h2 id="explore-studio-title" className="text-2xl">{activeStudioWork.title}</h2>
+                <form method="dialog">
+                  <button type="submit" className="nft-button">Close</button>
+                </form>
+              </div>
+              <p>{activeStudioWork.medium} · {activeStudioWork.year}</p>
+              <p>{activeStudioWork.description}</p>
+              <p className="text-sm text-fg/60">Studio preview</p>
+            </div>
+          </div>
+        </dialog>
+      )}
       <SiteFooter exploreHref="/explore" />
     </div>
   );
