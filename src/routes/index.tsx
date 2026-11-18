@@ -394,5 +394,9 @@ const homeVisualCSS = `
 .rc-atmosphere-ribbon-back{width:146%;left:-3%;top:60%}
 .rc-create-banner{background:#060810}
 }
+/* Vertically balance the full headline, description and CTA group within the hero artwork. */
+@media(min-width:901px){
+.rc-hero-copy{transform:translateY(35px)}
+}
 @media(prefers-reduced-motion:reduce){.rc-float-card{transition:none}}
 `;
