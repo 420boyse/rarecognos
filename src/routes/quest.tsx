@@ -51,6 +51,7 @@ function QuestPage() {
                 <h1>Quest</h1>
               </div>
             </div>
+            <p className="quest-disclaimer" role="note">Testnet demo progress: XP is saved in this browser, not as an on-chain reward balance. It does not guarantee any airdrop or future rewards.</p>
             <section className="xp-total" aria-label="Total XP">
               <div>
                 <p className="checkin-kicker">Total XP</p>
