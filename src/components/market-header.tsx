@@ -1,6 +1,6 @@
 import * as Dropdown from "@radix-ui/react-dropdown-menu";
 import * as Dialog from "@radix-ui/react-dialog";
-import { ChevronDown, LogOut, Grid2X2, QrCode, Wallet, X } from "lucide-react";
+import { ChevronDown, LogOut, Grid2X2, QrCode, Wallet, Search, X } from "lucide-react";
 import { useAccount, useConnect, useDisconnect, useSwitchChain } from "wagmi";
 import { useEffect, useState } from "react";
 import { EyeMark, Wordmark } from "./wordmark";
@@ -139,6 +139,10 @@ export function MarketHeader({ view }: { view: string }) {
             </a>
           )}
         </nav>
+        <form className="market-global-search" method="get" action="/explore" role="search">
+          <Search size={17} aria-hidden="true" />
+          <input type="search" name="q" maxLength={120} placeholder="Search NFTs, collections, or creators" aria-label="Search NFTs, collections, or creators" />
+        </form>
         <div className="market-wallet">
           <span className="network-indicator">
             <span aria-hidden="true" />
