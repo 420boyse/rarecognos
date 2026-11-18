@@ -2160,3 +2160,9 @@ button:disabled {
   .market-header-inner { grid-template-columns:auto auto minmax(230px,330px) auto; gap:clamp(18px,2.5vw,38px); }
 }
 @media(max-width:1279px) { .market-global-search { display:none; } }
+
+/* Quest is a testnet exploration feature; progress is not an on-chain reward. */
+.quest-disclaimer {
+  max-width:68ch; font-size:12px; line-height:1.6;
+  color:rgb(245 244 239 / 0.6); margin:0 0 24px;
+}
