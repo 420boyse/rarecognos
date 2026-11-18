@@ -119,7 +119,7 @@ function Home() {
           <div className="rc-mint-copy"><h2 id="rc-mint-title">From the studio</h2><p>Explore our creative direction and artwork concepts.<br />These are previews, not sale listings.</p><a className="rc-button rc-button-light" href="/create">Create NFT <ArrowRight size={17}/></a></div>
           <div className="rc-mint-tiles">{works.filter((work)=>["nocturne","lit-mark","red-aperture"].includes(work.id)).map((work)=><button key={work.id} type="button" onClick={()=>setActive(work)} className="rc-mint-tile"><img src={work.image} alt="" loading="lazy"/><span>{work.title} · Preview <ArrowUpRight size={15}/></span></button>)}</div>
         </section>
-        <section className="rc-create-banner" aria-labelledby="rc-create-title"><div><h2 id="rc-create-title">Create on RareCognos</h2><p>Mint your NFTs, reach collectors, and trade on LiteForge.</p><a className="rc-button rc-button-outline" href="/create">Start creating <ArrowRight size={17}/></a></div><div className="rc-banner-aurora" aria-hidden="true" /></section>
+        <section className="rc-create-banner" aria-labelledby="rc-create-title"><div><h2 id="rc-create-title">Create on RareCognos</h2><p>Mint your NFTs, reach collectors, and trade on LiteForge.</p><a className="rc-button rc-button-outline" href="/create">Start creating <ArrowRight size={17}/></a></div><div className="rc-banner-scene" aria-hidden="true"><img className="rc-banner-ribbon" src="/art/hero-ribbon.webp" alt="" loading="lazy" decoding="async" /></div></section>
           </>
         )}
         {view !== "Explore" && (
@@ -278,7 +278,7 @@ const homeVisualCSS = `
 @media (max-width:540px){
 .rc-hero{padding-top:calc(var(--header-block) - 4px)}
 .rc-create-banner{margin-top:28px;margin-bottom:36px;padding:34px 6% 38px;background:radial-gradient(ellipse at 108% 100%,#10244b 0%,#090c16 40%,#050608 85%)}
-.rc-create-banner .rc-banner-art{display:none}
+
 .rc-create-banner h2{max-width:11ch;font-size:clamp(32px,8.5vw,46px);line-height:1.06}
 .rc-create-banner p{max-width:33ch}
 }
@@ -325,6 +325,62 @@ const homeVisualCSS = `
 .rc-banner-aurora{
   position:absolute;inset:0;z-index:0;pointer-events:none;
   background:radial-gradient(ellipse 52% 96% at 112% 92%,rgba(37,89,207,.23),rgba(12,26,70,.1) 48%,transparent 86%);
+}
+
+/* Genuine metal ribbon returns as artwork, cropped and feathered so no source-image seams appear. */
+.rc-create-banner{
+  min-height:312px;
+  display:flex;
+  align-items:center;
+  border-color:#2b3443;
+  background:radial-gradient(ellipse at 82% 58%,#08162d 0%,#05080f 53%,#050608 85%);
+}
+.rc-create-banner::before{
+  inset:0;
+  background:radial-gradient(ellipse 53% 105% at 88% 56%,rgba(15,74,201,.31),transparent 83%);
+  filter:blur(24px);
+}
+.rc-banner-scene{
+  position:absolute;
+  right:-3%;
+  top:0;
+  width:71%;
+  height:100%;
+  overflow:hidden;
+  pointer-events:none;
+  z-index:1;
+  -webkit-mask-image:linear-gradient(90deg,transparent 0%,rgba(0,0,0,.15) 10%,rgba(0,0,0,.85) 32%,#000 58%,#000 91%,transparent 100%);
+  mask-image:linear-gradient(90deg,transparent 0%,rgba(0,0,0,.15) 10%,rgba(0,0,0,.85) 32%,#000 58%,#000 91%,transparent 100%);
+}
+.rc-banner-ribbon{
+  display:block;
+  position:absolute;
+  width:138%;
+  max-width:none;
+  height:auto;
+  right:-19%;
+  top:53%;
+  object-fit:contain;
+  /* The source's top 12% includes thin stray highlights from the original collage. */
+  clip-path:inset(12% 0 0 0);
+  transform:translateY(-50%) rotate(-8deg);
+  opacity:.92;
+  filter:drop-shadow(0 0 24px rgba(18,76,223,.31));
+  -webkit-mask-image:linear-gradient(180deg,transparent 0%,#000 27%,#000 78%,transparent 100%);
+  mask-image:linear-gradient(180deg,transparent 0%,#000 27%,#000 78%,transparent 100%);
+}
+.rc-create-banner > div:first-child{max-width:610px;z-index:3}
+@media(max-width:900px){
+.rc-banner-scene{right:-18%;width:91%}
+.rc-banner-ribbon{width:150%;right:-28%;opacity:.75}
+}
+@media(max-width:540px){
+.rc-create-banner{min-height:330px;align-items:flex-start}
+.rc-banner-scene{display:block;width:125%;height:78%;right:-45%;top:25%;opacity:.58;
+  -webkit-mask-image:linear-gradient(180deg,transparent 0%,#000 35%,#000 78%,transparent 100%);
+  mask-image:linear-gradient(180deg,transparent 0%,#000 35%,#000 78%,transparent 100%)}
+.rc-banner-ribbon{width:154%;right:-24%;top:64%;opacity:.8}
+.rc-create-banner > div:first-child{max-width:100%}
 }
 .rc-create-banner > div:first-child{position:relative;z-index:2}
 @media(max-width:900px){
