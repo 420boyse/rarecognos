@@ -10,7 +10,7 @@ const MAX_PROCESS_REPLAY = 4096;
 function redisConfig() {
   const url = env("UPSTASH_REDIS_REST_URL")?.trim();
   const token = env("UPSTASH_REDIS_REST_TOKEN")?.trim();
-  return url && token ? { url: url.replace(/\\/$/, ""), token } : null;
+  return url && token ? { url: url.endsWith("/") ? url.slice(0, -1) : url, token } : null;
 }
 
 async function reserveTicket(id: string, expires: number) {
@@ -36,6 +36,31 @@ async function reserveTicket(id: string, expires: number) {
   if (processReplay.has(key)) throw Object.assign(new Error("Upload authorization was already used. Sign again."), { status: 409 });
   processReplay.set(key, expires);
   while (processReplay.size > MAX_PROCESS_REPLAY) processReplay.delete(processReplay.keys().next().value!);
+}
+
+async function checkWalletQuota(wallet: string) {
+  const redis = redisConfig();
+  if (!redis) return; // Process-only mode is explicitly reported by /status.
+  const day = new Date().toISOString().slice(0, 10);
+  const key = `rarecognos:upload:wallet:${wallet.toLowerCase()}:${day}`;
+  const incr = await fetch(redis.url, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${redis.token}`, "Content-Type": "application/json" },
+    body: JSON.stringify(["INCR", key]),
+    signal: AbortSignal.timeout(5000),
+  });
+  if (!incr.ok) throw Object.assign(new Error("Upload quota service unavailable."), { status: 503 });
+  const result = await incr.json() as { result?: number; error?: string };
+  if (result.error || typeof result.result !== "number") throw Object.assign(new Error("Upload quota service unavailable."), { status: 503 });
+  if (result.result === 1) {
+    await fetch(redis.url, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${redis.token}`, "Content-Type": "application/json" },
+      body: JSON.stringify(["EXPIRE", key, 172800]),
+      signal: AbortSignal.timeout(5000),
+    });
+  }
+  if (result.result > 30) throw Object.assign(new Error("Daily upload limit reached. Try again tomorrow."), { status: 429 });
 }
 
 function equalsMac(a: string, b: string) {
@@ -304,6 +329,7 @@ export async function uploadPrepare(request: Request) {
     const mime = imageType(bytes);
     if (!mime) return uploadJson(415, { error: "Only single-frame PNG, JPEG and WebP images are supported" }, origin);
     await reserveTicket(body.id, ticket.expires);
+    await checkWalletQuota(payload.wallet);
     const imageURI = await pinFile(bytes, mime, `${payload.digest}.${mime.split("/")[1]}`);
     const metadata = {
       name: payload.name,
