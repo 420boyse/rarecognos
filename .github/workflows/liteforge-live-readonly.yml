@@ -1,0 +1,22 @@
+name: LiteForge deployed contracts (read-only)
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "scripts/liteforge-live-readonly.mjs"
+      - "config/liteforge.json"
+      - ".github/workflows/liteforge-live-readonly.yml"
+  workflow_dispatch:
+
+jobs:
+  live-readonly:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Verify on-chain contracts, NFT ownership, historical successful purchase
+        run: node scripts/liteforge-live-readonly.mjs
