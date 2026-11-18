@@ -13,7 +13,8 @@ import { pageMeta } from "@/lib/site-meta";
 import { useDropStatus } from "@/lib/nft/use-drop-status";
 import eyedDeployment from "../../config/eyed.json";
 import haloDeployment from "../../config/halo.json";
-import { isAddress, formatEther, type Address } from "viem";
+import { isAddress, type Address } from "viem";
+import { MarketplaceListingCard } from "@/components/marketplace-listing-card";
 import { useListings } from "@/lib/nft/data";
 export const Route = createFileRoute("/")({
   head: () =>
@@ -37,7 +38,7 @@ function Home() {
   const [marketLayout, setMarketLayout] = useState<"grid" | "list">("grid");
   const liveListings = listings.data?.pages.flatMap((page) => page.listings).filter((listing) => listing.valid) ?? [];
   const searchTerm = marketSearch.trim().toLowerCase();
-  const matchingListings = [...liveListings].filter((listing) => !searchTerm || `token #${listing.tokenId}`.includes(searchTerm)).sort((a,b) => marketSort === "price" ? (a.price < b.price ? -1 : a.price > b.price ? 1 : 0) : (a.id > b.id ? -1 : a.id < b.id ? 1 : 0));
+  const matchingListings = [...liveListings].sort((a,b) => marketSort === "price" ? (a.price < b.price ? -1 : a.price > b.price ? 1 : 0) : (a.id > b.id ? -1 : a.id < b.id ? 1 : 0));
   const mintCards = [{ name: "Eyed", href: "/eyed", image: "/art/eyed/04.jpg", status: eyedDrop.label }, { name: "Halo", href: "/halo", image: "/art/halo/01.png", status: haloDrop.label }].filter((card) => !searchTerm || card.name.toLowerCase().includes(searchTerm));
   useEffect(() => {
     const update = () => {
@@ -99,14 +100,19 @@ function Home() {
           </div>
           <div className={`rc-nft-grid ${marketLayout==="list"?"rc-nft-list":""}`}>
             {(marketTab==="all"||marketTab==="mint") && mintCards.map((card)=><a className="rc-nft-card" key={card.name} href={card.href}><div className="rc-nft-art"><img src={card.image} alt="" loading="lazy" /></div><div className="rc-nft-info"><strong>{card.name}</strong><span>{card.status}</span></div></a>)}
-            {(marketTab==="all"||marketTab==="listings") && matchingListings.map((listing)=><a className="rc-nft-card rc-listing-card" key={String(listing.id)} href={`/#token/${listing.tokenId}`}><div className="rc-nft-art rc-token-art"><span>RareCognos<br />NFT #{String(listing.tokenId)}</span></div><div className="rc-nft-info"><strong>Token #{String(listing.tokenId)}</strong><span>{formatEther(listing.price)} zkLTC · Listed</span></div></a>)}
+            {(marketTab==="all"||marketTab==="listings") && matchingListings.map((listing)=><MarketplaceListingCard key={String(listing.id)} listing={listing} search={marketSearch} />)}
           </div>
-          {(marketTab==="listings" && !listings.isPending && !matchingListings.length) && <div className="rc-empty">{listings.isError?"Listings are temporarily unavailable.":"No active listings match your search yet."} <a href="/explore">Explore collections</a></div>}
+          {(marketTab==="listings" || marketTab==="all") && listings.hasNextPage && (
+            <button type="button" className="rc-load-more nft-button" disabled={listings.isFetchingNextPage} onClick={() => void listings.fetchNextPage()}>
+              {listings.isFetchingNextPage ? "Loading…" : "Load more listings"}
+            </button>
+          )}
+          {(marketTab==="listings" && !listings.isPending && !matchingListings.length && !listings.hasNextPage) && <div className="rc-empty">{listings.isError?"Listings are temporarily unavailable.":"No active listings yet."} <a href="/explore">Explore collections</a></div>}
           {marketTab==="listings" && listings.isPending && <p className="rc-empty">Checking active listings…</p>}
           {marketTab!=="listings" && !mintCards.length && !(marketTab==="all" && matchingListings.length) && <p className="rc-empty">No matching NFTs found.</p>}
         </section>
         <section className="rc-section rc-mint" aria-labelledby="rc-mint-title">
-          <div className="rc-mint-copy"><h2 id="rc-mint-title">Mint now</h2><p>Turn your ideas into NFTs on LiteForge.<br />Create, mint, and list in a few simple steps.</p><a className="rc-button rc-button-light" href="/create">Create <ArrowRight size={17}/></a></div>
+          <div className="rc-mint-copy"><h2 id="rc-mint-title">From the studio</h2><p>Explore our creative direction and artwork concepts.<br />These are previews, not sale listings.</p><a className="rc-button rc-button-light" href="/create">Create NFT <ArrowRight size={17}/></a></div>
           <div className="rc-mint-tiles">{works.filter((work)=>["nocturne","lit-mark","red-aperture"].includes(work.id)).map((work)=><button key={work.id} type="button" onClick={()=>setActive(work)} className="rc-mint-tile"><img src={work.image} alt="" loading="lazy"/><span>{work.title} · Preview <ArrowUpRight size={15}/></span></button>)}</div>
         </section>
         <section className="rc-create-banner" aria-labelledby="rc-create-title"><div><h2 id="rc-create-title">Create on RareCognos</h2><p>Mint your NFTs, reach collectors, and trade on LiteForge.</p><a className="rc-button rc-button-outline" href="/create">Start creating <ArrowRight size={17}/></a></div><div className="rc-banner-art" aria-hidden="true" /></section>
