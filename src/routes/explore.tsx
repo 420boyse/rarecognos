@@ -123,7 +123,7 @@ function ExplorePage() {
                   <a className="catalog-card" href="/eyed">
                     <DeferredArt src="/art/eyed/02.jpg" eager pixel />
                     <strong>Eyed</strong>
-                    <em>8 featured of 9 · 100 editions each</em>
+                    <em>Featured digital works</em>
                     <span>Mint {eyedPrice} · {eyedNetwork}</span>
                     <span className="status-pill">{eyedDrop.label}</span>
                   </a>
@@ -134,7 +134,7 @@ function ExplorePage() {
                   <a className="catalog-card" href="/halo">
                     <DeferredArt src="/art/halo/01.png" eager />
                     <strong>Halo</strong>
-                    <em>6 pieces · 100 editions each</em>
+                    <em>Digital artwork collection</em>
                     <span>Planned {haloPrice}</span>
                     <span className="status-pill">{haloDrop.label}</span>
                   </a>
