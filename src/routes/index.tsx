@@ -74,6 +74,10 @@ function Home() {
         {view === "Explore" && (
           <>
         <section className="rc-hero" aria-labelledby="hero-title">
+          <div className="rc-hero-atmosphere" aria-hidden="true">
+            <img className="rc-atmosphere-ribbon rc-atmosphere-ribbon-back" src="/art/hero-ribbon.webp" alt="" decoding="async" />
+            <img className="rc-atmosphere-ribbon rc-atmosphere-ribbon-front" src="/art/hero-ribbon.webp" alt="" decoding="async" />
+          </div>
           <div className="rc-hero-copy">
             <h1 id="hero-title">Discover.<br />Collect.<br />Trade.</h1>
             <p>Your NFT marketplace on LiteForge.</p>
@@ -83,8 +87,6 @@ function Home() {
             </div>
           </div>
           <div className="rc-hero-visual" aria-label="RareCognos studio artwork previews">
-            <img className="rc-ribbon rc-ribbon-bottom" src="/art/hero-ribbon.webp" alt="" aria-hidden="true" decoding="async" />
-            <img className="rc-ribbon rc-ribbon-top" src="/art/hero-ribbon.webp" alt="" aria-hidden="true" decoding="async" />
             <div className="rc-float-card rc-float-left"><img src="/art/hero-wave.webp" alt="Cream sculptural wave artwork" loading="eager" decoding="async" /><span><Eye size={13} aria-hidden="true" /> Preview</span></div>
             <div className="rc-float-card rc-float-center"><img src="/art/hero-nocturne.webp" alt="Nocturne black chrome sculpture" loading="eager" decoding="async" /><span><Eye size={13} aria-hidden="true" /> Preview</span></div>
             <div className="rc-float-card rc-float-right"><img src="/art/hero-cubes.webp" alt="Blue crystal cube artwork" loading="eager" decoding="async" /><span><Eye size={13} aria-hidden="true" /> Preview</span></div>
@@ -117,7 +119,7 @@ function Home() {
           <div className="rc-mint-copy"><h2 id="rc-mint-title">From the studio</h2><p>Explore our creative direction and artwork concepts.<br />These are previews, not sale listings.</p><a className="rc-button rc-button-light" href="/create">Create NFT <ArrowRight size={17}/></a></div>
           <div className="rc-mint-tiles">{works.filter((work)=>["nocturne","lit-mark","red-aperture"].includes(work.id)).map((work)=><button key={work.id} type="button" onClick={()=>setActive(work)} className="rc-mint-tile"><img src={work.image} alt="" loading="lazy"/><span>{work.title} · Preview <ArrowUpRight size={15}/></span></button>)}</div>
         </section>
-        <section className="rc-create-banner" aria-labelledby="rc-create-title"><div><h2 id="rc-create-title">Create on RareCognos</h2><p>Mint your NFTs, reach collectors, and trade on LiteForge.</p><a className="rc-button rc-button-outline" href="/create">Start creating <ArrowRight size={17}/></a></div><img className="rc-banner-art" src="/art/hero-ribbon.webp" alt="" aria-hidden="true" loading="lazy" decoding="async" /></section>
+        <section className="rc-create-banner" aria-labelledby="rc-create-title"><div><h2 id="rc-create-title">Create on RareCognos</h2><p>Mint your NFTs, reach collectors, and trade on LiteForge.</p><a className="rc-button rc-button-outline" href="/create">Start creating <ArrowRight size={17}/></a></div><div className="rc-banner-aurora" aria-hidden="true" /></section>
           </>
         )}
         {view !== "Explore" && (
@@ -279,6 +281,61 @@ const homeVisualCSS = `
 .rc-create-banner .rc-banner-art{display:none}
 .rc-create-banner h2{max-width:11ch;font-size:clamp(32px,8.5vw,46px);line-height:1.06}
 .rc-create-banner p{max-width:33ch}
+}
+/* Full-bleed atmospheric ribbon: no hard edge at the card column boundary. */
+.rc-hero{
+  isolation:isolate;
+  background:#050506;
+}
+.rc-hero::before{
+  content:"";
+  position:absolute;inset:0;z-index:0;pointer-events:none;
+  background:radial-gradient(ellipse 68% 78% at 84% 60%,#0a1933 0%,rgba(7,13,29,.82) 40%,rgba(5,5,6,0) 80%);
+}
+.rc-hero::after{
+  content:"";
+  position:absolute;inset:0;z-index:2;pointer-events:none;
+  background:linear-gradient(90deg,#050506 0%,rgba(5,5,6,.96) 24%,rgba(5,5,6,.74) 35%,rgba(5,5,6,.20) 51%,transparent 66%);
+}
+.rc-hero-atmosphere{position:absolute;inset:0;z-index:1;overflow:hidden;pointer-events:none}
+.rc-atmosphere-ribbon{
+  position:absolute;display:block;max-width:none;height:auto;
+  opacity:.8;mix-blend-mode:screen;user-select:none;
+  -webkit-mask-image:linear-gradient(90deg,transparent 0%,rgba(0,0,0,.08) 15%,rgba(0,0,0,.66) 35%,#000 53%,#000 88%,transparent 100%);
+  mask-image:linear-gradient(90deg,transparent 0%,rgba(0,0,0,.08) 15%,rgba(0,0,0,.66) 35%,#000 53%,#000 88%,transparent 100%);
+}
+.rc-atmosphere-ribbon-front{
+  width:102%;left:14%;top:44%;transform:rotate(-6deg);
+  filter:drop-shadow(0 0 22px rgba(5,67,209,.35));
+}
+.rc-atmosphere-ribbon-back{
+  width:85%;left:32%;top:10%;transform:rotate(5deg) scaleY(-1);opacity:.58;
+}
+.rc-hero-copy{z-index:5}
+.rc-hero-visual{z-index:3;clip-path:none;isolation:auto}
+.rc-create-banner{
+  isolation:isolate;
+  background:#060810;
+}
+.rc-create-banner::before{
+  content:"";position:absolute;inset:-20%;z-index:0;pointer-events:none;
+  background:radial-gradient(ellipse 52% 60% at 86% 58%,rgba(28,70,169,.29) 0%,rgba(12,30,74,.14) 46%,transparent 82%);
+  filter:blur(16px);
+}
+.rc-banner-aurora{
+  position:absolute;inset:0;z-index:0;pointer-events:none;
+  background:radial-gradient(ellipse 52% 96% at 112% 92%,rgba(37,89,207,.23),rgba(12,26,70,.1) 48%,transparent 86%);
+}
+.rc-create-banner > div:first-child{position:relative;z-index:2}
+@media(max-width:900px){
+.rc-hero::after{background:linear-gradient(180deg,#050506 0%,rgba(5,5,6,.86) 37%,rgba(5,5,6,.18) 58%,transparent 82%)}
+.rc-atmosphere-ribbon-front{width:150%;left:-25%;top:66%;transform:rotate(-5deg)}
+.rc-atmosphere-ribbon-back{width:134%;left:0%;top:56%;opacity:.46}
+}
+@media(max-width:540px){
+.rc-atmosphere-ribbon-front{width:165%;left:-32%;top:70%}
+.rc-atmosphere-ribbon-back{width:146%;left:-3%;top:60%}
+.rc-create-banner{background:#060810}
 }
 @media(prefers-reduced-motion:reduce){.rc-float-card{transition:none}}
 `;
