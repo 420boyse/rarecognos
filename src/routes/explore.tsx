@@ -3,6 +3,8 @@ import { useEffect, useRef, useState } from "react";
 import { MarketHeader } from "@/components/market-header";
 import { SiteFooter } from "@/components/site-footer";
 import { FanStackNFT } from "@/components/fan-stack-nft";
+import { MarketplaceListingCard } from "@/components/marketplace-listing-card";
+import { useListings } from "@/lib/nft/data";
 import { eyedNetwork, eyedPrice } from "@/data/eyed";
 import { halo, haloPrice } from "@/data/halo";
 import { works, type Work } from "@/data/works";
@@ -66,6 +68,8 @@ function ExplorePage() {
   useEffect(() => {
     if (activeStudioWork && !studioDialog.current?.open) studioDialog.current?.showModal();
   }, [activeStudioWork]);
+  const listings = useListings();
+  const activeListings = listings.data?.pages.flatMap((page) => page.listings).filter((listing) => listing.valid) ?? [];
   const eyedDrop = useDropStatus(eyedDeployment.address);
   const haloDrop = useDropStatus(haloDeployment.address || undefined);
   const q = query.trim().toLowerCase();
@@ -136,6 +140,41 @@ function ExplorePage() {
             </ul>
           </section>
         )}
+        <section className="explore-live-listings" aria-labelledby="live-sales-title">
+          <div className="section-heading">
+            <div>
+              <h2 id="live-sales-title">Live listings</h2>
+              <p>Available NFTs listed by their current owners. Prices are read from LiteForge.</p>
+            </div>
+          </div>
+          {listings.isPending && <p className="explore-empty" role="status">Checking active listings…</p>}
+          {listings.isError && (
+            <p className="explore-empty" role="alert">
+              Live listings could not be loaded.{" "}
+              <button className="nft-button" onClick={() => void listings.refetch()}>Retry</button>
+            </p>
+          )}
+          {activeListings.length > 0 && (
+            <div className="explore-live-grid">
+              {activeListings.map((listing) => (
+                <MarketplaceListingCard key={String(listing.id)} listing={listing} search={query} />
+              ))}
+            </div>
+          )}
+          {!listings.isPending && !listings.isError && activeListings.length === 0 && !listings.hasNextPage && (
+            <p className="explore-empty">No active sales from the RareCognos collection yet. Minted works and studio previews are still available to explore.</p>
+          )}
+          {listings.hasNextPage && (
+            <button
+              type="button"
+              className="nft-button explore-load-more"
+              disabled={listings.isFetchingNextPage}
+              onClick={() => void listings.fetchNextPage()}
+            >
+              {listings.isFetchingNextPage ? "Loading…" : "Load more listings"}
+            </button>
+          )}
+        </section>
         {!q && (
           <FanStackNFT
             studio
