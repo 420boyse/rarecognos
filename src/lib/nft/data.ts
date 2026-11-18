@@ -86,22 +86,23 @@ export function useListings(enabled = true) {
             args: [id],
           });
           if (!active) return null;
-          const [owner, approval, version] = await Promise.all([
-            client!.readContract({ ...nftCall, functionName: "ownerOf", args: [tokenId] }),
-            client!.readContract({
-              ...marketCall,
-              functionName: "approved",
-              args: [tokenId, seller],
-            }),
-            client!.readContract({ ...nftCall, functionName: "transferVersion", args: [tokenId] }),
-          ]);
-          return {
-            id,
-            seller,
-            tokenId,
-            price,
-            valid: owner.toLowerCase() === seller.toLowerCase() && approval && version === nonce,
-          };
+          // A stale/burned token must not make every other market listing disappear.
+          let valid = false;
+          try {
+            const [owner, approval, version] = await Promise.all([
+              client!.readContract({ ...nftCall, functionName: "ownerOf", args: [tokenId] }),
+              client!.readContract({
+                ...marketCall,
+                functionName: "approved",
+                args: [tokenId, seller],
+              }),
+              client!.readContract({ ...nftCall, functionName: "transferVersion", args: [tokenId] }),
+            ]);
+            valid = owner.toLowerCase() === seller.toLowerCase() && approval && version === nonce;
+          } catch {
+            valid = false;
+          }
+          return { id, seller, tokenId, price, valid };
         }),
       );
       return { listings: listings.filter((x) => x !== null), next: end > 0n ? end : undefined };
