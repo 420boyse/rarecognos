@@ -9,7 +9,7 @@ import { metadata } from "./data";
 export const dropCall = (address: Address) => ({ address, abi: dropABI });
 export const factoryCall = { address: contracts.factory!, abi: factoryABI };
 export const feeFor = (total: bigint) => (total * 25n) / 10000n;
-export const dropURL = (address: Address) => `${location.origin}${location.pathname}#drop/${getAddress(address)}`;
+export const dropURL = (address: Address) => `${location.origin}/#drop/${getAddress(address)}`;
 
 export function useDrop(address?: Address) {
   const client = usePublicClient({ chainId: chain.id });
