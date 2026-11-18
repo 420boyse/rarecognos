@@ -2166,3 +2166,13 @@ button:disabled {
   max-width:68ch; font-size:12px; line-height:1.6;
   color:rgb(245 244 239 / 0.6); margin:0 0 24px;
 }
+
+/* Mobile nav is fixed: keep underlying artwork from showing through its rows. */
+@media (max-width: 640px) {
+  .market-header {
+    background: #050506;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    border-bottom: 1px solid #292b31;
+  }
+}
