@@ -2140,3 +2140,23 @@ button:disabled {
   .nft-live-card {transition:none}
   .nft-live-card:hover { transform:none; }
 }
+
+/* Marketplace-wide search in header; compact mobile header remains unchanged. */
+.market-global-search {
+  display:flex; align-items:center; min-width:0; gap:9px;
+  border:1px solid #45474f; border-radius:999px;
+  background:#111217; color:#aeb2bd; padding:0 14px;
+  height:44px; overflow:hidden;
+}
+.market-global-search svg { flex:none; }
+.market-global-search input {
+  width:100%; min-width:0; border:0; outline:0;
+  background:transparent; color:#f5f4f1; padding:0;
+  font-size:12px; box-shadow:none;
+}
+.market-global-search input::placeholder { color:#8e919c; opacity:1; }
+.market-global-search:focus-within { border-color:#698de8; box-shadow:0 0 0 2px #1558c53b; }
+@media(min-width:1280px) {
+  .market-header-inner { grid-template-columns:auto auto minmax(230px,330px) auto; gap:clamp(18px,2.5vw,38px); }
+}
+@media(max-width:1279px) { .market-global-search { display:none; } }
