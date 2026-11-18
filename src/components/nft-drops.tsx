@@ -124,7 +124,7 @@ function DashboardDrop({ address, busy, toggle }: { address: Address; busy: bool
               {d.data.active ? "Active" : "Paused"} · {short(address)}
             </p>
             <div className="drop-card-actions">
-              <a className="text-link" href={`#drop/${address}`}>
+              <a className="text-link" href={`/#drop/${address}`}>
                 Open public mint <ExternalLink size={14} />
               </a>
               <button className="nft-button" disabled={busy} onClick={() => void toggle(address, d.data!.active)}>
@@ -149,7 +149,7 @@ export function DropCreated({ address, hash }: { address: Address; hash?: Hash }
       <p>Collection deployed and confirmed. Share this public mint page:</p>
       <p className="uri-text">{url}</p>
       <div className="drop-card-actions">
-        <a className="primary-action" href={`#drop/${address}`}>Open public mint</a>
+        <a className="primary-action" href={`/#drop/${address}`}>Open public mint</a>
         <button className="nft-button" onClick={() => void navigator.clipboard.writeText(url)}>Copy share link</button>
         {hash && explorer && <a className="text-link" href={`${explorer}/tx/${hash}`} target="_blank" rel="noreferrer">View deployment transaction</a>}
       </div>
