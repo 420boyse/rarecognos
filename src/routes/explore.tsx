@@ -51,6 +51,7 @@ function DeferredArt({ src, eager = false, pixel = false }: { src: string; eager
 }
 
 export const Route = createFileRoute("/explore")({
+  validateSearch: (search: Record<string, unknown>) => ({ q: typeof search.q === "string" ? search.q.slice(0, 120) : "" }),
   head: () =>
     pageMeta({
       title: "Explore · RareCognos",
@@ -62,9 +63,11 @@ export const Route = createFileRoute("/explore")({
 });
 
 function ExplorePage() {
-  const [query, setQuery] = useState("");
+  const searchParams = Route.useSearch();
+  const [query, setQuery] = useState(searchParams.q);
   const [activeStudioWork, setActiveStudioWork] = useState<Work | null>(null);
   const studioDialog = useRef<HTMLDialogElement>(null);
+  useEffect(() => setQuery(searchParams.q), [searchParams.q]);
   useEffect(() => {
     if (activeStudioWork && !studioDialog.current?.open) studioDialog.current?.showModal();
   }, [activeStudioWork]);
