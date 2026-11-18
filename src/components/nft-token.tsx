@@ -148,7 +148,14 @@ export function NFTToken({ id, detail = false, ready, run }: Props) {
         {!t.saleReady ? (
           <p className="sale-state">Checking listing…</p>
         ) : t.active ? (
-          <p className="sale-price">{formatEther(salePrice!)} zkLTC</p>
+          detail ? (
+            <div className="token-price-block">
+              <span className="token-price-label">Current price</span>
+              <p className="sale-price">{formatEther(salePrice!)} zkLTC</p>
+            </div>
+          ) : (
+            <p className="sale-price">{formatEther(salePrice!)} zkLTC</p>
+          )
         ) : (
           <p className="sale-state">
             {t.listing?.[3]
@@ -162,31 +169,64 @@ export function NFTToken({ id, detail = false, ready, run }: Props) {
           </a>
         ) : (
           <>
-            <p className="token-description">{meta.data?.description}</p>
-            <dl className="token-facts">
-              <dt>Creator</dt>
-              <dd>{t.creator === zeroAddress ? "Not recorded by V1" : t.creator}</dd>
-              <dt>Current owner</dt>
-              <dd>{t.owner}</dd>
-              <dt>Network</dt>
-              <dd>
-                {chain.name} ({chain.id})
-              </dd>
-              <dt>Collection</dt>
-              <dd>{contracts.collection}</dd>
-              <dt>Metadata URI</dt>
-              <dd>{t.uri}</dd>
+            {meta.data?.description?.trim() &&
+              meta.data.description.trim().toLowerCase() !== "rare" && (
+                <p className="token-description">{meta.data.description}</p>
+              )}
+            <dl className="token-owner-facts">
+              <div>
+                <dt>Created by</dt>
+                <dd>
+                  {t.creator === zeroAddress ? (
+                    <span>Not recorded by V1</span>
+                  ) : explorer ? (
+                    <a href={`${explorer}/address/${t.creator}`} target="_blank" rel="noreferrer" title={t.creator} aria-label={`Creator address ${t.creator}, view on explorer`}>
+                      {short(t.creator)}
+                    </a>
+                  ) : (
+                    <span title={t.creator}>{short(t.creator)}</span>
+                  )}
+                </dd>
+              </div>
+              <div>
+                <dt>Owned by</dt>
+                <dd>
+                  {explorer ? (
+                    <a href={`${explorer}/address/${t.owner}`} target="_blank" rel="noreferrer" title={t.owner} aria-label={`Owner address ${t.owner}, view on explorer`}>
+                      {short(t.owner)}
+                    </a>
+                  ) : (
+                    <span title={t.owner}>{short(t.owner)}</span>
+                  )}
+                </dd>
+              </div>
             </dl>
-            {explorer && (
-              <a
-                href={`${explorer}/token/${contracts.collection}/instance/${id}`}
-                target="_blank"
-                rel="noreferrer"
-                className="text-link"
-              >
-                View token on explorer
-              </a>
-            )}
+            <p className="token-network-badge"><span aria-hidden="true" />{chain.name} Testnet</p>
+            <details className="token-technical">
+              <summary>Technical details</summary>
+              <dl className="token-technical-facts">
+                <dt>Chain ID</dt>
+                <dd>{chain.id}</dd>
+                <dt>Collection contract</dt>
+                <dd>{contracts.collection}</dd>
+                <dt>Creator address</dt>
+                <dd>{t.creator === zeroAddress ? "Not recorded by V1" : t.creator}</dd>
+                <dt>Owner address</dt>
+                <dd>{t.owner}</dd>
+                <dt>Metadata URI</dt>
+                <dd>{t.uri}</dd>
+              </dl>
+              {explorer && (
+                <a
+                  href={`${explorer}/token/${contracts.collection}/instance/${id}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-link"
+                >
+                  View token on explorer
+                </a>
+              )}
+            </details>
             {!account.address && (
               <p className="market-notice">
                 Connect your wallet in the top bar to{" "}
