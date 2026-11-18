@@ -228,8 +228,35 @@ const homeVisualCSS = `
 
 /* Image-backed hero: four separate optimized artworks; responsive card layers */
 .rc-hero{max-width:1440px;margin:0 auto;min-height:590px;display:grid;grid-template-columns:39% 61%;position:relative;overflow:hidden;border-bottom:1px solid #24262b;padding:62px 4.8% 46px;background:radial-gradient(ellipse at 78% 47%,#0a1933 0%,#05070d 47%,#050506 83%);isolation:isolate}
-.rc-hero-copy{position:relative;z-index:5;align-self:center}.rc-kicker{font-size:11px;letter-spacing:.16em;color:#91a7dd}.rc-hero h1{font-size:clamp(58px,6.5vw,100px);letter-spacing:-.065em;line-height:.92;font-weight:650;margin:28px 0 26px}.rc-hero-copy p{color:#bfc1c9;font-size:18px;margin-bottom:30px}.rc-actions{display:flex;gap:14px;flex-wrap:wrap}.rc-button{display:inline-flex;align-items:center;gap:14px;border-radius:999px;padding:15px 23px;text-decoration:none;font-size:14px;font-weight:600}.rc-button-light{background:#f4f3ee;color:#0b0b0d}.rc-button-outline{border:1px solid #4a4d54;color:#f4f3ee;background:#0b0c10}
+.rc-hero-copy{position:relative;z-index:5;align-self:center}.rc-kicker{font-size:11px;letter-spacing:.16em;color:#91a7dd}.rc-hero h1{font-size:clamp(58px,6.5vw,100px);letter-spacing:-.065em;line-height:.92;font-weight:650;margin:0 0 26px}.rc-hero-copy p{color:#bfc1c9;font-size:18px;margin-bottom:30px}.rc-actions{display:flex;gap:14px;flex-wrap:wrap}.rc-button{display:inline-flex;align-items:center;gap:14px;border-radius:999px;padding:15px 23px;text-decoration:none;font-size:14px;font-weight:600}.rc-button-light{background:#f4f3ee;color:#0b0b0d}.rc-button-outline{border:1px solid #4a4d54;color:#f4f3ee;background:#0b0c10}
 .rc-hero-visual{position:relative;min-height:470px;isolation:isolate;perspective:1000px}.rc-ribbon{position:absolute;display:block;pointer-events:none;mix-blend-mode:screen;max-width:none;user-select:none}.rc-ribbon-bottom{width:156%;left:-27%;top:34%;opacity:.98;filter:drop-shadow(0 0 20px #0349ee77);transform:rotate(-6deg);z-index:-2}.rc-ribbon-top{width:127%;left:14%;top:-16%;opacity:.8;transform:rotate(5deg) scaleY(-1);z-index:-3}
 .rc-float-card{position:absolute;top:18%;width:34%;height:72%;border:1px solid #677594;border-radius:18px;background:#090b10;overflow:hidden;box-shadow:0 28px 75px #000b,0 0 18px #0c3c9655;transform-style:preserve-3d}.rc-float-card img{width:100%;height:100%;object-fit:cover}.rc-float-card span{position:absolute;top:15px;left:15px;display:inline-flex;align-items:center;gap:7px;background:#272e40e6;border:1px solid #536079;border-radius:30px;padding:7px 13px;font-size:12px;color:white;font-weight:600}.rc-float-left{left:7%;width:36%;transform:rotate(-8deg) translateY(15px);z-index:1}.rc-float-center{left:32%;top:7%;height:86%;width:40%;transform:rotate(3deg);z-index:3;box-shadow:0 40px 90px #000d,0 0 24px #1656d34d}.rc-float-right{left:69%;width:34%;transform:rotate(9deg) translateY(19px);z-index:2}
-@media(max-width:800px){
+
+@media(max-width:900px){
+.rc-hero{grid-template-columns:1fr;min-height:0;padding:48px 5% 32px}
+.rc-hero-copy{max-width:680px}
+.rc-hero h1{font-size:clamp(56px,10vw,88px);margin:0 0 24px}
+.rc-hero-visual{width:100%;max-width:740px;min-height:clamp(320px,60vw,475px);margin:30px auto 0}
+.rc-ribbon-bottom{width:138%;left:-20%;top:30%}
+.rc-ribbon-top{width:126%;left:5%;top:-18%}
+.rc-float-card{top:18%;height:71%}
+.rc-float-center{top:7%;height:86%}
+}
+@media(max-width:540px){
+.rc-hero{padding:34px 5% 28px}
+.rc-hero h1{font-size:clamp(54px,13vw,74px);line-height:.93}
+.rc-hero-copy p{font-size:15px;line-height:1.5;margin-bottom:22px}
+.rc-actions{gap:10px}
+.rc-button{font-size:13px;padding:12px 18px;min-height:44px}
+.rc-hero-visual{min-height:clamp(240px,69vw,320px);margin-top:25px}
+.rc-ribbon-bottom{width:152%;left:-26%;top:30%}
+.rc-ribbon-top{width:132%;left:3%;top:-12%}
+.rc-float-card{border-radius:12px;top:20%;height:65%;box-shadow:0 16px 34px #000b,0 0 12px #134fbd55}
+.rc-float-left{left:5%;width:38%;transform:rotate(-9deg) translateY(10px)}
+.rc-float-center{left:30%;width:43%;height:84%;top:8%;transform:rotate(3deg)}
+.rc-float-right{left:68%;width:36%;transform:rotate(10deg) translateY(15px)}
+.rc-float-card span{top:8px;left:8px;gap:4px;padding:5px 8px;font-size:9px}
+.rc-float-card span svg{width:11px;height:11px}
+}
+@media(prefers-reduced-motion:reduce){.rc-float-card{transition:none}}
 `;
