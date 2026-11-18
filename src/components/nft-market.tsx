@@ -82,13 +82,15 @@ export function NFTMarket({
       /* confirmed receipt remains authoritative */
     }
   }
-  async function run(call: Parameters<typeof transact>[2], after?: (receipt: Awaited<ReturnType<typeof transact>>) => void) {
+  async function run(call: Parameters<typeof transact>[2], after?: (receipt: Awaited<ReturnType<typeof transact>>) => void, before?: () => Promise<void>) {
     if (!ready || lock.current || !client || !wallet.data) return;
     lock.current = true;
     setBusy(true);
     const owner = wallet.data.account.address.toLowerCase();
     let confirmed = false;
     try {
+      // A preflight is not a post-transaction callback: abort before showing a wallet approval.
+      await before?.();
       const receipt = await transact(
         client as PublicClient,
         wallet.data as WalletClient,
