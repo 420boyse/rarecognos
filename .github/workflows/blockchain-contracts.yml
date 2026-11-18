@@ -1,0 +1,48 @@
+name: Blockchain contract tests (local EVM)
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "contracts/**"
+      - "scripts/nft-compile.mjs"
+      - "scripts/nft-local.mjs"
+      - "scripts/nft-test.mjs"
+      - "scripts/drop-test.mjs"
+      - "src/lib/nft/**"
+      - "upload-service/**"
+      - ".github/workflows/blockchain-contracts.yml"
+      - "package.json"
+      - "package-lock.json"
+  pull_request:
+    paths:
+      - "contracts/**"
+      - "scripts/nft-compile.mjs"
+      - "scripts/nft-local.mjs"
+      - "scripts/nft-test.mjs"
+      - "scripts/drop-test.mjs"
+      - "src/lib/nft/**"
+      - "upload-service/**"
+      - ".github/workflows/blockchain-contracts.yml"
+      - "package.json"
+      - "package-lock.json"
+  workflow_dispatch:
+
+jobs:
+  nft-and-drop-contracts:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+      - name: Install dependencies
+        run: npm install --ignore-scripts --no-audit --no-fund --package-lock=false
+      - name: Compile Solidity contracts
+        run: npm run nft:compile
+      - name: Test NFT marketplace mint-list-buy and failure scenarios (Ganache)
+        run: node --experimental-strip-types scripts/nft-test.mjs
+      - name: Test creator drop factory, public mint and fee rules (Ganache)
+        run: node scripts/drop-test.mjs
