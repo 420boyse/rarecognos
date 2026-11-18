@@ -33,7 +33,7 @@ export const Route = createFileRoute("/eyed")({
       title: face ? `${face.name} · Eyed · RareCognos` : "Eyed · RareCognos",
       description: face
         ? face.story
-        : "Eyed is a set of nine faces on LiteForge. Eight are featured. Each face has 100 editions.",
+        : "Eyed is a character collection available to discover and mint on LiteForge.",
       path,
       image: face ? `/art/eyed/${face.id}.jpg` : "/art/eyed/02.jpg",
     });
