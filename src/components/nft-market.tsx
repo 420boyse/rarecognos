@@ -314,6 +314,12 @@ export function NFTMarket({
               </button>
             </div>
           ))}
+
+          <div className="market-notice" role="note">
+            <strong>Other LiteForge collections</strong>
+            <p>My NFTs currently tracks the RareCognos marketplace collection. Eyed editions and independent creator drops use separate contracts and may still be present in your wallet.</p>
+            <a href="/eyed" className="text-link">Explore Eyed</a>
+          </div>
           {listings.hasNextPage && (
             <button
               className="nft-button"
