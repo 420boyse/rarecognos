@@ -40,6 +40,8 @@ jobs:
           cache: "npm"
       - name: Install dependencies
         run: npm install --ignore-scripts --no-audit --no-fund --package-lock=false
+      - name: Build native SQLite dependency for upload integration scenario
+        run: npm rebuild better-sqlite3 --no-audit --no-fund
       - name: Compile Solidity contracts
         run: npm run nft:compile
       - name: Test NFT marketplace mint-list-buy and failure scenarios (Ganache)
