@@ -9,7 +9,7 @@ type Props = {
   id: bigint;
   detail?: boolean;
   ready: boolean;
-  run: (call: Parameters<typeof transact>[2], before?: () => Promise<void>) => Promise<void>;
+  run: (call: Parameters<typeof transact>[2], after?: (receipt: Awaited<ReturnType<typeof transact>>) => void, before?: () => Promise<void>) => Promise<void>;
 };
 export function NFTToken({ id, detail = false, ready, run }: Props) {
   const token = useToken(id),
@@ -93,6 +93,7 @@ export function NFTToken({ id, detail = false, ready, run }: Props) {
   const buy = () =>
     run(
       { ...marketCall, functionName: "buy", args: [t.listingId!, salePrice!], value: salePrice! },
+      undefined,
       async () => {
         const [seller, tokenId, value, active, nonce] = await client!.readContract({
           ...marketCall,
@@ -106,6 +107,7 @@ export function NFTToken({ id, detail = false, ready, run }: Props) {
         ]);
         if (
           !active ||
+          seller.toLowerCase() === account.address?.toLowerCase() ||
           tokenId !== id ||
           value !== salePrice ||
           owner.toLowerCase() !== seller.toLowerCase() ||
