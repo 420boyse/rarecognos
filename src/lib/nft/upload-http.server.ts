@@ -1,9 +1,47 @@
-import { createHash, createHmac } from "node:crypto";
+import { createHash, createHmac, randomBytes, timingSafeEqual } from "node:crypto";
 import { isAddress, verifyTypedData, type Address, type Hex } from "viem";
 import { env } from "@/lib/env.server";
 
 export const MAX_UPLOAD_BYTES = 3 * 1024 * 1024;
 const CHAIN_ID = 4441;
+const processReplay = new Map<string, number>();
+const MAX_PROCESS_REPLAY = 4096;
+
+function redisConfig() {
+  const url = env("UPSTASH_REDIS_REST_URL")?.trim();
+  const token = env("UPSTASH_REDIS_REST_TOKEN")?.trim();
+  return url && token ? { url: url.replace(/\\/$/, ""), token } : null;
+}
+
+async function reserveTicket(id: string, expires: number) {
+  const key = "rarecognos:upload:ticket:" + createHash("sha256").update(id).digest("hex");
+  const redis = redisConfig();
+  if (redis) {
+    const seconds = Math.max(1, Math.ceil((expires - Date.now()) / 1000));
+    const response = await fetch(redis.url, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${redis.token}`, "Content-Type": "application/json" },
+      body: JSON.stringify(["SET", key, "1", "EX", seconds, "NX"]),
+      signal: AbortSignal.timeout(5000),
+    });
+    if (!response.ok) throw Object.assign(new Error("Upload authorization storage is unavailable. Try again."), { status: 503 });
+    const body = await response.json() as { result?: string | null; error?: string };
+    if (body.error) throw Object.assign(new Error("Upload authorization storage is unavailable. Try again."), { status: 503 });
+    if (body.result !== "OK") throw Object.assign(new Error("Upload authorization was already used. Sign again."), { status: 409 });
+    return;
+  }
+  // Same-process guard only. A durable Redis store is required across serverless instances.
+  const now = Date.now();
+  for (const [seen, ttl] of processReplay) if (ttl <= now) processReplay.delete(seen);
+  if (processReplay.has(key)) throw Object.assign(new Error("Upload authorization was already used. Sign again."), { status: 409 });
+  processReplay.set(key, expires);
+  while (processReplay.size > MAX_PROCESS_REPLAY) processReplay.delete(processReplay.keys().next().value!);
+}
+
+function equalsMac(a: string, b: string) {
+  if (!/^[a-f0-9]{64}$/.test(a) || !/^[a-f0-9]{64}$/.test(b)) return false;
+  return timingSafeEqual(Buffer.from(a, "hex"), Buffer.from(b, "hex"));
+}
 
 function pinataJwt() {
   return env("PINATA_JWT") ?? "";
@@ -56,7 +94,7 @@ export function uploadStatus(request: Request) {
   if (origin && !allowed(request, origin)) return uploadJson(403, { error: "Origin not allowed" });
   return uploadJson(
     200,
-    { enabled: Boolean(pinataJwt()), mode: "ipfs", maxBytes: MAX_UPLOAD_BYTES, chainId: CHAIN_ID },
+    { enabled: Boolean(pinataJwt()), mode: "ipfs", maxBytes: MAX_UPLOAD_BYTES, chainId: CHAIN_ID, replayProtection: redisConfig() ? "persistent" : "process-only" },
     origin,
   );
 }
@@ -88,6 +126,8 @@ const publishTypes = {
     { name: "site", type: "string" },
     { name: "wallet", type: "address" },
     { name: "image", type: "bytes32" },
+    { name: "metadata", type: "bytes32" },
+    { name: "nonce", type: "bytes32" },
     { name: "until", type: "string" },
   ],
 } as const;
@@ -101,6 +141,8 @@ type PublishTyped = {
     site: string;
     wallet: Address;
     image: Hex;
+    metadata: Hex;
+    nonce: Hex;
     until: string;
   };
 };
@@ -133,12 +175,15 @@ export async function uploadChallenge(request: Request) {
     return uploadJson(400, { error: "Check name, description, wallet and rights declaration." }, origin);
   }
   const expires = Date.now() + 300000;
+  const nonce = `0x${randomBytes(32).toString("hex")}` as Hex;
+  const metadataDigest = `0x${createHash("sha256").update(JSON.stringify({ name: name.trim(), description, rights })).digest("hex")}` as Hex;
   const payload = JSON.stringify({
     wallet: wallet.toLowerCase(),
     digest,
     name: name.trim(),
     description,
     rights,
+    nonce,
     chainId: CHAIN_ID,
   });
   const until =
@@ -162,12 +207,14 @@ export async function uploadChallenge(request: Request) {
       site: new URL(origin).host,
       wallet: wallet as Address,
       image: `0x${digest}` as Hex,
+      metadata: metadataDigest,
+      nonce,
       until,
     },
   };
   return uploadJson(
     200,
-    { id: pack({ payload, typed, expires, mac: mac(JSON.stringify(typed)) }), typed, expires },
+    { id: pack({ payload, typed, expires, mac: mac(JSON.stringify({ payload, typed, expires })) }), typed, expires },
     origin,
   );
 }
@@ -211,13 +258,16 @@ export async function uploadPrepare(request: Request) {
       return uploadJson(400, { error: "Missing image" }, origin);
     const ticket = unpack(body.id);
     const typed = ticket.typed!;
-    if (ticket.mac !== mac(JSON.stringify(typed)) || !ticket.expires || ticket.expires < Date.now())
+    if (!equalsMac(ticket.mac!, mac(JSON.stringify({ payload: ticket.payload, typed, expires: ticket.expires }))) || !ticket.expires || ticket.expires < Date.now())
       return uploadJson(401, { error: "Upload authorization expired or already used. Sign again." }, origin);
     const payload = JSON.parse(ticket.payload!) as {
       wallet: string;
       digest: string;
       name: string;
       description: string;
+      rights: boolean;
+      nonce: Hex;
+      chainId: number;
     };
     const site = new URL(origin).host;
     if (
@@ -229,7 +279,11 @@ export async function uploadPrepare(request: Request) {
       typed.message.site !== site ||
       typed.message.wallet.toLowerCase() !== payload.wallet ||
       typed.message.artwork !== payload.name ||
-      typed.message.image.toLowerCase() !== `0x${payload.digest}`
+      typed.message.image.toLowerCase() !== `0x${payload.digest}` ||
+      typed.message.metadata.toLowerCase() !== `0x${createHash("sha256").update(JSON.stringify({ name: payload.name, description: payload.description, rights: payload.rights })).digest("hex")}` ||
+      typed.message.nonce.toLowerCase() !== payload.nonce.toLowerCase() ||
+      payload.chainId !== CHAIN_ID ||
+      payload.rights !== true
     )
       return uploadJson(401, { error: "Upload authorization expired or already used. Sign again." }, origin);
     if (
@@ -249,6 +303,7 @@ export async function uploadPrepare(request: Request) {
       return uploadJson(400, { error: "Image does not match signed digest" }, origin);
     const mime = imageType(bytes);
     if (!mime) return uploadJson(415, { error: "Only single-frame PNG, JPEG and WebP images are supported" }, origin);
+    await reserveTicket(body.id, ticket.expires);
     const imageURI = await pinFile(bytes, mime, `${payload.digest}.${mime.split("/")[1]}`);
     const metadata = {
       name: payload.name,
