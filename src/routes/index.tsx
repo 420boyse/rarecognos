@@ -11,6 +11,7 @@ import { useDropStatus } from "@/lib/nft/use-drop-status";
 import eyedDeployment from "../../config/eyed.json";
 import haloDeployment from "../../config/halo.json";
 import { isAddress, type Address } from "viem";
+import { useMarketResults } from "@/lib/nft/network-market";
 import { MarketplaceListingCard } from "@/components/marketplace-listing-card";
 import { rogueImage, useRoguesRelease } from "@/lib/nft/midnight-rogues";
 import { useListings, useListingSearch } from "@/lib/nft/data";
@@ -40,7 +41,10 @@ function Home() {
   const [marketLayout, setMarketLayout] = useState<"grid" | "list">("grid");
   const liveListings = listings.data?.pages.flatMap((page) => page.listings).filter((listing) => listing.valid) ?? [];
   const searchTerm = marketSearch.trim().toLowerCase();
-  const { matches, searching } = useListingSearch(liveListings, marketSearch);
+  const local = useListingSearch(liveListings, marketSearch);
+  const network = useMarketResults(searchTerm);
+  const matches = [...local.matches.map(card=>({...card, href:`/token/${card.listing.tokenId}`})), ...network.matches];
+  const searching = local.searching || !network.settled;
   const matchingListings = [...matches].sort((a,b) => marketSort === "price" ? (a.listing.price < b.listing.price ? -1 : a.listing.price > b.listing.price ? 1 : 0) : (a.listing.id > b.listing.id ? -1 : a.listing.id < b.listing.id ? 1 : 0));
   const mintCards = [{ name: "MIDNIGHT ROGUES", href: "/midnight-rogues", image: rogueImage("001"), status: rogues.label }, { name: "Eyed", href: "/eyed", image: "/art/eyed/04.jpg", status: eyedDrop.label }, { name: "Halo", href: "/halo", image: "/art/halo/01.png", status: haloDrop.label }].filter((card) => !searchTerm || card.name.toLowerCase().includes(searchTerm));
   useEffect(() => {
@@ -98,7 +102,7 @@ function Home() {
           </div>
         </section>
         <section id="marketplace" className="rc-section rc-market" aria-labelledby="rc-market-title">
-          <div className="rc-heading"><div><h2 id="rc-market-title">Explore NFTs</h2><p>Discover new mints and active listings on LiteForge.</p></div><a className="rc-text-link" href="/explore">Full explore <ArrowUpRight size={16} /></a></div>
+          <div className="rc-heading"><div><h2 id="rc-market-title">Explore NFTs</h2><p>Discover new mints and active listings on LiteForge.</p></div><a className="rc-text-link" href="/#my-nfts">List an NFT <ArrowUpRight size={16} /></a><a className="rc-text-link" href="/explore">Full explore <ArrowUpRight size={16} /></a></div>
           <div className="rc-toolbar">
             <div className="rc-tabs" role="group" aria-label="NFT category">
               {(["all","mint","listings"] as const).map((tab) => <button key={tab} type="button" className={marketTab===tab?"selected":""} aria-pressed={marketTab===tab} onClick={()=>setMarketTab(tab)}>{tab==="all"?"All":tab==="mint"?"Mint":"Listings"}</button>)}
@@ -109,8 +113,10 @@ function Home() {
           </div>
           <div className={`rc-nft-grid ${marketLayout==="list"?"rc-nft-list":""}`}>
             {(marketTab==="all"||marketTab==="mint") && mintCards.map((card)=><a className="rc-nft-card" key={card.name} href={card.href}><div className="rc-nft-art"><img src={card.image} alt="" loading="lazy" /></div><div className="rc-nft-info"><strong>{card.name}</strong><span>{card.status}</span></div></a>)}
-            {(marketTab==="all"||marketTab==="listings") && matchingListings.map((card)=><MarketplaceListingCard key={String(card.listing.id)} {...card} />)}
+            {(marketTab==="all"||marketTab==="listings") && matchingListings.map((card)=><MarketplaceListingCard key={card.href} {...card} />)}
           </div>
+          {marketTab!=="mint" && network.sales.hasNextPage && <button className="nft-button" disabled={network.sales.isFetchingNextPage} onClick={()=>void network.sales.fetchNextPage()}>Load more network listings</button>}
+          {marketTab!=="mint" && network.error && <p role="status">Network listings are temporarily unavailable.</p>}
           {(marketTab==="listings" || marketTab==="all") && listings.hasNextPage && (
             <button type="button" className="rc-load-more nft-button" disabled={listings.isFetchingNextPage} onClick={() => void listings.fetchNextPage()}>
               {listings.isFetchingNextPage ? "Loading…" : "Load more listings"}

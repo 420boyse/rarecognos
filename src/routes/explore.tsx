@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { MarketHeader } from "@/components/market-header";
 import { SiteFooter } from "@/components/site-footer";
 import { FanStackNFT } from "@/components/fan-stack-nft";
+import { useMarketResults } from "@/lib/nft/network-market";
 import { MarketplaceListingCard } from "@/components/marketplace-listing-card";
 import { useListings, useListingSearch } from "@/lib/nft/data";
 import { eyedNetwork, eyedPrice } from "@/data/eyed";
@@ -79,7 +80,10 @@ function ExplorePage() {
   const eyedDrop = useDropStatus(eyedDeployment.address);
   const haloDrop = useDropStatus(haloDeployment.address || undefined);
   const q = query.trim().toLowerCase();
-  const { matches, searching } = useListingSearch(activeListings, q);
+  const local = useListingSearch(activeListings, q);
+  const network = useMarketResults(q);
+  const matches = [...local.matches.map(card => ({...card, href: `/token/${card.listing.tokenId}`})), ...network.matches];
+  const searching = local.searching || !network.settled;
   const showRogues = "midnight rogues".includes(q);
   const shownRogues = rogues.filter((r) => showRogues || (r.name + " " + r.title + " #" + r.id).toLowerCase().includes(q));
   const showEyedCollection = "eyed".includes(q);
@@ -156,7 +160,8 @@ function ExplorePage() {
           <div className="section-heading">
             <div>
               <h2 id="live-sales-title">Live listings</h2>
-              <p>Available NFTs listed by their current owners. Prices are read from LiteForge.</p>
+              <p>Secondary sales across LiteForge collections. Prices are read on-chain.</p>
+              <a className="text-link" href="/#my-nfts">List an NFT</a>
             </div>
           </div>
           {listings.isPending && <p className="explore-empty" role="status">Checking active listings…</p>}
@@ -169,13 +174,15 @@ function ExplorePage() {
           {matches.length > 0 && (
             <div className="explore-live-grid">
               {matches.map((card) => (
-                <MarketplaceListingCard key={String(card.listing.id)} {...card} />
+                <MarketplaceListingCard key={card.href} {...card} />
               ))}
             </div>
           )}
-          {!q && !listings.isPending && !listings.isError && activeListings.length === 0 && !listings.hasNextPage && (
-            <p className="explore-empty">No active sales from the RareCognos collection yet. Minted works and studio previews are still available to explore.</p>
+          {!q && !listings.isPending && !listings.isError && !matches.length && network.settled && !network.sales.hasNextPage && !listings.hasNextPage && (
+            <p className="explore-empty">No active sales yet. Minted works and studio previews are still available to explore.</p>
           )}
+          {network.sales.hasNextPage && <button className="nft-button" disabled={network.sales.isFetchingNextPage} onClick={()=>void network.sales.fetchNextPage()}>Load more network listings</button>}
+          {network.error && <p role="status">Network listings are temporarily unavailable.</p>}
           {listings.hasNextPage && (
             <button
               type="button"
