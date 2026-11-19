@@ -1,0 +1,72 @@
+[
+  {
+    "id": "001",
+    "name": "AURIC",
+    "title": "The Last Crown",
+    "icon": "👑",
+    "story": "When darkness swallowed his kingdom, everyone fled. He stayed. He wears his crown as a promise to find his people a new sun."
+  },
+  {
+    "id": "002",
+    "name": "VOLT",
+    "title": "Spark of Rebellion",
+    "icon": "⚡",
+    "story": "They cut the city’s power, believing it would silence the uprising. Volt caught a lightning bolt. Now, every step he takes lights up the forbidden streets."
+  },
+  {
+    "id": "003",
+    "name": "NYX",
+    "title": "The Forgotten Shadow",
+    "icon": "🌑",
+    "story": "The only witness to the sun thief’s face. To survive, he surrendered his name to the darkness. Now he hunts an enemy no one remembers."
+  },
+  {
+    "id": "004",
+    "name": "GALE",
+    "title": "The Final Flight",
+    "icon": "🥽",
+    "story": "The last pilot to take off before the skies were sealed. He still hears his missing squadron’s call—and saves no fuel for the journey home."
+  },
+  {
+    "id": "005",
+    "name": "KNOX",
+    "title": "Heir to the Streets",
+    "icon": "⛓️",
+    "story": "When the palace gates closed, he built a city for its abandoned children. His golden chain was forged from the shattered throne of the first tyrant he overthrew."
+  },
+  {
+    "id": "006",
+    "name": "PYRE",
+    "title": "The Last Ember",
+    "icon": "🔥",
+    "story": "He reached for the final spark that fell from the stolen sun. As long as his fire burns, the world still has a chance to be reborn."
+  },
+  {
+    "id": "007",
+    "name": "ORBIT",
+    "title": "Beyond the Void",
+    "icon": "🚀",
+    "story": "He followed the stolen sun’s trail beyond the stars. Years later, he returned with an impossible reflection in his visor: a dawn that had yet to exist."
+  },
+  {
+    "id": "008",
+    "name": "RONIN",
+    "title": "The Unbroken Oath",
+    "icon": "⚔️",
+    "story": "He sealed his blade the night he failed to protect his master. He will draw it only when he stands before the true ruler behind the darkness."
+  },
+  {
+    "id": "009",
+    "name": "BLACKTIDE",
+    "title": "The Midnight Sea",
+    "icon": "🏴‍☠️",
+    "story": "He traded an eye to learn where the light lay beyond the horizon. His ship’s compass points toward the stolen sun."
+  },
+  {
+    "id": "010",
+    "name": "ECHO",
+    "title": "Dawn Frequency",
+    "icon": "🎧",
+    "story": "He recorded the final sound before the sun vanished. If he finds the right rhythm, the entire city will play as one—and unlock the sky."
+  }
+]

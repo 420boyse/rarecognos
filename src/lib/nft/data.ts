@@ -4,6 +4,10 @@ import { createPublicClient, http, type Address, zeroAddress } from "viem";
 import { abi as nft } from "./RareCognos";
 import { abi as market } from "./RareCognosMarket";
 import { chain, contracts, configured } from "./config";
+import catalogMetadata from "./catalog-metadata.json";
+
+const knownContent = new Map(Object.entries(catalogMetadata));
+
 export const nftCall = { address: contracts.collection!, abi: nft },
   marketCall = { address: contracts.market!, abi: market };
 const reads = createPublicClient({ chain, transport: http(chain.rpcUrls.default.http[0]) });
@@ -32,6 +36,9 @@ export function mediaURL(uri: string) {
   return u.href;
 }
 export async function metadata(uri: string, options: { redirect?: RequestRedirect; timeout?: number } = {}) {
+  // These content-addressed documents were verified against their IPFS SHA-256 digests.
+  const cached = knownContent.get(uri);
+  if (cached) return { ...cached, image: mediaURL(cached.image) };
   const r = await fetch(mediaURL(uri), {
     signal: AbortSignal.timeout(options.timeout ?? 12000),
     redirect: options.redirect,
