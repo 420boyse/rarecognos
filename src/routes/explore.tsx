@@ -4,7 +4,7 @@ import { MarketHeader } from "@/components/market-header";
 import { SiteFooter } from "@/components/site-footer";
 import { FanStackNFT } from "@/components/fan-stack-nft";
 import { MarketplaceListingCard } from "@/components/marketplace-listing-card";
-import { useListings } from "@/lib/nft/data";
+import { useListings, useListingSearch } from "@/lib/nft/data";
 import { eyedNetwork, eyedPrice } from "@/data/eyed";
 import { halo, haloPrice } from "@/data/halo";
 import { works, type Work } from "@/data/works";
@@ -76,15 +76,14 @@ function ExplorePage() {
   const eyedDrop = useDropStatus(eyedDeployment.address);
   const haloDrop = useDropStatus(haloDeployment.address || undefined);
   const q = query.trim().toLowerCase();
-  const collectionHit = !q || "eyed".includes(q) || q.includes("eyed");
-  const haloHit = !q || "halo".includes(q) || q.includes("halo");
-  const piece = faces.find((face) => face.name.toLowerCase().includes(q));
-  const figure = halo.find((item) => item.name.toLowerCase().includes(q));
-  const showPiece = Boolean(q && piece && !collectionHit);
-  const showHaloPiece = Boolean(q && figure && !haloHit);
-  const showEyedCollection = !showPiece && collectionHit;
-  const showHaloCollection = !showPiece && !showHaloPiece && haloHit;
-  const nothing = Boolean(q) && !showPiece && !showHaloPiece && !showEyedCollection && !showHaloCollection;
+  const { matches, searching } = useListingSearch(activeListings, q);
+  const showEyedCollection = "eyed".includes(q);
+  const showHaloCollection = "halo".includes(q);
+  const shownFaces = faces.filter((face) => showEyedCollection || `eyed ${face.name}`.toLowerCase().includes(q));
+  const shownFigures = halo.filter((figure) => showHaloCollection || `halo ${figure.name}`.toLowerCase().includes(q));
+  const shownStudio = q ? works.filter((work) => work.title.toLowerCase().includes(q)) : featuredStudio;
+  const nothing = q && !shownStudio.length && !shownFaces.length && !shownFigures.length && !matches.length &&
+    listings.isSuccess && !listings.hasNextPage && !searching;
 
   return (
     <div>
@@ -93,7 +92,7 @@ function ExplorePage() {
         <div className="section-heading">
           <div>
             <h1>Explore</h1>
-            <p>Search a collection or a work. One result opens that work.</p>
+            <p>Search collections, works, or a creator’s wallet address.</p>
           </div>
         </div>
         <label className="explore-search-label" htmlFor="explore-q">
@@ -157,14 +156,14 @@ function ExplorePage() {
               <button className="nft-button" onClick={() => void listings.refetch()}>Retry</button>
             </p>
           )}
-          {activeListings.length > 0 && (
+          {matches.length > 0 && (
             <div className="explore-live-grid">
-              {activeListings.map((listing) => (
-                <MarketplaceListingCard key={String(listing.id)} listing={listing} search={query} />
+              {matches.map((card) => (
+                <MarketplaceListingCard key={String(card.listing.id)} {...card} />
               ))}
             </div>
           )}
-          {!listings.isPending && !listings.isError && activeListings.length === 0 && !listings.hasNextPage && (
+          {!q && !listings.isPending && !listings.isError && activeListings.length === 0 && !listings.hasNextPage && (
             <p className="explore-empty">No active sales from the RareCognos collection yet. Minted works and studio previews are still available to explore.</p>
           )}
           {listings.hasNextPage && (
@@ -178,41 +177,19 @@ function ExplorePage() {
             </button>
           )}
         </section>
-        {!q && (
+        {shownStudio.length > 0 && (
           <FanStackNFT
             studio
-            items={featuredStudio}
-            onSelectWork={(id) => setActiveStudioWork(featuredStudio.find((work) => work.id === id) ?? null)}
+            key={shownStudio.map((work) => work.id).join(",")}
+            items={shownStudio}
+            onSelectWork={(id) => setActiveStudioWork(shownStudio.find((work) => work.id === id) ?? null)}
           />
         )}
-        {(showPiece || showHaloPiece || showEyedCollection || showHaloCollection) && (
+        {(shownFaces.length > 0 || shownFigures.length > 0) && (
           <section aria-labelledby="works-title">
             <h2 id="works-title">Works</h2>
             <ul className="catalog-grid">
-              {showPiece && piece && (
-                <li>
-                  <a className="catalog-card" href={`/eyed?piece=${piece.id}`}>
-                    <DeferredArt src={`/art/eyed/${piece.id}.jpg`} pixel />
-                    <strong>{piece.name}</strong>
-                    <em>Eyed</em>
-                    <span>Mint {eyedPrice}</span>
-                    <span className="status-pill">{eyedDrop.label}</span>
-                  </a>
-                </li>
-              )}
-              {showHaloPiece && figure && (
-                <li>
-                  <a className="catalog-card" href={`/halo?piece=${figure.id}`}>
-                    <DeferredArt src={`/art/halo/${figure.id}.png`} />
-                    <strong>{figure.name}</strong>
-                    <em>Halo</em>
-                    <span>Planned {haloPrice}</span>
-                    <span className="status-pill">{haloDrop.label}</span>
-                  </a>
-                </li>
-              )}
-              {showEyedCollection &&
-                faces.map((face) => (
+              {shownFaces.map((face) => (
                   <li key={face.id}>
                     <a className="catalog-card" href={`/eyed?piece=${face.id}`}>
                       <DeferredArt src={`/art/eyed/${face.id}.jpg`} pixel />
@@ -223,8 +200,7 @@ function ExplorePage() {
                     </a>
                   </li>
                 ))}
-              {showHaloCollection &&
-                halo.map((item) => (
+              {shownFigures.map((item) => (
                   <li key={item.id}>
                     <a className="catalog-card" href={`/halo?piece=${item.id}`}>
                       <DeferredArt src={`/art/halo/${item.id}.png`} />

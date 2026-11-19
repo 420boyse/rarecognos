@@ -39,6 +39,7 @@ export function MarketHeader({ view }: { view: string }) {
     network = useSwitchChain();
   const [error, setError] = useState("");
   const [loginOpen, setLoginOpen] = useState(false);
+  const [linkStatus, setLinkStatus] = useState("");
   const [walletApps, setWalletApps] = useState<{ name: string; href: string }[]>([]);
   const [isMobile, setIsMobile] = useState(false);
   const [available, setAvailable] = useState<typeof connect.connectors | null>(null);
@@ -80,6 +81,7 @@ export function MarketHeader({ view }: { view: string }) {
     return () => window.removeEventListener("rarecognos-login", open);
   }, [account.isConnected, connecting]);
   useEffect(() => {
+    setLinkStatus("");
     if (loginOpen && /Android|iPhone|iPad/i.test(navigator.userAgent)) {
       setIsMobile(true);
       setWalletApps(walletAppLinks());
@@ -290,6 +292,15 @@ export function MarketHeader({ view }: { view: string }) {
                     )}
                   </div>
                   <div className="wallet-dialog-footer">
+                    <button type="button" className="nft-button" onClick={async () => {
+                      try {
+                        await navigator.clipboard.writeText(window.location.href);
+                        setLinkStatus("Link copied. Open it in your wallet browser.");
+                      } catch {
+                        setLinkStatus(window.location.href);
+                      }
+                    }}>Copy page link</button>
+                    {linkStatus && <span role="status">{linkStatus}</span>}
                     <a href="/how">Connection help</a>
                     <a href={faucetUrl} target="_blank" rel="noreferrer">Get test zkLTC</a>
                     {gmail ? (

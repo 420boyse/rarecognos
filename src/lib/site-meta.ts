@@ -1,4 +1,8 @@
-export const siteOrigin = (import.meta.env.VITE_PUBLIC_APP_URL?.trim() || "https://rarecognos.vercel.app").replace(/\/$/, "");
+const configuredOrigin = import.meta.env.VITE_PUBLIC_APP_URL?.trim().replace(/\/$/, "");
+export const siteOrigin = !configuredOrigin || configuredOrigin === "https://rarecognos.vercel.app"
+  ? "https://rarecognos.com"
+  : configuredOrigin;
+
 
 export function pageMeta(opts: { title: string; description: string; path: string; image: string }) {
   const url = `${siteOrigin}${opts.path}`;

@@ -426,7 +426,7 @@ function insertAfterHeadOpen(html, snippet) {
 }
 
 function insertBeforeHeadClose(html, snippet) {
-  if (/<\/head>/i.test(html)) return html.replace(/<\/head>/i, `${snippet}</head>`);
+  if (/<\/head>/i.test(html)) return html.replace(/<\/head>/i, () => `${snippet}</head>`);
   return insertAfterHeadOpen(html, snippet);
 }
 
@@ -491,22 +491,19 @@ function upsertShareMeta(html, key, content) {
     `<meta\\b[^>]*\\b(?:property|name)\\s*=\\s*["']${key.replaceAll(":", "\\:")}["'][^>]*>`,
     "i",
   );
-  if (re.test(html)) return html.replace(re, tag);
+  if (re.test(html)) return html.replace(re, () => tag);
   return insertBeforeHeadClose(html, tag);
 }
 
-/**
- * Keep a route's own description, canonical URL, and absolute image when the
- * platform cannot emit an image (Vercel system hosts). Never replaces an
- * og:image the platform already emitted for a public host.
- */
-function applyPageShareMeta(html, authored, { keepPlatformImage }) {
+function applyPageShareMeta(html, authored) {
   let next = html;
   for (const key of ["og:description", "twitter:title", "twitter:description"]) {
     if (authored[key]) next = upsertShareMeta(next, key, authored[key]);
   }
   if (isAbsoluteHttps(authored["og:url"] || "")) next = upsertShareMeta(next, "og:url", authored["og:url"]);
-  if (!keepPlatformImage && isAbsoluteHttps(authored["og:image"] || "")) {
+  if (isAbsoluteHttps(authored["og:image"] || "")) {
+    // Platform dimensions describe the default card only.
+    next = next.replace(/<meta\b[^>]*property=["']og:image:(?:width|height)["'][^>]*>/gi, "");
     next = upsertShareMeta(next, "og:image", authored["og:image"]);
   }
   if (isAbsoluteHttps(authored["twitter:image"] || "")) {
@@ -562,9 +559,7 @@ export function injectGrokPwaHead(html, ctx = {}) {
   }
 
   if (missing.length > 0) next = insertBeforeHeadClose(next, missing.join(""));
-  return applyPageShareMeta(next, authored, {
-    keepPlatformImage: ogTags.some((tag) => tag.includes('property="og:image"')),
-  });
+  return applyPageShareMeta(next, authored);
 }
 
 function findHeadClose(buf) {

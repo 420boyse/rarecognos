@@ -77,6 +77,7 @@ export function FanStackNFT({
   const cardRefs = useRef<(HTMLDivElement | null)[]>([]);
   const startIndex = Math.max(0, cards.findIndex((card) => (card.origId || card.id) === initialId));
   const scrollPos = useRef(startIndex);
+  const wake = useRef<() => void>(() => {});
   const velocity = useRef(0);
   const isDragging = useRef(false);
   const dragStart = useRef({ x: 0, y: 0, lastX: 0, lastTime: 0 });
@@ -142,6 +143,7 @@ export function FanStackNFT({
 
     let raf = 0;
     const loop = () => {
+      raf = 0;
       if (!isDragging.current) {
         scrollPos.current += velocity.current;
         velocity.current *= FRICTION;
@@ -159,11 +161,12 @@ export function FanStackNFT({
         }
       }
       paint();
-      raf = requestAnimationFrame(loop);
+      if (!isDragging.current && (velocity.current !== 0 || !Number.isInteger(scrollPos.current))) wake.current();
     };
-    raf = requestAnimationFrame(loop);
-    return () => cancelAnimationFrame(raf);
-  }, [cards, studio]);
+    wake.current = () => { if (!raf) raf = requestAnimationFrame(loop); };
+    wake.current();
+    return () => { cancelAnimationFrame(raf); wake.current = () => {}; };
+  }, [cards, studio, cardSize]);
 
   useEffect(() => {
     const el = containerRef.current;
@@ -173,6 +176,7 @@ export function FanStackNFT({
       event.preventDefault();
       const spread = Math.max(1, sizeRef.current * FAN_SPREAD);
       scrollPos.current += event.deltaX / spread;
+      wake.current();
       velocity.current = 0;
     };
     const onTouchMove = (event: TouchEvent) => {
@@ -192,6 +196,7 @@ export function FanStackNFT({
     const index = cards.findIndex((card) => (card.origId || card.id) === focusId);
     if (index >= 0) {
       scrollPos.current = index;
+      wake.current();
       velocity.current = 0;
       centeredRef.current = index;
       setCentered(index);
@@ -201,6 +206,7 @@ export function FanStackNFT({
   const nudge = (dir: number) => {
     const next = wrapIndex(Math.round(scrollPos.current) + dir, Math.max(1, countRef.current));
     scrollPos.current = next;
+    wake.current();
     velocity.current = 0;
     const id = cards[next]?.origId || cards[next]?.id;
     if (id) {
@@ -251,6 +257,7 @@ export function FanStackNFT({
     const spread = Math.max(1, sizeRef.current * FAN_SPREAD);
     const step = dx / spread;
     scrollPos.current -= step;
+    wake.current();
     const nextVelocity = (-step * 16) / dt;
     velocity.current = Math.max(-0.55, Math.min(0.55, nextVelocity));
     dragStart.current.lastX = e.clientX;
@@ -264,6 +271,7 @@ export function FanStackNFT({
     }
     isDragging.current = false;
     axisLocked.current = null;
+    wake.current();
   };
 
   const current = cards[centered] || cards[0];

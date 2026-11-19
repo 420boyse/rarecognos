@@ -11,10 +11,11 @@ import { chain, explorer } from "@/lib/nft/config";
 import { eyedTreasury, eyedUris, readEyedAddress, saveEyedAddress } from "@/lib/nft/eyed-address";
 import eyedDeployment from "../../config/eyed.json";
 import { availabilityLabel, dropStatus } from "@/lib/nft/availability";
-import { isTimeout, phaseLabel, txFailure, type MintPhase } from "@/lib/nft/mint-phase";
+import { phaseLabel, txFailure, type MintPhase } from "@/lib/nft/mint-phase";
 import { eyedContractIndex, eyedVisible } from "@/lib/nft/piece-index";
 import { abi } from "@/lib/nft/RareCognosEyed";
-import { pageMeta, siteOrigin } from "@/lib/site-meta";
+import { pageMeta } from "@/lib/site-meta";
+import { useEditionMint } from "@/lib/nft/use-edition-mint";
 import { transactionError } from "@/lib/nft/transaction";
 
 type EyedSearch = { piece?: string; setup?: "1" };
@@ -42,6 +43,11 @@ export const Route = createFileRoute("/eyed")({
 });
 
 function EyedPage() {
+  const account = useAccount();
+  return <EyedCollection key={account.address ?? "visitor"} />;
+}
+
+function EyedCollection() {
   const search = Route.useSearch();
   const navigate = Route.useNavigate();
   const visible = eyedVisible(search.piece);
@@ -50,7 +56,9 @@ function EyedPage() {
   const [address, setAddress] = useState<Address | undefined>(() =>
     eyedDeployment.address && isAddress(eyedDeployment.address) ? eyedDeployment.address : undefined,
   );
-  const [receipt, setReceipt] = useState<{ hash: Hash; left: number; supply: number } | null>(null);
+  const edition = useEditionMint(address);
+  const { receipt, setReceipt } = edition;
+  const mintedWork = receipt?.piece !== undefined ? eyed[receipt.piece] : undefined;
   const [pendingHash, setPendingHash] = useState<Hash | null>(null);
   const [phase, setPhase] = useState<MintPhase>("idle");
   const [notice, setNotice] = useState("");
@@ -203,59 +211,6 @@ function EyedPage() {
     }
   };
 
-  const mint = async () => {
-    if (lock.current || !wallet.data || !address || !client || piece < 0) return;
-    if (pendingHash && (phase === "unknown" || phase === "confirming" || phase === "submitted")) {
-      setNotice("A transaction was already sent. Check it before minting again.");
-      return;
-    }
-    lock.current = true;
-    setNotice("");
-    setReceipt(null);
-    let hash: Hash | undefined;
-    try {
-      setPhase("awaiting-wallet");
-      if ((await wallet.data.getChainId()) !== chain.id) throw Error("Wrong network. Switch to LiteForge, then mint again.");
-      const value = await client.readContract({ address, abi, functionName: "MINT_PRICE" });
-      const cap = await client.readContract({ address, abi, functionName: "PIECE_SUPPLY" });
-      const taken = await client.readContract({ address, abi, functionName: "mintedOf", args: [BigInt(piece)] });
-      if (taken >= cap) throw Error("This face is sold out.");
-      hash = await wallet.data.writeContract({
-        address,
-        abi,
-        functionName: "mint",
-        args: [BigInt(piece)],
-        value,
-      });
-      setPendingHash(hash);
-      setPhase("submitted");
-      setPhase("confirming");
-      const confirmed = await client.waitForTransactionReceipt({ hash, timeout: 120_000 });
-      if (confirmed.status !== "success") throw Error("The transaction was included but did not succeed.");
-      const after = await client.readContract({ address, abi, functionName: "mintedOf", args: [BigInt(piece)] });
-      setReceipt({ hash, left: Number(cap) - Number(after), supply: Number(cap) });
-      setPhase("success");
-      setPendingHash(null);
-      setStory(false);
-    } catch (error) {
-      if (hash) {
-        setPhase("unknown");
-        setPendingHash(hash);
-        setNotice(
-          isTimeout(error)
-            ? "The transaction was sent, but confirmation did not arrive. Check the explorer. It was not sent again."
-            : `${transactionError(error)} It was not sent again.`,
-        );
-      } else {
-        setPhase(txFailure(error));
-        setNotice(transactionError(error));
-        setPendingHash(null);
-      }
-    } finally {
-      lock.current = false;
-    }
-  };
-
   const onPrimary = () => {
     if (!live && !canLaunch) return;
     if (!account.isConnected) {
@@ -269,11 +224,15 @@ function EyedPage() {
       return;
     }
     if (!live) void launch();
-    else void mint();
+    else {
+      setStory(false);
+      setNotice("");
+      void edition.run(piece);
+    }
   };
 
-  const busy = phase === "awaiting-wallet" || phase === "submitted" || phase === "confirming";
-  const primaryLabel = !live
+  const busy = edition.busy || phase === "awaiting-wallet" || phase === "submitted" || phase === "confirming";
+  const primaryLabel = edition.busy ? "Checking mint…" : edition.pending ? "Recheck mint receipt" : !live
     ? canLaunch
       ? busy
         ? "Confirming…"
@@ -292,7 +251,7 @@ function EyedPage() {
         <div className="section-heading eyed-heading">
           <div>
             <h1>Eyed</h1>
-            <p>Eight featured works from a set of nine. 100 editions each. Vanta remains piece 1 on the contract and is not in this row.</p>
+            <p>Eight featured works from a set of nine. 100 editions each. Eyed editions are collected on their own contract and cannot be listed in the RareCognos 1/1 market.</p>
           </div>
           <p className="status-pill" role="status">{statusText}</p>
         </div>
@@ -301,7 +260,7 @@ function EyedPage() {
           focusId={pieceId}
           onCenter={go}
           primaryLabel={primaryLabel}
-          primaryDisabled={busy || soldOut || (!live && !canLaunch)}
+          primaryDisabled={busy || (soldOut && !edition.pending) || (!live && !canLaunch)}
           onPrimary={onPrimary}
           onSelectWork={() => {
             opener.current = document.activeElement as HTMLElement | null;
@@ -339,26 +298,26 @@ function EyedPage() {
             </button>
           </p>
         )}
+        {(edition.notice || edition.pending) && (
+          <p className="eyed-note" role="status">
+            {edition.notice || "A mint was sent. Recheck its receipt to continue."}{" "}
+            {edition.hash && explorer && <a href={`${explorer}/tx/${edition.hash}`} target="_blank" rel="noreferrer">View transaction</a>}
+            {edition.pending && <button className="nft-button" disabled={busy} onClick={onPrimary}>Recheck receipt</button>}
+          </p>
+        )}
         {receipt && (
           <div className="eyed-story" role="dialog" aria-modal="true" aria-labelledby="mint-receipt-title">
             <button type="button" className="eyed-story-backdrop" aria-label="Close" onClick={() => setReceipt(null)} />
             <div className="eyed-story-card" ref={storyRef}>
-              <button type="button" className="eyed-story-close" aria-label="Close" onClick={() => setReceipt(null)}>
-                ×
-              </button>
-              <img src={`/art/eyed/${face.id}.jpg`} alt="" width="640" height="640" />
+              <button type="button" className="eyed-story-close" aria-label="Close" onClick={() => setReceipt(null)}>×</button>
+              {mintedWork && <img src={`/art/eyed/${mintedWork.id}.jpg`} alt="" width="640" height="640" />}
               <div>
                 <h2 id="mint-receipt-title">Mint confirmed</h2>
-                <p>{face.name} is in this wallet. {receipt.supply - receipt.left} of {receipt.supply} are minted. {receipt.left} remain.</p>
-                <p>{priceText}</p>
-                {explorer && (
-                  <a href={`${explorer}/tx/${receipt.hash}`} target="_blank" rel="noreferrer">
-                    View transaction
-                  </a>
-                )}
-                <p>
-                  <a href="/#my-nfts">View in this wallet</a>
-                </p>
+                <p>{mintedWork?.name ?? "Eyed edition"}{receipt.tokenId && ` #${receipt.tokenId}`} minted to your wallet.</p>
+                {explorer && <>
+                  <a href={`${explorer}/tx/${receipt.hash}`} target="_blank" rel="noreferrer">View transaction</a>
+                  {receipt.tokenId && <p><a href={`${explorer}/token/${receipt.contract}/instance/${receipt.tokenId}`} target="_blank" rel="noreferrer">View minted token</a></p>}
+                </>}
               </div>
             </div>
           </div>
@@ -384,9 +343,9 @@ function EyedPage() {
                   supply={supply}
                   supplyState={supplyState}
                   contractUrl={address && explorer ? `${explorer}/address/${address}` : undefined}
-                  metadataUrl={`${siteOrigin}/meta/eyed/${face.id}.json`}
+                  metadataUrl={eyedUris()[piece]}
                 />
-                <button className="primary-action" type="button" disabled={busy || soldOut || (!live && !canLaunch)} onClick={onPrimary}>
+                <button className="primary-action" type="button" disabled={busy || (soldOut && !edition.pending) || (!live && !canLaunch)} onClick={onPrimary}>
                   {primaryLabel}
                 </button>
               </div>

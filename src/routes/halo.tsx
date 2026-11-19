@@ -10,9 +10,10 @@ import { chain, explorer } from "@/lib/nft/config";
 import { haloTreasury, haloUris, readHaloAddress, saveHaloAddress } from "@/lib/nft/halo-address";
 import haloDeployment from "../../config/halo.json";
 import { availabilityLabel, dropStatus } from "@/lib/nft/availability";
-import { isTimeout, phaseLabel, txFailure, type MintPhase } from "@/lib/nft/mint-phase";
+import { phaseLabel, txFailure, type MintPhase } from "@/lib/nft/mint-phase";
 import { abi } from "@/lib/nft/RareCognosHalo";
-import { pageMeta, siteOrigin } from "@/lib/site-meta";
+import { pageMeta } from "@/lib/site-meta";
+import { useEditionMint } from "@/lib/nft/use-edition-mint";
 import { transactionError } from "@/lib/nft/transaction";
 
 type HaloSearch = { piece?: string; setup?: "1" };
@@ -38,6 +39,11 @@ export const Route = createFileRoute("/halo")({
 });
 
 function HaloPage() {
+  const account = useAccount();
+  return <HaloCollection key={account.address ?? "visitor"} />;
+}
+
+function HaloCollection() {
   const search = Route.useSearch();
   const navigate = Route.useNavigate();
   const canLaunch = search.setup === "1";
@@ -45,7 +51,9 @@ function HaloPage() {
   const [address, setAddress] = useState<Address | undefined>(() =>
     haloDeployment.address && isAddress(haloDeployment.address) ? haloDeployment.address : undefined,
   );
-  const [receipt, setReceipt] = useState<{ hash: Hash; left: number; supply: number; name: string; id: string } | null>(null);
+  const edition = useEditionMint(address);
+  const { receipt, setReceipt } = edition;
+  const mintedWork = receipt?.piece !== undefined ? halo[receipt.piece] : undefined;
   const [pendingHash, setPendingHash] = useState<Hash | null>(null);
   const [phase, setPhase] = useState<MintPhase>("idle");
   const [notice, setNotice] = useState("");
@@ -162,57 +170,6 @@ function HaloPage() {
     }
   };
 
-  const mint = async () => {
-    if (lock.current || !wallet.data || !address || !client) return;
-    if (pendingHash && (phase === "unknown" || phase === "confirming")) {
-      setNotice("A transaction was already sent. Check it before minting again.");
-      return;
-    }
-    lock.current = true;
-    setNotice("");
-    setReceipt(null);
-    let hash: Hash | undefined;
-    try {
-      setPhase("awaiting-wallet");
-      if ((await wallet.data.getChainId()) !== chain.id) throw Error("Wrong network. Switch to LiteForge, then mint again.");
-      const value = await client.readContract({ address, abi, functionName: "MINT_PRICE" });
-      const cap = await client.readContract({ address, abi, functionName: "PIECE_SUPPLY" });
-      const taken = await client.readContract({ address, abi, functionName: "mintedOf", args: [BigInt(index)] });
-      if (taken >= cap) throw Error("This figure is sold out.");
-      hash = await wallet.data.writeContract({
-        address,
-        abi,
-        functionName: "mint",
-        args: [BigInt(index)],
-        value,
-      });
-      setPendingHash(hash);
-      setPhase("confirming");
-      const confirmed = await client.waitForTransactionReceipt({ hash, timeout: 120_000 });
-      if (confirmed.status !== "success") throw Error("The transaction was included but did not succeed.");
-      const after = await client.readContract({ address, abi, functionName: "mintedOf", args: [BigInt(index)] });
-      setReceipt({ hash, left: Number(cap) - Number(after), supply: Number(cap), name: piece.name, id: piece.id });
-      setPhase("success");
-      setPendingHash(null);
-      setOpen("");
-    } catch (error) {
-      if (hash) {
-        setPhase("unknown");
-        setPendingHash(hash);
-        setNotice(
-          isTimeout(error)
-            ? "The transaction was sent, but confirmation did not arrive. Check the explorer. It was not sent again."
-            : `${transactionError(error)} It was not sent again.`,
-        );
-      } else {
-        setPhase(txFailure(error));
-        setNotice(transactionError(error));
-      }
-    } finally {
-      lock.current = false;
-    }
-  };
-
   const onPrimary = () => {
     if (!live && !canLaunch) return;
     if (!account.isConnected) {
@@ -226,11 +183,15 @@ function HaloPage() {
       return;
     }
     if (!live) void launch();
-    else void mint();
+    else {
+      setOpen("");
+      setNotice("");
+      void edition.run(index);
+    }
   };
 
-  const busy = phase === "awaiting-wallet" || phase === "submitted" || phase === "confirming";
-  const actionLabel = !live ? (canLaunch ? (busy ? "Confirming…" : "Open the drop") : "Not live yet") : soldOut ? "Sold out" : busy ? phaseLabel(phase) : `Mint ${piece.name}`;
+  const busy = edition.busy || phase === "awaiting-wallet" || phase === "submitted" || phase === "confirming";
+  const actionLabel = edition.busy ? "Checking mint…" : edition.pending ? "Recheck mint receipt" : !live ? (canLaunch ? (busy ? "Confirming…" : "Open the drop") : "Not live yet") : soldOut ? "Sold out" : busy ? phaseLabel(phase) : `Mint ${piece.name}`;
 
   return (
     <div>
@@ -290,26 +251,26 @@ function HaloPage() {
             </button>
           </p>
         )}
+        {(edition.notice || edition.pending) && (
+          <p className="eyed-note" role="status">
+            {edition.notice || "A mint was sent. Recheck its receipt to continue."}{" "}
+            {edition.hash && explorer && <a href={`${explorer}/tx/${edition.hash}`} target="_blank" rel="noreferrer">View transaction</a>}
+            {edition.pending && <button className="nft-button" disabled={busy} onClick={onPrimary}>Recheck receipt</button>}
+          </p>
+        )}
         {receipt && (
-          <div className="eyed-story" role="dialog" aria-modal="true" aria-labelledby="halo-receipt-title">
+          <div className="eyed-story" role="dialog" aria-modal="true" aria-labelledby="mint-receipt-title">
             <button type="button" className="eyed-story-backdrop" aria-label="Close" onClick={() => setReceipt(null)} />
             <div className="eyed-story-card" ref={cardRef}>
-              <button type="button" className="eyed-story-close" aria-label="Close" onClick={() => setReceipt(null)}>
-                ×
-              </button>
-              <img src={`/art/halo/${receipt.id}.png`} alt="" width="640" height="640" />
+              <button type="button" className="eyed-story-close" aria-label="Close" onClick={() => setReceipt(null)}>×</button>
+              {mintedWork && <img src={`/art/halo/${mintedWork.id}.png`} alt="" width="640" height="640" />}
               <div>
-                <h2 id="halo-receipt-title">Mint confirmed</h2>
-                <p>{receipt.name} is in this wallet. {receipt.supply - receipt.left} of {receipt.supply} are minted.</p>
-                <p>{haloPrice} · {haloNetwork}</p>
-                {explorer && (
-                  <a href={`${explorer}/tx/${receipt.hash}`} target="_blank" rel="noreferrer">
-                    View transaction
-                  </a>
-                )}
-                <p>
-                  <a href="/#my-nfts">View in this wallet</a>
-                </p>
+                <h2 id="mint-receipt-title">Mint confirmed</h2>
+                <p>{mintedWork?.name ?? "Halo edition"}{receipt.tokenId && ` #${receipt.tokenId}`} minted to your wallet.</p>
+                {explorer && <>
+                  <a href={`${explorer}/tx/${receipt.hash}`} target="_blank" rel="noreferrer">View transaction</a>
+                  {receipt.tokenId && <p><a href={`${explorer}/token/${receipt.contract}/instance/${receipt.tokenId}`} target="_blank" rel="noreferrer">View minted token</a></p>}
+                </>}
               </div>
             </div>
           </div>
@@ -335,9 +296,9 @@ function HaloPage() {
                   supply={supply}
                   supplyState={supplyState}
                   contractUrl={address && explorer ? `${explorer}/address/${address}` : undefined}
-                  metadataUrl={`${siteOrigin}/meta/halo/${piece.id}.json`}
+                  metadataUrl={haloUris()[index]}
                 />
-                <button className="primary-action" type="button" disabled={busy || soldOut || (!live && !canLaunch)} onClick={onPrimary}>
+                <button className="primary-action" type="button" disabled={busy || (soldOut && !edition.pending) || (!live && !canLaunch)} onClick={onPrimary}>
                   {actionLabel}
                 </button>
               </div>

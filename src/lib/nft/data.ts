@@ -1,4 +1,4 @@
-import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
+import { useInfiniteQuery, useQueries, useQuery } from "@tanstack/react-query";
 import { usePublicClient } from "wagmi";
 import { createPublicClient, http, type Address, zeroAddress } from "viem";
 import { abi as nft } from "./RareCognos";
@@ -31,9 +31,10 @@ export function mediaURL(uri: string) {
   if (u.username || u.password) throw Error("Invalid media URL");
   return u.href;
 }
-export async function metadata(uri: string) {
+export async function metadata(uri: string, options: { redirect?: RequestRedirect; timeout?: number } = {}) {
   const r = await fetch(mediaURL(uri), {
-    signal: AbortSignal.timeout(12000),
+    signal: AbortSignal.timeout(options.timeout ?? 12000),
+    redirect: options.redirect,
     credentials: "omit",
     referrerPolicy: "no-referrer",
   });
@@ -140,8 +141,8 @@ export function useOwned(address?: Address) {
     getNextPageParam: (p) => p.next,
   });
 }
-export function useToken(id: bigint) {
-  const core = useQuery({
+function tokenOptions(id: bigint) {
+  return {
     queryKey: ["nft", "token", chain.id, contracts.collection, String(id)],
     enabled: configured && id > 0n,
     staleTime: 15000,
@@ -154,7 +155,10 @@ export function useToken(id: bigint) {
       ]);
       return { id, owner, uri, creator };
     },
-  });
+  };
+}
+export function useToken(id: bigint) {
+  const core = useQuery(tokenOptions(id));
   const extra = useQuery({
     queryKey: ["nft", "token-sale", chain.id, contracts.collection, String(id), core.data?.owner],
     enabled: configured && !!core.data,
@@ -200,12 +204,32 @@ export function useToken(id: bigint) {
     refetch: () => Promise.all([core.refetch(), extra.refetch()]),
   };
 }
-export function useMetadata(uri?: string) {
-  return useQuery({
+function metadataOptions(uri?: string) {
+  return {
     queryKey: ["metadata", uri],
     enabled: !!uri,
     queryFn: () => metadata(uri!),
     staleTime: Infinity,
     retry: 1,
+  };
+}
+
+export function useMetadata(uri?: string) {
+  return useQuery(metadataOptions(uri));
+}
+
+export type MarketplaceListing = { id: bigint; tokenId: bigint; seller: Address; price: bigint; valid: boolean };
+
+export function useListingSearch(listings: MarketplaceListing[], query: string) {
+  const tokens = useQueries({ queries: listings.map((listing) => tokenOptions(listing.tokenId)) });
+  const art = useQueries({ queries: tokens.map((token) => metadataOptions(token.data?.uri)) });
+  const term = query.trim().toLowerCase();
+  const matches = listings.flatMap((listing, i) => {
+    const title = art[i].data?.name?.trim() || `Token #${listing.tokenId}`;
+    const fields = [title, `token #${listing.tokenId}`, listing.seller, tokens[i].data?.creator];
+    return fields.some((field) => field?.toLowerCase().includes(term))
+      ? [{ listing, title, image: art[i].data?.image, loading: tokens[i].isPending || art[i].isFetching }]
+      : [];
   });
+  return { matches, searching: tokens.some((token) => token.isPending) || art.some((entry) => entry.isFetching) };
 }

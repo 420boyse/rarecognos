@@ -143,7 +143,7 @@ export function NFTMarket({
         setStatus({ wallet: r.wallet.toLowerCase(), message, hash }),
       );
       let token: string | undefined;
-      if (r.kind === "mint" && receipt.status === "success") {
+      if (r.kind === "mint" && r.contract.toLowerCase() === contracts.collection?.toLowerCase() && receipt.status === "success") {
         const event = parseEventLogs({ abi: nft, eventName: "Transfer", logs: receipt.logs }).find(
           (e) =>
             e.address.toLowerCase() === r.contract.toLowerCase() &&
@@ -231,7 +231,7 @@ export function NFTMarket({
             </a>
           )}
           {status.token && (
-            <a className="text-link" href={`/#token/${status.token}`}>
+            <a className="text-link" href={`/token/${status.token}`}>
               View token #{status.token}
             </a>
           )}
@@ -277,7 +277,7 @@ export function NFTMarket({
           </div>
           {address && configured && !owned.isPending && !owned.error && !own.length && (
             <p>
-              No NFTs in this wallet yet.{" "}
+              No NFTs from the RareCognos marketplace collection in this wallet.{" "}
               <a className="text-link" href="/create">
                 Create a work
               </a>
@@ -295,7 +295,7 @@ export function NFTMarket({
           <h3 className="listings-title">Your listings</h3>
           {ownListings.map((l) => (
             <div className="own-listing" key={String(l.id)}>
-              <a href={`#token/${l.tokenId}`}>
+              <a href={`/token/${l.tokenId}`}>
                 Token #{String(l.tokenId)} · {l.valid ? "Active" : "Unavailable"}
               </a>
               <button

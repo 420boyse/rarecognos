@@ -1,3 +1,4 @@
+import { siteOrigin } from "../site-meta";
 import { createConfig, http, injected } from "wagmi";
 import { coinbaseWallet, walletConnect } from "wagmi/connectors";
 import { defineChain, isAddress, type Address, type EIP1193Provider } from "viem";
@@ -21,8 +22,6 @@ export const local = defineChain({
 });
 export const chain = import.meta.env.VITE_NFT_LOCAL === "true" ? local : liteforge;
 const walletConnectProjectId = import.meta.env.VITE_WALLETCONNECT_PROJECT_ID?.trim();
-const publicAppUrl = import.meta.env.VITE_PUBLIC_APP_URL?.trim() ||
-  "https://rarecognos.vercel.app";
 export const config = createConfig({
   chains: [chain],
   multiInjectedProviderDiscovery: true,
@@ -39,8 +38,8 @@ export const config = createConfig({
             metadata: {
               name: "RareCognos",
               description: "Digital art on LiteForge",
-              url: publicAppUrl,
-              icons: [new URL("/brand/eye-mark.svg", publicAppUrl).href],
+              url: siteOrigin,
+              icons: [new URL("/brand/eye-mark.svg", siteOrigin).href],
             },
           }),
         ]
