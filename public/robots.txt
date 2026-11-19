@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://rarecognos.vercel.app/sitemap.xml
+Sitemap: https://rarecognos.com/sitemap.xml

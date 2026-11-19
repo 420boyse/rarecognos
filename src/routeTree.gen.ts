@@ -18,6 +18,7 @@ import { Route as HaloRouteImport } from './routes/halo'
 import { Route as HowRouteImport } from './routes/how'
 import { Route as QuestRouteImport } from './routes/quest'
 import { Route as ReferralRouteImport } from './routes/referral'
+import { Route as TokenTokenIdRouteImport } from './routes/token.$tokenId'
 import { Route as ApiUploadChallengeRouteImport } from './routes/api/upload/challenge'
 import { Route as ApiUploadPrepareRouteImport } from './routes/api/upload/prepare'
 import { Route as ApiUploadStatusRouteImport } from './routes/api/upload/status'
@@ -67,6 +68,11 @@ const ReferralRoute = ReferralRouteImport.update({
   path: '/referral',
   getParentRoute: () => rootRouteImport,
 } as any)
+const TokenTokenIdRoute = TokenTokenIdRouteImport.update({
+  id: '/token/$tokenId',
+  path: '/token/$tokenId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiUploadChallengeRoute = ApiUploadChallengeRouteImport.update({
   id: '/api/upload/challenge',
   path: '/api/upload/challenge',
@@ -93,6 +99,7 @@ export interface FileRoutesByFullPath {
   '/how': typeof HowRoute
   '/quest': typeof QuestRoute
   '/referral': typeof ReferralRoute
+  '/token/$tokenId': typeof TokenTokenIdRoute
   '/api/upload/challenge': typeof ApiUploadChallengeRoute
   '/api/upload/prepare': typeof ApiUploadPrepareRoute
   '/api/upload/status': typeof ApiUploadStatusRoute
@@ -107,6 +114,7 @@ export interface FileRoutesByTo {
   '/how': typeof HowRoute
   '/quest': typeof QuestRoute
   '/referral': typeof ReferralRoute
+  '/token/$tokenId': typeof TokenTokenIdRoute
   '/api/upload/challenge': typeof ApiUploadChallengeRoute
   '/api/upload/prepare': typeof ApiUploadPrepareRoute
   '/api/upload/status': typeof ApiUploadStatusRoute
@@ -122,6 +130,7 @@ export interface FileRoutesById {
   '/how': typeof HowRoute
   '/quest': typeof QuestRoute
   '/referral': typeof ReferralRoute
+  '/token/$tokenId': typeof TokenTokenIdRoute
   '/api/upload/challenge': typeof ApiUploadChallengeRoute
   '/api/upload/prepare': typeof ApiUploadPrepareRoute
   '/api/upload/status': typeof ApiUploadStatusRoute
@@ -138,6 +147,7 @@ export interface FileRouteTypes {
     | '/how'
     | '/quest'
     | '/referral'
+    | '/token/$tokenId'
     | '/api/upload/challenge'
     | '/api/upload/prepare'
     | '/api/upload/status'
@@ -152,6 +162,7 @@ export interface FileRouteTypes {
     | '/how'
     | '/quest'
     | '/referral'
+    | '/token/$tokenId'
     | '/api/upload/challenge'
     | '/api/upload/prepare'
     | '/api/upload/status'
@@ -166,6 +177,7 @@ export interface FileRouteTypes {
     | '/how'
     | '/quest'
     | '/referral'
+    | '/token/$tokenId'
     | '/api/upload/challenge'
     | '/api/upload/prepare'
     | '/api/upload/status'
@@ -181,6 +193,7 @@ export interface RootRouteChildren {
   HowRoute: typeof HowRoute
   QuestRoute: typeof QuestRoute
   ReferralRoute: typeof ReferralRoute
+  TokenTokenIdRoute: typeof TokenTokenIdRoute
   ApiUploadChallengeRoute: typeof ApiUploadChallengeRoute
   ApiUploadPrepareRoute: typeof ApiUploadPrepareRoute
   ApiUploadStatusRoute: typeof ApiUploadStatusRoute
@@ -251,6 +264,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ReferralRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/token/$tokenId': {
+      id: '/token/$tokenId'
+      path: '/token/$tokenId'
+      fullPath: '/token/$tokenId'
+      preLoaderRoute: typeof TokenTokenIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/upload/challenge': {
       id: '/api/upload/challenge'
       path: '/api/upload/challenge'
@@ -285,6 +305,7 @@ const rootRouteChildren: RootRouteChildren = {
   HowRoute: HowRoute,
   QuestRoute: QuestRoute,
   ReferralRoute: ReferralRoute,
+  TokenTokenIdRoute: TokenTokenIdRoute,
   ApiUploadChallengeRoute: ApiUploadChallengeRoute,
   ApiUploadPrepareRoute: ApiUploadPrepareRoute,
   ApiUploadStatusRoute: ApiUploadStatusRoute,

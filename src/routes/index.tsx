@@ -1,12 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { ArrowRight, ArrowUpRight, Eye, X } from "lucide-react";
-import { useEffect, useId, useRef, useState } from "react";
+import { lazy, Suspense, useEffect, useId, useRef, useState } from "react";
 import { EyeMark } from "@/components/wordmark";
 import { works, type Work } from "@/data/works";
-import { NFTMarket } from "@/components/nft-market";
-import { NFTDeploy } from "@/components/nft-deploy";
 import { MarketHeader } from "@/components/market-header";
-import { NFTDropMint } from "@/components/nft-drops";
 import { SiteFooter } from "@/components/site-footer";
 import { faucetUrl } from "@/lib/nft/network";
 import { pageMeta } from "@/lib/site-meta";
@@ -15,7 +12,10 @@ import eyedDeployment from "../../config/eyed.json";
 import haloDeployment from "../../config/halo.json";
 import { isAddress, type Address } from "viem";
 import { MarketplaceListingCard } from "@/components/marketplace-listing-card";
-import { useListings } from "@/lib/nft/data";
+import { useListings, useListingSearch } from "@/lib/nft/data";
+const NFTMarket = lazy(() => import("@/components/nft-market").then((module) => ({ default: module.NFTMarket })));
+const NFTDeploy = lazy(() => import("@/components/nft-deploy").then((module) => ({ default: module.NFTDeploy })));
+const NFTDropMint = lazy(() => import("@/components/nft-drops").then((module) => ({ default: module.NFTDropMint })));
 export const Route = createFileRoute("/")({
   head: () =>
     pageMeta({
@@ -38,7 +38,8 @@ function Home() {
   const [marketLayout, setMarketLayout] = useState<"grid" | "list">("grid");
   const liveListings = listings.data?.pages.flatMap((page) => page.listings).filter((listing) => listing.valid) ?? [];
   const searchTerm = marketSearch.trim().toLowerCase();
-  const matchingListings = [...liveListings].sort((a,b) => marketSort === "price" ? (a.price < b.price ? -1 : a.price > b.price ? 1 : 0) : (a.id > b.id ? -1 : a.id < b.id ? 1 : 0));
+  const { matches, searching } = useListingSearch(liveListings, marketSearch);
+  const matchingListings = [...matches].sort((a,b) => marketSort === "price" ? (a.listing.price < b.listing.price ? -1 : a.listing.price > b.listing.price ? 1 : 0) : (a.listing.id > b.listing.id ? -1 : a.listing.id < b.listing.id ? 1 : 0));
   const mintCards = [{ name: "Eyed", href: "/eyed", image: "/art/eyed/04.jpg", status: eyedDrop.label }, { name: "Halo", href: "/halo", image: "/art/halo/01.png", status: haloDrop.label }].filter((card) => !searchTerm || card.name.toLowerCase().includes(searchTerm));
   useEffect(() => {
     const update = () => {
@@ -46,10 +47,12 @@ function Home() {
         location.replace("/create");
         return;
       }
+      if (/^#token\/[1-9][0-9]{0,77}$/.test(location.hash)) {
+        location.replace(`/token/${location.hash.slice(7)}${location.search}`);
+        return;
+      }
       setView(
-        /^#token\/[1-9][0-9]{0,76}$/.test(location.hash)
-          ? "Token:" + location.hash.slice(7)
-          : /^#drop\/0x[0-9a-fA-F]{40}$/.test(location.hash) && isAddress(location.hash.slice(6))
+        /^#drop\/0x[0-9a-fA-F]{40}$/.test(location.hash) && isAddress(location.hash.slice(6))
             ? "Drop:" + location.hash.slice(6)
             : location.hash === "#my-nfts"
               ? "My NFTs"
@@ -80,9 +83,9 @@ function Home() {
           </div>
           <div className="rc-hero-copy">
             <h1 id="hero-title">Discover.<br />Collect.<br />Trade.</h1>
-            <p>Your NFT marketplace on LiteForge.</p>
+            <p>Explore eight featured Eyed works. Mint on LiteForge with test zkLTC.</p>
             <div className="rc-actions">
-              <a className="rc-button rc-button-light" href="#marketplace">Explore NFTs <ArrowRight size={17} /></a>
+              <a className="rc-button rc-button-light" href="/eyed">Explore Eyed <ArrowRight size={17} /></a>
               <a className="rc-button rc-button-outline" href="/create">Create</a>
             </div>
           </div>
@@ -104,16 +107,16 @@ function Home() {
           </div>
           <div className={`rc-nft-grid ${marketLayout==="list"?"rc-nft-list":""}`}>
             {(marketTab==="all"||marketTab==="mint") && mintCards.map((card)=><a className="rc-nft-card" key={card.name} href={card.href}><div className="rc-nft-art"><img src={card.image} alt="" loading="lazy" /></div><div className="rc-nft-info"><strong>{card.name}</strong><span>{card.status}</span></div></a>)}
-            {(marketTab==="all"||marketTab==="listings") && matchingListings.map((listing)=><MarketplaceListingCard key={String(listing.id)} listing={listing} search={marketSearch} />)}
+            {(marketTab==="all"||marketTab==="listings") && matchingListings.map((card)=><MarketplaceListingCard key={String(card.listing.id)} {...card} />)}
           </div>
           {(marketTab==="listings" || marketTab==="all") && listings.hasNextPage && (
             <button type="button" className="rc-load-more nft-button" disabled={listings.isFetchingNextPage} onClick={() => void listings.fetchNextPage()}>
               {listings.isFetchingNextPage ? "Loading…" : "Load more listings"}
             </button>
           )}
-          {(marketTab==="listings" && !listings.isPending && !matchingListings.length && !listings.hasNextPage) && <div className="rc-empty">{listings.isError?"Listings are temporarily unavailable.":"No active listings yet."} <a href="/explore">Explore collections</a></div>}
+          {(marketTab==="listings" && !listings.isPending && !searching && !matchingListings.length && !listings.hasNextPage) && <div className="rc-empty">{listings.isError?"Listings are temporarily unavailable.":searchTerm?"No matching NFTs found.":"No active listings yet."} <a href="/explore">Explore collections</a></div>}
           {marketTab==="listings" && listings.isPending && <p className="rc-empty">Checking active listings…</p>}
-          {marketTab!=="listings" && !mintCards.length && !(marketTab==="all" && matchingListings.length) && <p className="rc-empty">No matching NFTs found.</p>}
+          {marketTab!=="listings" && !mintCards.length && (marketTab==="mint" || (listings.isSuccess && !searching && !listings.hasNextPage && !matchingListings.length)) && <p className="rc-empty">No matching NFTs found.</p>}
         </section>
         <section className="rc-section rc-mint" aria-labelledby="rc-mint-title">
           <div className="rc-mint-copy"><h2 id="rc-mint-title">From the studio</h2><p>Explore our creative direction and artwork concepts.<br />These are previews, not sale listings.</p><a className="rc-button rc-button-light" href="/create">Create NFT <ArrowRight size={17}/></a></div>
@@ -123,7 +126,7 @@ function Home() {
           </>
         )}
         {view !== "Explore" && (
-        <div className="rc-subpage">
+        <div className="rc-subpage"><Suspense fallback={<p role="status">Loading artwork…</p>}>
         {view.startsWith("Drop:") && <NFTDropMint address={view.slice(5) as Address} />}
         <NFTMarket
           tab={view}
@@ -133,9 +136,9 @@ function Home() {
             location.hash = next === "My NFTs" ? "my-nfts" : "explore";
           }}
         />
-        </div>
+        </Suspense></div>
         )}
-        <NFTDeploy />
+        {import.meta.env.DEV && import.meta.env.VITE_NFT_DEPLOY === "true" && <Suspense fallback={null}><NFTDeploy /></Suspense>}
       </main>
       <SiteFooter exploreHref="/explore" />
       {active && <WorkDialog work={active} onClose={() => setActive(null)} />}

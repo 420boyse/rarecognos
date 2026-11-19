@@ -330,15 +330,15 @@ test("keeps a page absolute share card when the host cannot supply og:image", ()
   }
 });
 
-test("a public host card still replaces a page og:image", () => {
+test("a public host preserves the artwork share card", () => {
   const html =
     '<html><head><meta property="og:image" content="https://rarecognos.vercel.app/art/eyed/04.jpg"><meta property="og:description" content="Piece story"></head></html>';
   const out = injectGrokPwaHead(html, {
     host: "wild-race.grok.me",
     site: { title: "Wild Race", description: "Platform line", card: "custom", image: "/og.jpg" },
   });
-  assert.match(out, /property="og:image" content="https:\/\/wild-race\.grok\.me\/og\.jpg"/);
-  assert.doesNotMatch(out, /rarecognos\.vercel\.app/);
+  assert.ok(out.includes('property="og:image" content="https://rarecognos.vercel.app/art/eyed/04.jpg"'));
+  assert.doesNotMatch(out, /property="og:image:(width|height)"/);
   assert.match(out, /property="og:description" content="Piece story"/);
   assert.equal(out.split('property="og:image"').length - 1, 1);
 });

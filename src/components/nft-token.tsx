@@ -123,7 +123,7 @@ export function NFTToken({ id, detail = false, ready, run }: Props) {
         {detail ? (
           artwork
         ) : (
-          <a href={`#token/${id}`} aria-label={`View ${meta.data?.name || "token " + id}`}>
+          <a href={`/token/${id}`} aria-label={`View ${meta.data?.name || "token " + id}`}>
             {artwork}
           </a>
         )}
@@ -166,7 +166,7 @@ export function NFTToken({ id, detail = false, ready, run }: Props) {
           </p>
         )}
         {!detail ? (
-          <a className="secondary-action" href={`#token/${id}`}>
+          <a className="secondary-action" href={`/token/${id}`}>
             View artwork
           </a>
         ) : (

@@ -37,7 +37,7 @@
     "testnet:acceptance": "node qa/testnet-acceptance.mjs",
     "upload:serve": "node upload-service/server.mjs",
     "test:upload": "node --test scripts/upload.test.mjs",
-    "test:transaction": "node --experimental-strip-types --test scripts/transaction.test.mjs"
+    "test:transaction": "node --experimental-strip-types --test scripts/transaction.test.mjs scripts/edition-receipt.test.mjs"
   },
   "dependencies": {
     "@electric-sql/pglite": "^0.5.4",
