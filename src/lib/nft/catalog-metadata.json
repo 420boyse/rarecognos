@@ -1,0 +1,22 @@
+{
+  "ipfs://bafkreicppdle4nikdgzyqjmk73mbks77inybgtuuh25eygabs3xrcs257y": {
+    "name": "01 wawe",
+    "description": "First end-to-end test artwork on LiteForge Zeeve testnet. ",
+    "image": "ipfs://bafkreicpuazwegfckdw3imrbmdaohnwugmvksxzpqotklequyxfdnexfcq"
+  },
+  "ipfs://bafkreia7jam5772x3ueypnq3sracocossuskjcvuxb6ejpnkng6bbfhxhu": {
+    "name": "RARE",
+    "description": "RARE",
+    "image": "ipfs://bafybeiej4zaruy4ryuu52hnlx6kbuwrvodzz4nyvpsw6377yjms3deucyy"
+  },
+  "ipfs://bafkreict2qaqcp6wwmi7ylvkzne65lbkactauuqhkan7u6pvy6rqyxsrbu": {
+    "name": "SKODA",
+    "description": "Skoda",
+    "image": "ipfs://bafkreihykol4puvhusqn637yf44wl6oavy45o3rkvx47vehf5swm6kjz64"
+  },
+  "ipfs://bafkreih7u6q4qxkb3zxtxbkypj2izl2qy5z6sbj3qb6xvftnng64up4mwe": {
+    "name": "123",
+    "description": "123",
+    "image": "ipfs://bafybeigpoep6nmldn5g7tlkndb6ltwu7yzv46j65jstecqsdarqb3rwmxe"
+  }
+}

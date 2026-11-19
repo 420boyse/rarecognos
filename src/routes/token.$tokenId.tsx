@@ -15,7 +15,7 @@ export const Route = createFileRoute("/token/$tokenId")({
     try {
       const uri = await client.readContract({ ...nftCall, functionName: "tokenURI", args: [BigInt(tokenId)] });
       // The marketplace contract mints IPFS URIs. Fetch only through our configured gateway.
-      if (uri.startsWith("ipfs://")) return await metadata(uri, { redirect: "error", timeout: 5000 });
+      if (uri.startsWith("ipfs://")) return await metadata(uri, { redirect: "error", timeout: 12000 });
     } catch {
       // Keep the public token link usable when the RPC or IPFS gateway is unavailable.
     }

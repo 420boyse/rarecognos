@@ -12,6 +12,7 @@ import eyedDeployment from "../../config/eyed.json";
 import haloDeployment from "../../config/halo.json";
 import { isAddress, type Address } from "viem";
 import { MarketplaceListingCard } from "@/components/marketplace-listing-card";
+import { rogueImage, useRoguesRelease } from "@/lib/nft/midnight-rogues";
 import { useListings, useListingSearch } from "@/lib/nft/data";
 const NFTMarket = lazy(() => import("@/components/nft-market").then((module) => ({ default: module.NFTMarket })));
 const NFTDeploy = lazy(() => import("@/components/nft-deploy").then((module) => ({ default: module.NFTDeploy })));
@@ -29,6 +30,7 @@ export const Route = createFileRoute("/")({
 function Home() {
   const [view, setView] = useState("Explore");
   const [active, setActive] = useState<Work | null>(null);
+  const rogues = useRoguesRelease();
   const eyedDrop = useDropStatus(eyedDeployment.address);
   const haloDrop = useDropStatus(haloDeployment.address || undefined);
   const listings = useListings();
@@ -40,7 +42,7 @@ function Home() {
   const searchTerm = marketSearch.trim().toLowerCase();
   const { matches, searching } = useListingSearch(liveListings, marketSearch);
   const matchingListings = [...matches].sort((a,b) => marketSort === "price" ? (a.listing.price < b.listing.price ? -1 : a.listing.price > b.listing.price ? 1 : 0) : (a.listing.id > b.listing.id ? -1 : a.listing.id < b.listing.id ? 1 : 0));
-  const mintCards = [{ name: "Eyed", href: "/eyed", image: "/art/eyed/04.jpg", status: eyedDrop.label }, { name: "Halo", href: "/halo", image: "/art/halo/01.png", status: haloDrop.label }].filter((card) => !searchTerm || card.name.toLowerCase().includes(searchTerm));
+  const mintCards = [{ name: "MIDNIGHT ROGUES", href: "/midnight-rogues", image: rogueImage("001"), status: rogues.label }, { name: "Eyed", href: "/eyed", image: "/art/eyed/04.jpg", status: eyedDrop.label }, { name: "Halo", href: "/halo", image: "/art/halo/01.png", status: haloDrop.label }].filter((card) => !searchTerm || card.name.toLowerCase().includes(searchTerm));
   useEffect(() => {
     const update = () => {
       if (location.hash === "#create" || location.hash === "#drops") {

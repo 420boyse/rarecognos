@@ -16,6 +16,7 @@ import { Route as ExploreRouteImport } from './routes/explore'
 import { Route as EyedRouteImport } from './routes/eyed'
 import { Route as HaloRouteImport } from './routes/halo'
 import { Route as HowRouteImport } from './routes/how'
+import { Route as MidnightRoguesRouteImport } from './routes/midnight-rogues'
 import { Route as QuestRouteImport } from './routes/quest'
 import { Route as ReferralRouteImport } from './routes/referral'
 import { Route as TokenTokenIdRouteImport } from './routes/token.$tokenId'
@@ -58,6 +59,11 @@ const HowRoute = HowRouteImport.update({
   path: '/how',
   getParentRoute: () => rootRouteImport,
 } as any)
+const MidnightRoguesRoute = MidnightRoguesRouteImport.update({
+  id: '/midnight-rogues',
+  path: '/midnight-rogues',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const QuestRoute = QuestRouteImport.update({
   id: '/quest',
   path: '/quest',
@@ -97,6 +103,7 @@ export interface FileRoutesByFullPath {
   '/eyed': typeof EyedRoute
   '/halo': typeof HaloRoute
   '/how': typeof HowRoute
+  '/midnight-rogues': typeof MidnightRoguesRoute
   '/quest': typeof QuestRoute
   '/referral': typeof ReferralRoute
   '/token/$tokenId': typeof TokenTokenIdRoute
@@ -112,6 +119,7 @@ export interface FileRoutesByTo {
   '/eyed': typeof EyedRoute
   '/halo': typeof HaloRoute
   '/how': typeof HowRoute
+  '/midnight-rogues': typeof MidnightRoguesRoute
   '/quest': typeof QuestRoute
   '/referral': typeof ReferralRoute
   '/token/$tokenId': typeof TokenTokenIdRoute
@@ -128,6 +136,7 @@ export interface FileRoutesById {
   '/eyed': typeof EyedRoute
   '/halo': typeof HaloRoute
   '/how': typeof HowRoute
+  '/midnight-rogues': typeof MidnightRoguesRoute
   '/quest': typeof QuestRoute
   '/referral': typeof ReferralRoute
   '/token/$tokenId': typeof TokenTokenIdRoute
@@ -145,6 +154,7 @@ export interface FileRouteTypes {
     | '/eyed'
     | '/halo'
     | '/how'
+    | '/midnight-rogues'
     | '/quest'
     | '/referral'
     | '/token/$tokenId'
@@ -160,6 +170,7 @@ export interface FileRouteTypes {
     | '/eyed'
     | '/halo'
     | '/how'
+    | '/midnight-rogues'
     | '/quest'
     | '/referral'
     | '/token/$tokenId'
@@ -175,6 +186,7 @@ export interface FileRouteTypes {
     | '/eyed'
     | '/halo'
     | '/how'
+    | '/midnight-rogues'
     | '/quest'
     | '/referral'
     | '/token/$tokenId'
@@ -191,6 +203,7 @@ export interface RootRouteChildren {
   EyedRoute: typeof EyedRoute
   HaloRoute: typeof HaloRoute
   HowRoute: typeof HowRoute
+  MidnightRoguesRoute: typeof MidnightRoguesRoute
   QuestRoute: typeof QuestRoute
   ReferralRoute: typeof ReferralRoute
   TokenTokenIdRoute: typeof TokenTokenIdRoute
@@ -250,6 +263,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof HowRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/midnight-rogues': {
+      id: '/midnight-rogues'
+      path: '/midnight-rogues'
+      fullPath: '/midnight-rogues'
+      preLoaderRoute: typeof MidnightRoguesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/quest': {
       id: '/quest'
       path: '/quest'
@@ -303,6 +323,7 @@ const rootRouteChildren: RootRouteChildren = {
   EyedRoute: EyedRoute,
   HaloRoute: HaloRoute,
   HowRoute: HowRoute,
+  MidnightRoguesRoute: MidnightRoguesRoute,
   QuestRoute: QuestRoute,
   ReferralRoute: ReferralRoute,
   TokenTokenIdRoute: TokenTokenIdRoute,

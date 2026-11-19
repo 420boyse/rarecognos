@@ -10,6 +10,8 @@ import { halo, haloPrice } from "@/data/halo";
 import { works, type Work } from "@/data/works";
 import eyedDeployment from "../../config/eyed.json";
 import haloDeployment from "../../config/halo.json";
+import rogues from "@/data/midnight-rogues.json";
+import { rogueImage, roguePage, useRoguesRelease } from "@/lib/nft/midnight-rogues";
 import { featuredEyed } from "@/lib/nft/piece-index";
 import { useDropStatus } from "@/lib/nft/use-drop-status";
 import { pageMeta } from "@/lib/site-meta";
@@ -55,7 +57,7 @@ export const Route = createFileRoute("/explore")({
   head: () =>
     pageMeta({
       title: "Explore · RareCognos",
-      description: "Search Eyed and Halo. One result opens that work.",
+      description: "Discover MIDNIGHT ROGUES, Eyed, Halo and works listed on LiteForge.",
       path: "/explore",
       image: "/art/eyed/02.jpg",
     }),
@@ -71,18 +73,21 @@ function ExplorePage() {
   useEffect(() => {
     if (activeStudioWork && !studioDialog.current?.open) studioDialog.current?.showModal();
   }, [activeStudioWork]);
+  const release = useRoguesRelease();
   const listings = useListings();
   const activeListings = listings.data?.pages.flatMap((page) => page.listings).filter((listing) => listing.valid) ?? [];
   const eyedDrop = useDropStatus(eyedDeployment.address);
   const haloDrop = useDropStatus(haloDeployment.address || undefined);
   const q = query.trim().toLowerCase();
   const { matches, searching } = useListingSearch(activeListings, q);
+  const showRogues = "midnight rogues".includes(q);
+  const shownRogues = rogues.filter((r) => showRogues || (r.name + " " + r.title + " #" + r.id).toLowerCase().includes(q));
   const showEyedCollection = "eyed".includes(q);
   const showHaloCollection = "halo".includes(q);
   const shownFaces = faces.filter((face) => showEyedCollection || `eyed ${face.name}`.toLowerCase().includes(q));
   const shownFigures = halo.filter((figure) => showHaloCollection || `halo ${figure.name}`.toLowerCase().includes(q));
   const shownStudio = q ? works.filter((work) => work.title.toLowerCase().includes(q)) : featuredStudio;
-  const nothing = q && !shownStudio.length && !shownFaces.length && !shownFigures.length && !matches.length &&
+  const nothing = q && !shownRogues.length && !shownStudio.length && !shownFaces.length && !shownFigures.length && !matches.length &&
     listings.isSuccess && !listings.hasNextPage && !searching;
 
   return (
@@ -113,10 +118,15 @@ function ExplorePage() {
             </button>
           </p>
         )}
-        {(showEyedCollection || showHaloCollection) && (
+        {(showRogues || showEyedCollection || showHaloCollection) && (
           <section aria-labelledby="collections-title">
             <h2 id="collections-title">Collections</h2>
             <ul className="catalog-grid catalog-grid--collections">
+              {showRogues && <li><a className="catalog-card" href="/midnight-rogues">
+                <DeferredArt src={rogueImage("001")} eager />
+                <strong>MIDNIGHT ROGUES</strong><em>10 characters · 10 editions each</em>
+                <span>0.001 test zkLTC</span><span className="status-pill">{release.label}</span>
+              </a></li>}
               {showEyedCollection && (
                 <li>
                   <a className="catalog-card" href="/eyed">
@@ -185,10 +195,13 @@ function ExplorePage() {
             onSelectWork={(id) => setActiveStudioWork(shownStudio.find((work) => work.id === id) ?? null)}
           />
         )}
-        {(shownFaces.length > 0 || shownFigures.length > 0) && (
+        {(shownRogues.length > 0 || shownFaces.length > 0 || shownFigures.length > 0) && (
           <section aria-labelledby="works-title">
             <h2 id="works-title">Works</h2>
             <ul className="catalog-grid">
+              {shownRogues.map((r) => <li key={r.name}><a className="catalog-card" href={roguePage(r.id)}>
+                <DeferredArt src={rogueImage(r.id)} /><strong>#{r.id} — {r.name}</strong><em>{r.title}</em><span>MIDNIGHT ROGUES</span>
+              </a></li>)}
               {shownFaces.map((face) => (
                   <li key={face.id}>
                     <a className="catalog-card" href={`/eyed?piece=${face.id}`}>
