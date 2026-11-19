@@ -13,6 +13,7 @@ import {
   type Pending,
 } from "@/lib/nft/transaction";
 import { NFTCreate } from "./nft-create";
+import { NetworkInventory } from "./network-inventory";
 import { NFTToken } from "./nft-token";
 export type Availability = "loading" | "available" | "empty" | "error" | "unconfigured";
 export function NFTMarket({
@@ -260,7 +261,7 @@ export function NFTMarket({
         )
       ) : tab === "My NFTs" ? (
         <>
-          {!address && <p>Connect a wallet to see your collection.</p>}
+          {!address && <div><p>Connect a wallet to see and list your LiteForge NFTs.</p><button className="nft-button" onClick={() => window.dispatchEvent(new Event("rarecognos-login"))}>Connect wallet to view NFTs</button></div>}
           {owned.isLoading && <p role="status">Reading your NFTs…</p>}
           {owned.error && (
             <p role="alert">
@@ -315,11 +316,7 @@ export function NFTMarket({
             </div>
           ))}
 
-          <div className="market-notice" role="note">
-            <strong>Other LiteForge collections</strong>
-            <p>My NFTs currently tracks the RareCognos marketplace collection. Eyed editions and independent creator drops use separate contracts and may still be present in your wallet.</p>
-            <a href="/eyed" className="text-link">Explore Eyed</a>
-          </div>
+          <NetworkInventory />
           {listings.hasNextPage && (
             <button
               className="nft-button"

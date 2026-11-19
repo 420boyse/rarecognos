@@ -17,6 +17,7 @@ import { Route as EyedRouteImport } from './routes/eyed'
 import { Route as HaloRouteImport } from './routes/halo'
 import { Route as HowRouteImport } from './routes/how'
 import { Route as MidnightRoguesRouteImport } from './routes/midnight-rogues'
+import { Route as NetworkMarketRouteImport } from './routes/network-market'
 import { Route as QuestRouteImport } from './routes/quest'
 import { Route as ReferralRouteImport } from './routes/referral'
 import { Route as TokenTokenIdRouteImport } from './routes/token.$tokenId'
@@ -64,6 +65,11 @@ const MidnightRoguesRoute = MidnightRoguesRouteImport.update({
   path: '/midnight-rogues',
   getParentRoute: () => rootRouteImport,
 } as any)
+const NetworkMarketRoute = NetworkMarketRouteImport.update({
+  id: '/network-market',
+  path: '/network-market',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const QuestRoute = QuestRouteImport.update({
   id: '/quest',
   path: '/quest',
@@ -104,6 +110,7 @@ export interface FileRoutesByFullPath {
   '/halo': typeof HaloRoute
   '/how': typeof HowRoute
   '/midnight-rogues': typeof MidnightRoguesRoute
+  '/network-market': typeof NetworkMarketRoute
   '/quest': typeof QuestRoute
   '/referral': typeof ReferralRoute
   '/token/$tokenId': typeof TokenTokenIdRoute
@@ -120,6 +127,7 @@ export interface FileRoutesByTo {
   '/halo': typeof HaloRoute
   '/how': typeof HowRoute
   '/midnight-rogues': typeof MidnightRoguesRoute
+  '/network-market': typeof NetworkMarketRoute
   '/quest': typeof QuestRoute
   '/referral': typeof ReferralRoute
   '/token/$tokenId': typeof TokenTokenIdRoute
@@ -137,6 +145,7 @@ export interface FileRoutesById {
   '/halo': typeof HaloRoute
   '/how': typeof HowRoute
   '/midnight-rogues': typeof MidnightRoguesRoute
+  '/network-market': typeof NetworkMarketRoute
   '/quest': typeof QuestRoute
   '/referral': typeof ReferralRoute
   '/token/$tokenId': typeof TokenTokenIdRoute
@@ -155,6 +164,7 @@ export interface FileRouteTypes {
     | '/halo'
     | '/how'
     | '/midnight-rogues'
+    | '/network-market'
     | '/quest'
     | '/referral'
     | '/token/$tokenId'
@@ -171,6 +181,7 @@ export interface FileRouteTypes {
     | '/halo'
     | '/how'
     | '/midnight-rogues'
+    | '/network-market'
     | '/quest'
     | '/referral'
     | '/token/$tokenId'
@@ -187,6 +198,7 @@ export interface FileRouteTypes {
     | '/halo'
     | '/how'
     | '/midnight-rogues'
+    | '/network-market'
     | '/quest'
     | '/referral'
     | '/token/$tokenId'
@@ -204,6 +216,7 @@ export interface RootRouteChildren {
   HaloRoute: typeof HaloRoute
   HowRoute: typeof HowRoute
   MidnightRoguesRoute: typeof MidnightRoguesRoute
+  NetworkMarketRoute: typeof NetworkMarketRoute
   QuestRoute: typeof QuestRoute
   ReferralRoute: typeof ReferralRoute
   TokenTokenIdRoute: typeof TokenTokenIdRoute
@@ -270,6 +283,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MidnightRoguesRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/network-market': {
+      id: '/network-market'
+      path: '/network-market'
+      fullPath: '/network-market'
+      preLoaderRoute: typeof NetworkMarketRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/quest': {
       id: '/quest'
       path: '/quest'
@@ -324,6 +344,7 @@ const rootRouteChildren: RootRouteChildren = {
   HaloRoute: HaloRoute,
   HowRoute: HowRoute,
   MidnightRoguesRoute: MidnightRoguesRoute,
+  NetworkMarketRoute: NetworkMarketRoute,
   QuestRoute: QuestRoute,
   ReferralRoute: ReferralRoute,
   TokenTokenIdRoute: TokenTokenIdRoute,
