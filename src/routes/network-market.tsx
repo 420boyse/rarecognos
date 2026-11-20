@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState, useRef } from "react";
-import { formatEther, parseEther, type Hash, type PublicClient, type WalletClient } from "viem";
+import { formatEther, parseEther, parseAbiItem, parseEventLogs, type Hash, type PublicClient, type WalletClient } from "viem";
 import {
   useAccount,
   usePublicClient,
@@ -16,6 +16,7 @@ import { MarketplaceListingCard } from "@/components/marketplace-listing-card";
 import {
   assetAbi,
   assetKey,
+  saleLink,
   marketAbi,
   networkMarket,
   parseAsset,
@@ -27,7 +28,7 @@ import {
 } from "@/lib/nft/network-market";
 import { chain, explorer } from "@/lib/nft/config";
 import { records, resumeTransaction, transact, transactionError } from "@/lib/nft/transaction";
-import { pageMeta } from "@/lib/site-meta";
+import { marketPreview } from "@/lib/nft/market-preview";
 import release from "../../config/liteforge-market.json";
 
 export const Route = createFileRoute("/network-market")({
@@ -37,13 +38,9 @@ export const Route = createFileRoute("/network-market")({
     mine: Number(s.mine) === 1 ? 1 : undefined,
     setup: Number(s.setup) === 1 ? 1 : undefined,
   }),
-  head: () =>
-    pageMeta({
-      title: "LiteForge NFT market · RareCognos",
-      description: "Collect or list ERC-721 and ERC-1155 NFTs on the LiteForge testnet.",
-      path: "/network-market",
-      image: "/og.jpg",
-    }),
+  loaderDeps: ({ search }) => ({ asset: search.asset, sale: search.sale }),
+  loader: ({ deps }) => marketPreview(deps.asset, deps.sale),
+  head: ({ loaderData }) => loaderData ?? {},
   component: NetworkMarket,
 });
 function NetworkMarket() {
@@ -167,7 +164,8 @@ function useTrade() {
   const lock = useRef(false),
     [busy, setBusy] = useState(false),
     [notice, setNotice] = useState(""),
-    [hash, setHash] = useState<Hash>();
+    [hash, setHash] = useState<Hash>(),
+    [listing, setListing] = useState<bigint>();
   const pending = records().find(
     (r) =>
       r.status === "pending" &&
@@ -179,6 +177,7 @@ function useTrade() {
     lock.current = true;
     setBusy(true);
     setHash(undefined);
+    setListing(undefined);
     const update = (message: string, h?: Hash) => {
       setNotice(message);
       if (h) setHash(h);
@@ -188,6 +187,11 @@ function useTrade() {
       const receipt = pending
         ? await resumeTransaction(rpc, pending, update)
         : call && (await transact(rpc, wallet.data as WalletClient, call, update));
+      if (receipt?.status === "success") {
+        const listed = parseEventLogs({ abi: [parseAbiItem("event Listed(uint256 indexed id,address indexed seller,address indexed collection,uint256 tokenId,uint256 price)")], logs: receipt.logs })
+          .find(log => log.address.toLowerCase() === networkMarket.toLowerCase() && log.args.seller.toLowerCase() === account.address?.toLowerCase());
+        if (listed) setListing(listed.args.id);
+      }
       if (receipt)
         update(
           receipt.status === "success" ? "Confirmed on LiteForge." : "Transaction reverted.",
@@ -212,6 +216,7 @@ function useTrade() {
     feedback: (
       <>
         {notice && <p role="status">{notice}</p>}
+        {listing !== undefined && <a className="primary-action" href={saleLink(listing)}>Open your listing</a>}
         {hash && explorer && <a href={`${explorer}/tx/${hash}`}>View transaction</a>}
       </>
     ),

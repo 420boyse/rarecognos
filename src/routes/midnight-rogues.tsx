@@ -1,3 +1,4 @@
+import { assetLink } from "@/lib/nft/network-market";
 import { createFileRoute } from "@tanstack/react-router";
 import { OpenRelease } from "@/components/open-release";
 import { parseAbi } from "viem";
@@ -78,6 +79,7 @@ function Mint({ index }: { index: number }) {
       </button>}
     {mint.notice && <p role="status">{mint.notice}</p>}
     {mint.receipt && <p role="status">Mint confirmed. {mint.receipt.piece !== undefined && rogues[mint.receipt.piece]?.name} {mint.receipt.tokenId && `· Token #${mint.receipt.tokenId}`}</p>}
+    {mint.receipt?.tokenId && <a className="primary-action" href={assetLink({ collection: mint.receipt.contract, id: mint.receipt.tokenId, multi: false })}>List this NFT</a>}
     {(mint.receipt?.hash || mint.hash) && explorer && <a href={`${explorer}/tx/${mint.receipt?.hash || mint.hash}`}>View transaction</a>}
   </>;
 }

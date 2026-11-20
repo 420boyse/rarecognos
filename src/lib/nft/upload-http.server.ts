@@ -2,65 +2,48 @@ import { createHash, createHmac, randomBytes, timingSafeEqual } from "node:crypt
 import { isAddress, verifyTypedData, type Address, type Hex } from "viem";
 import { env } from "@/lib/env.server";
 
+import { redisConfig, redisCommand } from "./redis.server.ts";
+
 export const MAX_UPLOAD_BYTES = 3 * 1024 * 1024;
 const CHAIN_ID = 4441;
 const processReplay = new Map<string, number>();
 const MAX_PROCESS_REPLAY = 4096;
+const localQuota = new Map<string, number>();
+let localQuotaDate = "";
 
-function redisConfig() {
-  const url = env("UPSTASH_REDIS_REST_URL")?.trim();
-  const token = env("UPSTASH_REDIS_REST_TOKEN")?.trim();
-  return url && token ? { url: url.endsWith("/") ? url.slice(0, -1) : url, token } : null;
-}
-
-async function reserveTicket(id: string, expires: number) {
-  const key = "rarecognos:upload:ticket:" + createHash("sha256").update(id).digest("hex");
-  const redis = redisConfig();
-  if (redis) {
-    const seconds = Math.max(1, Math.ceil((expires - Date.now()) / 1000));
-    const response = await fetch(redis.url, {
-      method: "POST",
-      headers: { Authorization: `Bearer ${redis.token}`, "Content-Type": "application/json" },
-      body: JSON.stringify(["SET", key, "1", "EX", seconds, "NX"]),
-      signal: AbortSignal.timeout(5000),
-    });
-    if (!response.ok) throw Object.assign(new Error("Upload authorization storage is unavailable. Try again."), { status: 503 });
-    const body = await response.json() as { result?: string | null; error?: string };
-    if (body.error) throw Object.assign(new Error("Upload authorization storage is unavailable. Try again."), { status: 503 });
-    if (body.result !== "OK") throw Object.assign(new Error("Upload authorization was already used. Sign again."), { status: 409 });
+async function reserveUpload(id: string, expires: number, wallet: string) {
+  const ticket = "rarecognos:upload:ticket:" + createHash("sha256").update(id).digest("hex");
+  const quota = "rarecognos:upload:wallet:" + wallet.toLowerCase() + ":" + new Date().toISOString().slice(0, 10);
+  if (redisConfig()) {
+    const script = `
+      if redis.call('EXISTS', KEYS[1]) == 1 then return 409 end
+      if tonumber(redis.call('GET', KEYS[2]) or '0') >= 30 then return 429 end
+      redis.call('SET', KEYS[1], '1', 'EX', ARGV[1])
+      redis.call('INCR', KEYS[2])
+      redis.call('EXPIRE', KEYS[2], 172800)
+      return 200`;
+    let status;
+    try {
+      status = await redisCommand<number>(["EVAL", script, 2, ticket, quota, Math.max(1, Math.ceil((expires - Date.now()) / 1000))]);
+    } catch {
+      throw Object.assign(Error("Upload quota service unavailable. Please retry."), { status: 503 });
+    }
+    if (status === 429) throw Object.assign(Error("Daily upload limit reached. Try again tomorrow."), { status });
+    if (status !== 200) throw Object.assign(Error("Upload authorization was already used. Sign again."), { status: 409 });
     return;
   }
-  // Same-process guard only. A durable Redis store is required across serverless instances.
+  // Existing installations can continue accepting uploads while Redis is connected.
+  // The status endpoint explicitly reports the scope of this fallback.
+  const day = new Date().toISOString().slice(0, 10);
+  if (day !== localQuotaDate) { localQuota.clear(); localQuotaDate = day; }
   const now = Date.now();
   for (const [seen, ttl] of processReplay) if (ttl <= now) processReplay.delete(seen);
-  if (processReplay.has(key)) throw Object.assign(new Error("Upload authorization was already used. Sign again."), { status: 409 });
-  processReplay.set(key, expires);
+  if (processReplay.has(ticket)) throw Object.assign(Error("Upload authorization was already used."), { status: 409 });
+  const count = localQuota.get(quota) ?? 0;
+  if (count >= 30) throw Object.assign(Error("Daily upload limit reached. Try again tomorrow."), {status:429});
+  localQuota.set(quota, count + 1);
+  processReplay.set(ticket, expires);
   while (processReplay.size > MAX_PROCESS_REPLAY) processReplay.delete(processReplay.keys().next().value!);
-}
-
-async function checkWalletQuota(wallet: string) {
-  const redis = redisConfig();
-  if (!redis) return; // Process-only mode is explicitly reported by /status.
-  const day = new Date().toISOString().slice(0, 10);
-  const key = `rarecognos:upload:wallet:${wallet.toLowerCase()}:${day}`;
-  const incr = await fetch(redis.url, {
-    method: "POST",
-    headers: { Authorization: `Bearer ${redis.token}`, "Content-Type": "application/json" },
-    body: JSON.stringify(["INCR", key]),
-    signal: AbortSignal.timeout(5000),
-  });
-  if (!incr.ok) throw Object.assign(new Error("Upload quota service unavailable."), { status: 503 });
-  const result = await incr.json() as { result?: number; error?: string };
-  if (result.error || typeof result.result !== "number") throw Object.assign(new Error("Upload quota service unavailable."), { status: 503 });
-  if (result.result === 1) {
-    await fetch(redis.url, {
-      method: "POST",
-      headers: { Authorization: `Bearer ${redis.token}`, "Content-Type": "application/json" },
-      body: JSON.stringify(["EXPIRE", key, 172800]),
-      signal: AbortSignal.timeout(5000),
-    });
-  }
-  if (result.result > 30) throw Object.assign(new Error("Daily upload limit reached. Try again tomorrow."), { status: 429 });
 }
 
 function equalsMac(a: string, b: string) {
@@ -183,9 +166,11 @@ export async function uploadChallenge(request: Request) {
     name?: string;
     description?: string;
     rights?: boolean;
+    kind?: "edition" | "single";
   };
-  const { wallet, digest, name, description, rights } = body;
+  const { wallet, digest, name, description, rights, kind } = body;
   if (
+    (kind !== undefined && kind !== "single" && kind !== "edition") ||
     !wallet ||
     !isAddress(wallet) ||
     !digest ||
@@ -201,13 +186,14 @@ export async function uploadChallenge(request: Request) {
   }
   const expires = Date.now() + 300000;
   const nonce = `0x${randomBytes(32).toString("hex")}` as Hex;
-  const metadataDigest = `0x${createHash("sha256").update(JSON.stringify({ name: name.trim(), description, rights })).digest("hex")}` as Hex;
+  const metadataDigest = `0x${createHash("sha256").update(JSON.stringify({ name: name.trim(), description, rights, kind })).digest("hex")}` as Hex;
   const payload = JSON.stringify({
     wallet: wallet.toLowerCase(),
     digest,
     name: name.trim(),
     description,
     rights,
+    kind,
     nonce,
     chainId: CHAIN_ID,
   });
@@ -291,6 +277,7 @@ export async function uploadPrepare(request: Request) {
       name: string;
       description: string;
       rights: boolean;
+      kind?: "edition" | "single";
       nonce: Hex;
       chainId: number;
     };
@@ -305,7 +292,7 @@ export async function uploadPrepare(request: Request) {
       typed.message.wallet.toLowerCase() !== payload.wallet ||
       typed.message.artwork !== payload.name ||
       typed.message.image.toLowerCase() !== `0x${payload.digest}` ||
-      typed.message.metadata.toLowerCase() !== `0x${createHash("sha256").update(JSON.stringify({ name: payload.name, description: payload.description, rights: payload.rights })).digest("hex")}` ||
+      typed.message.metadata.toLowerCase() !== `0x${createHash("sha256").update(JSON.stringify({ name: payload.name, description: payload.description, rights: payload.rights, kind: payload.kind })).digest("hex")}` ||
       typed.message.nonce.toLowerCase() !== payload.nonce.toLowerCase() ||
       payload.chainId !== CHAIN_ID ||
       payload.rights !== true
@@ -328,15 +315,14 @@ export async function uploadPrepare(request: Request) {
       return uploadJson(400, { error: "Image does not match signed digest" }, origin);
     const mime = imageType(bytes);
     if (!mime) return uploadJson(415, { error: "Only single-frame PNG, JPEG and WebP images are supported" }, origin);
-    await reserveTicket(body.id, ticket.expires);
-    await checkWalletQuota(payload.wallet);
+    await reserveUpload(body.id, ticket.expires, payload.wallet);
     const imageURI = await pinFile(bytes, mime, `${payload.digest}.${mime.split("/")[1]}`);
     const metadata = {
       name: payload.name,
       description: payload.description,
       image: imageURI,
       creator: payload.wallet,
-      attributes: [{ trait_type: "Edition", value: "1/1" }],
+      attributes: [{ trait_type: "Edition", value: payload.kind === "edition" ? "Limited edition" : "1/1" }],
       properties: { content_sha256: payload.digest, rights_declared: true },
     };
     const uri = await pinFile(Buffer.from(JSON.stringify(metadata)), "application/json", "metadata.json");
@@ -348,6 +334,7 @@ export async function uploadPrepare(request: Request) {
         name: payload.name,
         description: payload.description,
         creator: payload.wallet,
+        kind: payload.kind ?? "single",
         chainId: CHAIN_ID,
         contentHash: payload.digest,
         mode: "ipfs",

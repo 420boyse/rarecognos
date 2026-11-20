@@ -3,7 +3,8 @@ import { useAccount, usePublicClient, useReadContract, useWalletClient } from "w
 import { useQueryClient } from "@tanstack/react-query";
 import { formatEther, parseEther, parseEventLogs, type Address, type Hash, type PublicClient, type WalletClient } from "viem";
 import { ExternalLink, Pause, Play } from "lucide-react";
-import { chain, contracts, dropsConfigured, explorer } from "@/lib/nft/config";
+import { useEditionFactory } from "@/lib/nft/drops";
+import { chain, contracts, explorer } from "@/lib/nft/config";
 import { abi as factoryABI } from "@/lib/nft/RareCognosDropFactory";
 import { abi as dropABI } from "@/lib/nft/RareCognosDrop";
 import { dropCall, dropURL, feeFor, factoryCall, useCreatorDrops, useDrop, useDropMetadata } from "@/lib/nft/drops";
@@ -85,7 +86,9 @@ export function NFTDropMint({ address }: { address: Address }) {
 
 export function CreatorDashboard() {
   const account = useAccount(), client = usePublicClient({ chainId: chain.id }), wallet = useWalletClient(), cache = useQueryClient();
-  const drops = useCreatorDrops(account.address);
+  const factory = useEditionFactory();
+  const dropsConfigured = factory.data === true && !factory.isError;
+  const drops = useCreatorDrops(account.address, dropsConfigured);
   const [status, setStatus] = useState(""), [busy, setBusy] = useState(false);
   async function toggle(address: Address, active: boolean) {
     if (!client || !wallet.data || busy) return;

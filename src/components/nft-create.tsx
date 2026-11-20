@@ -5,10 +5,11 @@ import { formatEther, keccak256, parseEther, toHex, type Address, type Hash } fr
 import { chain, contracts, configured } from "@/lib/nft/config";
 import { mediaURL, nftCall } from "@/lib/nft/data";
 import { assertChain, records, resumeTransaction, transactionError, type transact } from "@/lib/nft/transaction";
-import { dropsConfigured } from "@/lib/nft/config";
+import { useEditionFactory } from "@/lib/nft/drops";
 import { createDrop, DropCreated } from "./nft-drops";
 export const uploadAPI = (import.meta.env.VITE_UPLOAD_API_URL || "/api/upload").replace(/\/$/, "");
 type Prepared = {
+  kind?: "edition" | "single";
   uri: string;
   image: string;
   name: string;
@@ -26,6 +27,8 @@ export function NFTCreate({
   busy: boolean;
   ready: boolean;
 }) {
+  const factory = useEditionFactory();
+  const dropsConfigured = factory.data === true && !factory.isError;
   const account = useAccount(),
     wallet = useWalletClient(),
     client = usePublicClient({ chainId: chain.id });
@@ -63,7 +66,9 @@ export function NFTCreate({
   });
   useEffect(() => {
     try {
-      setPrepared(JSON.parse(localStorage.getItem(key) || "null") || undefined);
+      const saved = JSON.parse(localStorage.getItem(key) || "null") as Prepared | null;
+      setPrepared(saved || undefined);
+      setKind(saved?.kind ?? "single");
     } catch {
       setPrepared(undefined);
     }
@@ -161,6 +166,7 @@ export function NFTCreate({
       const challenge = await post("/challenge", {
         wallet: address,
         digest,
+        kind,
         name,
         description,
         rights,
@@ -227,7 +233,7 @@ export function NFTCreate({
         )}
       </div>
       <div className="creation-form">
-        {dropsConfigured && <div className="kind-toggle" role="group" aria-label="Creation type"><button type="button" aria-pressed={kind === "single"} onClick={() => setKind("single")}>1/1 artwork</button><button type="button" aria-pressed={kind === "edition"} onClick={() => setKind("edition")}>Limited edition</button></div>}
+        {dropsConfigured && <div className="kind-toggle" role="group" aria-label="Creation type"><button type="button" disabled={!!prepared || uploading} aria-pressed={kind === "single"} onClick={() => setKind("single")}>1/1 artwork</button><button type="button" disabled={!!prepared || uploading} aria-pressed={kind === "edition"} onClick={() => setKind("edition")}>Limited edition</button></div>}
         <h3>{prepared ? (kind === "edition" ? "Ready to launch" : "Ready to mint") : kind === "edition" ? "Create a limited edition" : "Create a 1/1 work"}</h3>
         <p>
           {kind === "edition"

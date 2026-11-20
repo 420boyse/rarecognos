@@ -80,6 +80,7 @@ try {
     return p;
   }
   async function connect(p) {
+    await p.waitForLoadState("networkidle");
     await p.getByRole("button", { name: "Connect wallet", exact: true }).first().click();
     await p
       .getByRole("button", { name: /connect in this browser/i })
@@ -96,7 +97,16 @@ try {
   await p.getByText("This wallet does not hold this NFT.").waitFor();
   await p.goto(new URL("/network-market?mine=1", url).href);
   await p.getByRole("link", { name: /View Independent artwork/ }).click();
-  await p.getByRole("button", { name: "Cancel listing" }).waitFor();
+  await p.getByRole("button", { name: "Cancel listing" }).click();
+  await p.getByText(/Listing closed/).waitFor();
+  await p.goto(new URL("/#my-nfts", url).href);
+  await p.getByRole("link", { name: /Independent artwork/ }).click();
+  await p.getByLabel("Listing price").fill("0.003");
+  await p.getByRole("button", { name: "Approve this NFT" }).click();
+  await p.getByRole("button", { name: "List one NFT" }).click();
+  await p.getByRole("link", { name: "Open your listing" }).click();
+  await p.waitForURL("**/network-market?sale=L2");
+
   const b = await pageFor(buyer, 390);
   await b.goto(new URL("/explore?q=Independent", url).href);
   await b.getByRole("link", { name: /View Independent artwork/ }).click();

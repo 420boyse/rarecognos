@@ -13,18 +13,20 @@ import haloDeployment from "../../config/halo.json";
 import { isAddress, type Address } from "viem";
 import { useMarketResults } from "@/lib/nft/network-market";
 import { MarketplaceListingCard } from "@/components/marketplace-listing-card";
-import { rogueImage, useRoguesRelease } from "@/lib/nft/midnight-rogues";
+import { searchCatalog, searchParams } from "@/lib/nft/catalog";
+import { rogueImage, roguePage, useRoguesRelease } from "@/lib/nft/midnight-rogues";
 import { useListings, useListingSearch } from "@/lib/nft/data";
 const NFTMarket = lazy(() => import("@/components/nft-market").then((module) => ({ default: module.NFTMarket })));
 const NFTDeploy = lazy(() => import("@/components/nft-deploy").then((module) => ({ default: module.NFTDeploy })));
 const NFTDropMint = lazy(() => import("@/components/nft-drops").then((module) => ({ default: module.NFTDropMint })));
 export const Route = createFileRoute("/")({
+  validateSearch: searchParams,
   head: () =>
     pageMeta({
       title: "RareCognos",
       description: "An eye for the rare. Distinctive digital art on LiteForge.",
       path: "/",
-      image: "/art/nocturne-hero.jpg",
+      image: rogueImage("001"),
     }),
   component: Home,
 });
@@ -36,7 +38,9 @@ function Home() {
   const haloDrop = useDropStatus(haloDeployment.address || undefined);
   const listings = useListings();
   const [marketTab, setMarketTab] = useState<"all" | "mint" | "listings">("all");
-  const [marketSearch, setMarketSearch] = useState("");
+  const { q: marketSearch = "" } = Route.useSearch();
+  const navigate = Route.useNavigate();
+  const setMarketSearch = (q: string) => void navigate({ search: { q }, replace: true, resetScroll: false });
   const [marketSort, setMarketSort] = useState<"newest" | "price">("newest");
   const [marketLayout, setMarketLayout] = useState<"grid" | "list">("grid");
   const liveListings = listings.data?.pages.flatMap((page) => page.listings).filter((listing) => listing.valid) ?? [];
@@ -47,6 +51,15 @@ function Home() {
   const searching = local.searching || !network.settled;
   const matchingListings = [...matches].sort((a,b) => marketSort === "price" ? (a.listing.price < b.listing.price ? -1 : a.listing.price > b.listing.price ? 1 : 0) : (a.listing.id > b.listing.id ? -1 : a.listing.id < b.listing.id ? 1 : 0));
   const mintCards = [{ name: "MIDNIGHT ROGUES", href: "/midnight-rogues", image: rogueImage("001"), status: rogues.label }, { name: "Eyed", href: "/eyed", image: "/art/eyed/04.jpg", status: eyedDrop.label }, { name: "Halo", href: "/halo", image: "/art/halo/01.png", status: haloDrop.label }].filter((card) => !searchTerm || card.name.toLowerCase().includes(searchTerm));
+  if (searchTerm) {
+    const result = searchCatalog(searchTerm);
+    mintCards.push(
+      ...result.rogues.map(r => ({ name: r.name, href: roguePage(r.id), image: rogueImage(r.id), status: rogues.label })),
+      ...result.faces.map(r => ({ name: r.name, href: `/eyed?piece=${r.id}`, image: `/art/eyed/${r.id}.jpg`, status: eyedDrop.label })),
+      ...result.figures.map(r => ({ name: r.name, href: `/halo?piece=${r.id}`, image: `/art/halo/${r.id}.png`, status: haloDrop.label })),
+    );
+    if (marketTab === "all") mintCards.push(...result.studio.map(r => ({ name: r.title, href: "/explore?q=" + encodeURIComponent(r.title), image: r.image, status: "Studio preview" })));
+  }
   useEffect(() => {
     const update = () => {
       if (location.hash === "#create" || location.hash === "#drops") {
@@ -88,17 +101,18 @@ function Home() {
             <img className="rc-atmosphere-ribbon rc-atmosphere-ribbon-front" src="/art/hero-ribbon.webp" alt="" decoding="async" />
           </div>
           <div className="rc-hero-copy">
-            <h1 id="hero-title">Discover.<br />Collect.<br />Trade.</h1>
-            <p>Explore eight featured Eyed works. Mint on LiteForge with test zkLTC.</p>
+            <h1 id="hero-title">MIDNIGHT<br />ROGUES</h1>
+            <p className="rc-kicker">{rogues.data === true ? "Mint open · LiteForge testnet" : rogues.label}</p>
+            <p>Ten raccoons hunt for a stolen sun. Collect one of 10 editions per character for 0.001 test zkLTC.</p>
             <div className="rc-actions">
-              <a className="rc-button rc-button-light" href="/eyed">Explore Eyed <ArrowRight size={17} /></a>
+              <a className="rc-button rc-button-light" href="/midnight-rogues">Explore MIDNIGHT ROGUES <ArrowRight size={17} /></a>
               <a className="rc-button rc-button-outline" href="/create">Create</a>
             </div>
           </div>
-          <div className="rc-hero-visual" aria-label="RareCognos studio artwork previews">
-            <div className="rc-float-card rc-float-left"><img src="/art/hero-wave.webp" alt="Cream sculptural wave artwork" loading="eager" decoding="async" /><span><Eye size={13} aria-hidden="true" /> Preview</span></div>
-            <div className="rc-float-card rc-float-center"><img src="/art/hero-nocturne.webp" alt="Nocturne black chrome sculpture" loading="eager" decoding="async" /><span><Eye size={13} aria-hidden="true" /> Preview</span></div>
-            <div className="rc-float-card rc-float-right"><img src="/art/hero-cubes.webp" alt="Blue crystal cube artwork" loading="eager" decoding="async" /><span><Eye size={13} aria-hidden="true" /> Preview</span></div>
+          <div className="rc-hero-visual" aria-label="MIDNIGHT ROGUES characters">
+            <div className="rc-float-card rc-float-left"><img src={rogueImage("002")} alt="VOLT" loading="eager" decoding="async" /><span><Eye size={13} aria-hidden="true" /> VOLT</span></div>
+            <div className="rc-float-card rc-float-center"><img src={rogueImage("001")} alt="AURIC" loading="eager" decoding="async" /><span><Eye size={13} aria-hidden="true" /> AURIC</span></div>
+            <div className="rc-float-card rc-float-right"><img src={rogueImage("010")} alt="ECHO" loading="eager" decoding="async" /><span><Eye size={13} aria-hidden="true" /> ECHO</span></div>
           </div>
         </section>
         <section id="marketplace" className="rc-section rc-market" aria-labelledby="rc-market-title">
@@ -107,7 +121,7 @@ function Home() {
             <div className="rc-tabs" role="group" aria-label="NFT category">
               {(["all","mint","listings"] as const).map((tab) => <button key={tab} type="button" className={marketTab===tab?"selected":""} aria-pressed={marketTab===tab} onClick={()=>setMarketTab(tab)}>{tab==="all"?"All":tab==="mint"?"Mint":"Listings"}</button>)}
             </div>
-            <label className="rc-search"><span className="sr-only">Search NFTs</span><input value={marketSearch} onChange={(event)=>setMarketSearch(event.target.value)} placeholder="Search NFTs..." /></label>
+            <label className="rc-search"><span className="sr-only">Search NFTs</span><input value={marketSearch} onChange={(event)=>setMarketSearch(event.target.value)} maxLength={120} placeholder="Search NFTs…" /></label>
             <select aria-label="Sort listings" value={marketSort} onChange={(event)=>setMarketSort(event.target.value as "newest"|"price")}><option value="newest">Newest</option><option value="price">Price: low to high</option></select>
             <div className="rc-layout" role="group" aria-label="Display layout"><button aria-label="Grid layout" aria-pressed={marketLayout==="grid"} onClick={()=>setMarketLayout("grid")}>▦</button><button aria-label="List layout" aria-pressed={marketLayout==="list"} onClick={()=>setMarketLayout("list")}>☷</button></div>
           </div>
