@@ -2176,3 +2176,57 @@ button:disabled {
     border-bottom: 1px solid #292b31;
   }
 }
+
+.market-empty {
+  padding: 28px 0;
+}
+.market-empty p:first-child {
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+.market-empty-actions,
+.mint-share {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 16px;
+}
+.rogue-mint-action {
+  display: grid;
+  gap: 12px;
+}
+.rogue-mint-price {
+  font-weight: 600;
+}
+.rogue-mint-price small {
+  font-size: .8rem;
+  font-weight: 400;
+}
+@media (max-width: 767px) {
+  .rogue-detail {
+    padding-bottom: calc(150px + env(safe-area-inset-bottom));
+  }
+  .rogue-mint-action {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 30;
+    padding: 12px 20px calc(12px + env(safe-area-inset-bottom));
+    background: var(--color-bg);
+    color: var(--color-fg);
+    border-top: 1px solid var(--color-line);
+    gap: 8px;
+  }
+  .rogue-mint-action .primary-action {
+    min-height: 46px;
+    width: 100%;
+    text-align: center;
+  }
+  .rogue-mint-price {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    font-size: .9rem;
+  }
+}

@@ -1,8 +1,10 @@
 import { assetLink } from "@/lib/nft/network-market";
 import { createFileRoute } from "@tanstack/react-router";
 import { OpenRelease } from "@/components/open-release";
-import { parseAbi } from "viem";
-import { useAccount, useReadContract, useSwitchChain } from "wagmi";
+import { useState } from "react";
+import { faucetUrl } from "@/lib/nft/network";
+import { parseAbi, parseEther } from "viem";
+import { useAccount, useBalance, useReadContract, useSwitchChain } from "wagmi";
 import rogues from "@/data/midnight-rogues.json";
 import { MarketHeader } from "@/components/market-header";
 import { SiteFooter } from "@/components/site-footer";
@@ -36,7 +38,7 @@ function Collection() {
   const state = useRoguesRelease();
   return <>
     <MarketHeader view="Explore" />
-    <main className="market-section explore-page">
+    <main className={item ? "market-section explore-page rogue-detail" : "market-section explore-page"}>
       <div className="section-heading"><div>
         {item && <a href="/midnight-rogues">← MIDNIGHT ROGUES</a>}
         <h1>{item ? `#${item.id} — ${item.name}` : "MIDNIGHT ROGUES"}</h1>
@@ -64,6 +66,10 @@ const connect = () => window.dispatchEvent(new Event("rarecognos-login"));
 
 function Mint({ index }: { index: number }) {
   const account = useAccount();
+  const [copied, setCopied] = useState(false);
+  const balance = useBalance({ address: account.address, chainId: chain.id,
+    query: { enabled: account.isConnected && account.chainId === chain.id, refetchInterval: 15000 } });
+  const needsFunds = balance.data !== undefined && balance.data.value <= parseEther("0.001");
   const switcher = useSwitchChain();
   const count = useReadContract({ chainId: chain.id, address: roguesAddress, abi: mintedAbi,
     functionName: "editionState", args: [BigInt(index)], query: { refetchInterval: 15000 } });
@@ -73,14 +79,32 @@ function Mint({ index }: { index: number }) {
   const sold = minted !== undefined && minted >= BigInt(rogueEditions);
   return <>
     <p>{minted !== undefined ? `${minted} of ${rogueEditions} minted` : count.isError ? "Edition count unavailable" : "Checking editions…"}</p>
+    <div className="rogue-mint-action">
+    <span className="rogue-mint-price">0.001 test zkLTC <small>+ network fee</small></span>
     {!account.isConnected ? <button className="primary-action" onClick={connect}>Connect wallet to mint</button>
       : wrong ? <button className="primary-action" onClick={() => switcher.switchChain({chainId: chain.id})}>Switch to LiteForge</button>
+      : needsFunds && !mint.pending ? <a className="primary-action" href={faucetUrl} target="_blank" rel="noreferrer">Get test zkLTC</a>
       : <button className="primary-action" disabled={mint.busy || (!mint.pending && (sold || count.data === undefined || count.isError))} onClick={() => void mint.run(index)}>
         {mint.busy ? "Checking transaction…" : mint.pending ? "Recheck mint receipt" : sold ? "Sold out" : "Mint for 0.001 test zkLTC"}
       </button>}
+    </div>
+    {needsFunds && !wrong && <p role="status">Get test zkLTC from the faucet, then return here to mint.</p>}
+    {balance.isError && account.isConnected && !wrong && <a href={faucetUrl} target="_blank" rel="noreferrer">Need test zkLTC? Open the faucet</a>}
     {mint.notice && <p role="status">{mint.notice}</p>}
     {mint.receipt && <p role="status">Mint confirmed. {mint.receipt.piece !== undefined && rogues[mint.receipt.piece]?.name} {mint.receipt.tokenId && `· Token #${mint.receipt.tokenId}`}</p>}
     {mint.receipt?.tokenId && <a className="primary-action" href={assetLink({ collection: mint.receipt.contract, id: mint.receipt.tokenId, multi: false })}>List this NFT</a>}
+    {mint.receipt?.tokenId && mint.receipt.piece !== undefined && rogues[mint.receipt.piece] && <div className="mint-share">
+      <a className="nft-button" href={"https://twitter.com/intent/tweet?" + new URLSearchParams({
+        text: `I collected ${rogues[mint.receipt.piece].name} from MIDNIGHT ROGUES on the LiteForge testnet. Who brings back the sun?`,
+        url: "https://rarecognos.com" + roguePage(rogues[mint.receipt.piece].id),
+      })} target="_blank" rel="noopener noreferrer">Share my character on X</a>
+      <button className="nft-button" onClick={async () => {
+        try {
+          await navigator.clipboard.writeText("https://rarecognos.com" + roguePage(rogues[mint.receipt!.piece!].id));
+          setCopied(true);
+        } catch { setCopied(false); }
+      }}>{copied ? "Link copied" : "Copy character link"}</button>
+    </div>}
     {(mint.receipt?.hash || mint.hash) && explorer && <a href={`${explorer}/tx/${mint.receipt?.hash || mint.hash}`}>View transaction</a>}
   </>;
 }
