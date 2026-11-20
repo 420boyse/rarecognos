@@ -1,7 +1,14 @@
 import { createPublicClient, formatEther, http } from "viem";
 import { chain, explorer } from "./config";
-import { mediaURL } from "./data";
-import { assetLink, parseAsset, marketAbi, networkMarket, saleLink } from "./network-market";
+import { mediaURL, metadata } from "./data";
+import {
+  assetAbi,
+  assetLink,
+  parseAsset,
+  marketAbi,
+  networkMarket,
+  saleLink,
+} from "./network-market";
 import { pageMeta } from "../site-meta";
 
 const client = createPublicClient({
@@ -39,7 +46,7 @@ export async function marketPreview(assetKey?: string, sale?: string) {
   if (asset) {
     title = "Token #" + asset.id;
     try {
-      // Fetch only the configured explorer. Remote art is a link in the preview.
+      // Use indexed artwork first; recently minted editions may only have a token URI.
       const response = await fetch(
         `${explorer}/api/v2/tokens/${asset.collection}/instances/${asset.id}`,
         {
@@ -56,6 +63,25 @@ export async function marketPreview(assetKey?: string, sale?: string) {
       }
     } catch {
       /* A token without indexed art still has its own share URL. */
+    }
+    if (image === "/og.jpg") {
+      try {
+        const uri = await client.readContract({
+          address: asset.collection,
+          abi: assetAbi,
+          functionName: asset.multi ? "uri" : "tokenURI",
+          args: [BigInt(asset.id)],
+        });
+        // Server-side metadata reads stay on the configured, bounded IPFS gateway.
+        if (uri.startsWith("ipfs://")) {
+          const path = uri.replaceAll("{id}", BigInt(asset.id).toString(16).padStart(64, "0"));
+          const artwork = await metadata(path, { redirect: "error", timeout: 12000 });
+          title = artwork.name || title;
+          image = artwork.image;
+        }
+      } catch {
+        /* Keep price and listing URL if the gateway is unavailable. */
+      }
     }
   }
   return pageMeta({ title: title + " · RareCognos", description, path, image });
