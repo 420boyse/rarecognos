@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { formatEther, parseEther, parseAbiItem, parseEventLogs, type Hash, type PublicClient, type WalletClient } from "viem";
 import {
   useAccount,
@@ -28,6 +28,7 @@ import {
 } from "@/lib/nft/network-market";
 import { chain, explorer } from "@/lib/nft/config";
 import { records, resumeTransaction, transact, transactionError } from "@/lib/nft/transaction";
+import { matchesMarketPending } from "@/lib/nft/pending-market";
 import { marketPreview } from "@/lib/nft/market-preview";
 import release from "../../config/liteforge-market.json";
 
@@ -113,8 +114,15 @@ function SaleGrid({ mine }: { mine: boolean }) {
               <MarketplaceListingCard key={r.href} {...r} />
             ))}
           </div>
-          {!rows.length && result.settled && (
-            <p>No active network listings{mine ? " for this wallet" : ""}.</p>
+          {!rows.length && result.settled && !result.error && !result.sales.hasNextPage && (
+            <div className="market-empty">
+              <p>{mine ? "You have no active listings yet." : "The next listing could be yours."}</p>
+              <p>{mine ? "Choose an NFT from your wallet to set a price." : "Explore open mints or choose an NFT from your wallet to list."}</p>
+              <div className="market-empty-actions">
+                <a className="primary-action" href="/explore">Explore open mints</a>
+                <a className="nft-button" href="/#my-nfts">List from my wallet</a>
+              </div>
+            </div>
           )}
           {result.sales.isError && (
             <button className="nft-button" onClick={() => void result.sales.refetch()}>
@@ -156,7 +164,7 @@ function Switch() {
 }
 type Call = Parameters<typeof transact>[2];
 
-function useTrade() {
+function useTrade(asset: Asset, saleId?: bigint) {
   const client = usePublicClient({ chainId: chain.id }),
     wallet = useWalletClient(),
     cache = useQueryClient(),
@@ -166,11 +174,23 @@ function useTrade() {
     [notice, setNotice] = useState(""),
     [hash, setHash] = useState<Hash>(),
     [listing, setListing] = useState<bigint>();
-  const pending = records().find(
+  const [history, setHistory] = useState<ReturnType<typeof records>>([]);
+  useEffect(() => {
+    const refresh = () => setHistory(records());
+    refresh();
+    window.addEventListener("nft-transactions", refresh);
+    window.addEventListener("storage", refresh);
+    return () => {
+      window.removeEventListener("nft-transactions", refresh);
+      window.removeEventListener("storage", refresh);
+    };
+  }, []);
+  const pending = history.find(
     (r) =>
       r.status === "pending" &&
       r.chainId === chain.id &&
-      r.wallet.toLowerCase() === account.address?.toLowerCase(),
+      r.wallet.toLowerCase() === account.address?.toLowerCase() &&
+      matchesMarketPending(r, networkMarket, { ...asset, saleId }),
   );
   async function run(call?: Call) {
     if (lock.current || !wallet.data || !client || account.chainId !== chain.id) return;
@@ -234,7 +254,7 @@ function TradeAsset({
   const account = useAccount(),
     access = useAssetAccess(asset, account.address),
     [art] = useNetworkArt([asset]),
-    trade = useTrade(),
+    trade = useTrade(asset, sale?.id),
     [input, setInput] = useState("");
   const title = art.data?.title || "NFT";
   let price = 0n;

@@ -61,5 +61,5 @@ export function useEditionMint(contract?: Address, releases?: readonly Address[]
       setBusy(false);
     }
   }
-  return { receipt, setReceipt, notice, hash: hash ?? pending?.hash, busy, pending, run };
+  return { receipt: receipt?.wallet.toLowerCase() === account.address?.toLowerCase() ? receipt : null, setReceipt, notice, hash: hash ?? pending?.hash, busy, pending, run };
 }
