@@ -24,6 +24,7 @@ import { Route as TokenTokenIdRouteImport } from './routes/token.$tokenId'
 import { Route as ApiUploadChallengeRouteImport } from './routes/api/upload/challenge'
 import { Route as ApiUploadPrepareRouteImport } from './routes/api/upload/prepare'
 import { Route as ApiUploadStatusRouteImport } from './routes/api/upload/status'
+import { Route as ApiXpWalletRouteImport } from './routes/api/xp/$wallet'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -100,6 +101,11 @@ const ApiUploadStatusRoute = ApiUploadStatusRouteImport.update({
   path: '/api/upload/status',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiXpWalletRoute = ApiXpWalletRouteImport.update({
+  id: '/api/xp/$wallet',
+  path: '/api/xp/$wallet',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -117,6 +123,7 @@ export interface FileRoutesByFullPath {
   '/api/upload/challenge': typeof ApiUploadChallengeRoute
   '/api/upload/prepare': typeof ApiUploadPrepareRoute
   '/api/upload/status': typeof ApiUploadStatusRoute
+  '/api/xp/$wallet': typeof ApiXpWalletRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -134,6 +141,7 @@ export interface FileRoutesByTo {
   '/api/upload/challenge': typeof ApiUploadChallengeRoute
   '/api/upload/prepare': typeof ApiUploadPrepareRoute
   '/api/upload/status': typeof ApiUploadStatusRoute
+  '/api/xp/$wallet': typeof ApiXpWalletRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -152,6 +160,7 @@ export interface FileRoutesById {
   '/api/upload/challenge': typeof ApiUploadChallengeRoute
   '/api/upload/prepare': typeof ApiUploadPrepareRoute
   '/api/upload/status': typeof ApiUploadStatusRoute
+  '/api/xp/$wallet': typeof ApiXpWalletRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -171,6 +180,7 @@ export interface FileRouteTypes {
     | '/api/upload/challenge'
     | '/api/upload/prepare'
     | '/api/upload/status'
+    | '/api/xp/$wallet'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -188,6 +198,7 @@ export interface FileRouteTypes {
     | '/api/upload/challenge'
     | '/api/upload/prepare'
     | '/api/upload/status'
+    | '/api/xp/$wallet'
   id:
     | '__root__'
     | '/'
@@ -205,6 +216,7 @@ export interface FileRouteTypes {
     | '/api/upload/challenge'
     | '/api/upload/prepare'
     | '/api/upload/status'
+    | '/api/xp/$wallet'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -223,6 +235,7 @@ export interface RootRouteChildren {
   ApiUploadChallengeRoute: typeof ApiUploadChallengeRoute
   ApiUploadPrepareRoute: typeof ApiUploadPrepareRoute
   ApiUploadStatusRoute: typeof ApiUploadStatusRoute
+  ApiXpWalletRoute: typeof ApiXpWalletRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -332,6 +345,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiUploadStatusRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/xp/$wallet': {
+      id: '/api/xp/$wallet'
+      path: '/api/xp/$wallet'
+      fullPath: '/api/xp/$wallet'
+      preLoaderRoute: typeof ApiXpWalletRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -351,6 +371,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiUploadChallengeRoute: ApiUploadChallengeRoute,
   ApiUploadPrepareRoute: ApiUploadPrepareRoute,
   ApiUploadStatusRoute: ApiUploadStatusRoute,
+  ApiXpWalletRoute: ApiXpWalletRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

@@ -1,172 +1,127 @@
-import { useEffect, useState } from "react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useAccount, usePublicClient, useReadContract, useWalletClient } from "wagmi";
-import { NetworkHelp } from "@/components/network-help";
-import { chain } from "@/lib/nft/config";
-import { checkInTreasury, readCheckInAddress, saveCheckInAddress } from "@/lib/nft/checkin-address";
+import { useRef, useState } from "react";
+import {
+  usePublicClient,
+  useReadContract,
+  useWalletClient,
+  useAccount,
+  useSwitchChain,
+} from "wagmi";
+import { useQueryClient } from "@tanstack/react-query";
+import { type Address, type Hash, type PublicClient, type WalletClient, formatEther } from "viem";
+import { NetworkHelp } from "./network-help";
+import { chain, explorer } from "@/lib/nft/config";
 import { abi } from "@/lib/nft/RareCognosCheckIn";
-import { progressFor, saveProgress, utcDay } from "@/lib/member";
-import { transactionError } from "@/lib/nft/transaction";
-import type { Address } from "viem";
+import deployment from "../../config/checkin.json";
+import { records, resumeTransaction, transact, transactionError } from "@/lib/nft/transaction";
+import { xpKey } from "@/lib/nft/use-wallet-xp";
+import { xpPoints, type WalletScore } from "@/lib/nft/xp";
 
-const FEE = 100_000_000_000_000n;
-const DAY = 86_400_000;
-
-function utcDayNumber(date = Date.now()) {
-  return Math.floor(date / DAY);
-}
-
-function labelForDay(day: number) {
-  return new Date(day * DAY).toLocaleDateString("en-GB", { day: "2-digit", month: "short", timeZone: "UTC" });
-}
-
-export function DailyCheckIn({ member }: { member: string }) {
-  const account = useAccount();
-  const client = usePublicClient({ chainId: chain.id });
-  const wallet = useWalletClient();
-  const cache = useQueryClient();
-  const [note, setNote] = useState("");
-  const [busy, setBusy] = useState(false);
-  const [address, setAddress] = useState<Address | undefined>();
-  const done = member ? progressFor(member).checkin === utcDay() : false;
-  const locked = !account.address;
-  const wrong = account.isConnected && account.chainId !== chain.id;
-  const checked = useReadContract({
-    address,
-    abi,
+const target = deployment.address as Address;
+export function DailyCheckIn({ wallet, score }: { wallet: Address; score?: WalletScore }) {
+  const client = usePublicClient({ chainId: chain.id }),
+    signer = useWalletClient(),
+    account = useAccount();
+  const switcher = useSwitchChain(),
+    cache = useQueryClient();
+  const [busy, setBusy] = useState(false),
+    [note, setNote] = useState(""),
+    [hash, setHash] = useState<Hash>();
+  const lock = useRef(false);
+  const read = { address: target, abi, chainId: chain.id };
+  const last = useReadContract({
+    ...read,
     functionName: "lastDay",
-    args: account.address ? [account.address] : undefined,
-    query: { enabled: Boolean(address && account.address) },
+    args: [wallet],
+    query: { refetchInterval: 30000 },
   });
-
-  useEffect(() => {
-    const saved = readCheckInAddress();
-    if (saved) setAddress(saved);
-  }, []);
-
-  async function launch() {
-    if (!wallet.data || !client) return;
-    setBusy(true);
-    setNote("");
-    try {
-      const artifact = await fetch("/contracts/RareCognosCheckIn.json").then((res) => res.json());
-      const hash = await wallet.data.deployContract({
-        abi,
-        bytecode: artifact.bytecode,
-        args: [checkInTreasury],
-      });
-      const receipt = await client.waitForTransactionReceipt({ hash });
-      if (!receipt.contractAddress) throw Error("Deployment did not return a contract.");
-      saveCheckInAddress(receipt.contractAddress);
-      setAddress(receipt.contractAddress);
-      setNote("");
-    } catch (error) {
-      setNote(transactionError(error));
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  async function checkIn() {
-    if (!account.address || !member || !client || !wallet.data || !address || done || busy) return;
-    setBusy(true);
-    setNote("");
-    try {
-      if ((await wallet.data.getChainId()) !== chain.id) throw Error("Switch to LiteForge first.");
-      const hash = await wallet.data.writeContract({
-        address,
-        abi,
-        functionName: "checkIn",
-        args: [],
-        value: FEE,
-      });
-      setNote("");
-      const receipt = await client.waitForTransactionReceipt({ hash });
-      if (receipt.status !== "success") throw Error("Check-in was not confirmed.");
-      const current = progressFor(member);
-      saveProgress(member, {
-        ...current,
-        checkin: utcDay(),
-        xp: current.xp + (current.checkin === utcDay() ? 0 : 10),
-      });
-      await cache.invalidateQueries({ queryKey: ["checkin-board", address, account.address] });
-      await checked.refetch();
-      setNote("");
-    } catch (error) {
-      setNote(transactionError(error));
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  const chainDone = typeof checked.data === "bigint" && Number(checked.data) === Math.floor(Date.now() / 86_400_000);
-  const finished = done || chainDone;
-  const label = finished ? "Recorded" : locked ? "Locked" : !address ? "Launch" : "Check in";
-  const today = utcDayNumber();
-  const last = typeof checked.data === "bigint" ? Number(checked.data) : 0;
-  const logs = useQuery({
-    queryKey: ["checkin-board", address, account.address],
-    enabled: Boolean(client && address && account.address),
-    queryFn: async () => {
-      const latest = await client!.getBlockNumber();
-      const fromBlock = latest > 750_000n ? latest - 750_000n : 0n;
-      return client!.getLogs({
-        address,
-        event: {
-          type: "event",
-          name: "CheckedIn",
-          inputs: [
-            { type: "address", name: "account", indexed: true },
-            { type: "uint256", name: "day", indexed: true },
-            { type: "uint256", name: "fee", indexed: false },
-          ],
-        },
-        args: { account: account.address },
-        fromBlock,
-      });
-    },
-  });
-  const days = new Set(
-    (logs.data || [])
-      .map((log) => (log.args as { day?: bigint }).day)
-      .filter((day): day is bigint => typeof day === "bigint")
-      .map(Number),
+  const fee = useReadContract({ ...read, functionName: "FEE", query: { staleTime: Infinity } });
+  const today = Math.floor(Date.now() / 86400000);
+  const done = last.data === BigInt(today) || (score?.today === today && score.checkedToday);
+  const wrong = account.chainId !== chain.id;
+  const pending = records().find(
+    (r) =>
+      r.status === "pending" &&
+      r.wallet.toLowerCase() === wallet.toLowerCase() &&
+      r.chainId === chain.id &&
+      r.contract.toLowerCase() === target.toLowerCase() &&
+      r.kind === "checkIn",
   );
-  if (last > 0) days.add(last);
-  let streak = 0;
-  for (let day = days.has(today) ? today : today - 1; days.has(day); day -= 1) streak += 1;
-  const detail = finished
-    ? `${labelForDay(today)}${streak > 1 ? ` · ${streak} days` : ""}`
-    : last > 0
-      ? `Last recorded ${labelForDay(last)}`
-      : "Once a day. 0.0001 zkLTC.";
-
-  useEffect(() => {
-    if (!member || !chainDone) return;
-    const current = progressFor(member);
-    if (current.checkin === utcDay()) return;
-    saveProgress(member, { ...current, checkin: utcDay(), xp: current.xp + 10 });
-  }, [member, chainDone]);
-
+  async function submit() {
+    if (
+      lock.current ||
+      wrong ||
+      !client ||
+      !signer.data ||
+      (!pending && (done || fee.data === undefined || last.data === undefined))
+    )
+      return;
+    lock.current = true;
+    setBusy(true);
+    setNote("");
+    const notify = (message: string, tx?: Hash) => {
+      setNote(message);
+      if (tx) setHash(tx);
+    };
+    try {
+      const rpc = client as PublicClient;
+      const receipt = pending
+        ? await resumeTransaction(rpc, pending, notify)
+        : await transact(
+            rpc,
+            signer.data as WalletClient,
+            { address: target, abi, functionName: "checkIn", value: fee.data },
+            notify,
+          );
+      if (receipt.status !== "success") throw Error("Check-in reverted.");
+      setHash(receipt.transactionHash);
+      setNote("Check-in confirmed. Syncing wallet XP.");
+      await Promise.all([last.refetch(), cache.invalidateQueries({ queryKey: xpKey(wallet) })]);
+      setNote("Check-in confirmed.");
+    } catch (e) {
+      setNote(transactionError(e));
+    } finally {
+      lock.current = false;
+      setBusy(false);
+    }
+  }
   return (
-    <li className={`quest-row checkin-row ${finished ? "done" : locked ? "locked" : "ready"}`}>
+    <li className={`quest-row checkin-row ${done ? "done" : "ready"}`}>
       <div>
-        <p className="checkin-kicker">Daily check-in</p>
-        <h2>{finished ? "Recorded today" : "Open today"}</h2>
-        <p>{detail}</p>
-        {(wrong || !account.isConnected) && <NetworkHelp />}
+        <h2>Daily check-in</h2>
+        <p>
+          Once per UTC day.{" "}
+          {fee.data !== undefined && `${formatEther(fee.data)} test zkLTC plus network gas.`}
+        </p>
+        {score && (
+          <p>
+            {score.days} recorded · {score.streak}-day streak
+          </p>
+        )}
+        {wrong && <NetworkHelp />}
         {note && <p role="status">{note}</p>}
+        {hash && explorer && <a href={`${explorer}/tx/${hash}`}>View transaction</a>}
       </div>
-      <span className="xp-chip">10 XP</span>
-      {finished ? (
-        <span className="checkin-recorded">Recorded</span>
+      <span className="xp-chip">{xpPoints.day} XP / day</span>
+      {wrong ? (
+        <button className="nft-button" onClick={() => switcher.switchChain({ chainId: chain.id })}>
+          Switch to LiteForge
+        </button>
+      ) : done && !pending ? (
+        <span className="checkin-recorded">Recorded today</span>
+      ) : (last.isError || fee.isError) && !pending ? (
+        <button
+          className="nft-button"
+          onClick={() => void Promise.all([last.refetch(), fee.refetch()])}
+        >
+          Retry check-in status
+        </button>
       ) : (
         <button
           className="primary-action"
-          disabled={locked || busy || wrong}
-          onClick={() => void (address ? checkIn() : launch())}
+          disabled={busy || (!pending && (fee.data === undefined || last.data === undefined))}
+          onClick={() => void submit()}
         >
-          {busy ? "Confirming…" : label}
+          {busy ? "Confirming…" : pending ? "Recheck receipt" : "Check in"}
         </button>
       )}
     </li>
