@@ -138,3 +138,29 @@ test("a free greeting is wallet-specific, independent of chain activity and coun
   assert.equal(unavailable.xp, null);
   assert.equal(unavailable.chainXp, 160);
 });
+
+test("a sale in the next window joins the old listing and preserves earlier XP", async () => {
+  const { advanceHistory } = await import("./xp-index.server.ts");
+  const rows = [
+    event(checkIn.address, [check, who, padHex("0x63")]),
+    event(market.address, [listing, id, who, other]),
+    event(market.address, [purchase, id, other], "0x05"),
+  ];
+  const read =
+    (min: number) =>
+    async (address: string, topics: readonly (Hex | null)[], from: number, to: number) => {
+      assert.ok(from >= min);
+      return rows.filter(
+        (row) =>
+          row.address === address &&
+          Number(row.blockNumber) >= from &&
+          Number(row.blockNumber) <= to &&
+          topics.every((t, i) => !t || row.topics[i] === t),
+      );
+    };
+  const first = await advanceHistory(wallet, 0, 3, read(0));
+  assert.equal(first.sold, false);
+  const next = await advanceHistory(wallet, 4, 10, read(4), first);
+  assert.equal(next.sold, true);
+  assert.deepEqual(next.days, [99]);
+});

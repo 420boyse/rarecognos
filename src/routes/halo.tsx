@@ -1,3 +1,4 @@
+import { assetLink } from "@/lib/nft/network-market";
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { useAccount, usePublicClient, useReadContract, useSwitchChain, useWalletClient } from "wagmi";
@@ -269,6 +270,7 @@ function HaloCollection() {
                 <p>{mintedWork?.name ?? "Halo edition"}{receipt.tokenId && ` #${receipt.tokenId}`} minted to your wallet.</p>
                 {explorer && <>
                   <a href={`${explorer}/tx/${receipt.hash}`} target="_blank" rel="noreferrer">View transaction</a>
+                  {receipt.tokenId && <p><a className="primary-action" href={assetLink({ collection: receipt.contract, id: receipt.tokenId, multi: false })}>List this NFT</a></p>}
                   {receipt.tokenId && <p><a href={`${explorer}/token/${receipt.contract}/instance/${receipt.tokenId}`} target="_blank" rel="noreferrer">View minted token</a></p>}
                 </>}
               </div>

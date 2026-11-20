@@ -4,6 +4,8 @@ import { type Address, getAddress } from "viem";
 import { abi as factoryABI } from "./RareCognosDropFactory";
 import { abi as dropABI } from "./RareCognosDrop";
 import { chain, contracts, dropsConfigured } from "./config";
+import editionFactory from "../../../config/edition-factory.json";
+import { useRelease } from "./use-release";
 import { metadata } from "./data";
 
 export const dropCall = (address: Address) => ({ address, abi: dropABI });
@@ -39,11 +41,16 @@ export function useDrop(address?: Address) {
   });
 }
 
-export function useCreatorDrops(creator?: Address) {
+export function useEditionFactory() {
+  const expected = contracts.factory?.toLowerCase() === editionFactory.address.toLowerCase() ? editionFactory.runtimeHash : undefined;
+  return useRelease(contracts.factory!, expected, dropsConfigured);
+}
+
+export function useCreatorDrops(creator?: Address, live = true) {
   const client = usePublicClient({ chainId: chain.id });
   return useQuery({
     queryKey: ["creator-drops", chain.id, contracts.factory, creator],
-    enabled: dropsConfigured && !!creator && !!client,
+    enabled: live && dropsConfigured && !!creator && !!client,
     queryFn: async () => {
       const count = await client!.readContract({ ...factoryCall, functionName: "creatorDropCount", args: [creator!] });
       return Promise.all(Array.from({ length: Number(count) }, (_, i) => client!.readContract({ ...factoryCall, functionName: "creatorDropAt", args: [creator!, BigInt(i)] })));

@@ -23,7 +23,7 @@ function HowPage() {
         <div className="section-heading">
           <div>
             <h1>How it works</h1>
-            <p>Four steps. Test funds only.</p>
+            <p>Mint and trade using test zkLTC.</p>
           </div>
         </div>
         <ol className="steps">
@@ -39,12 +39,14 @@ function HowPage() {
             .
           </li>
           <li>
-            <strong>Choose a work.</strong> Eyed is open. Halo is not. Studio images are previews.
+            <strong>Choose a work.</strong> Browse <a href="/midnight-rogues">MIDNIGHT ROGUES</a> or <a href="/eyed">Eyed</a>. Each work shows its mint status and price.
           </li>
           <li>
             <strong>Mint.</strong> The mint price and the network fee are separate. The wallet shows the fee before you
             confirm. A signature for an upload is not a mint.
           </li>
+          <li><strong>List your NFT.</strong> Choose “List this NFT” on your mint receipt, or open <a href="/#my-nfts">My NFTs</a> and pick a work. Enter a price, approve the marketplace when prompted, and confirm the listing in your wallet.</li>
+          <li><strong>Manage your listing.</strong> Open <a href="/network-market?mine=1">your network listings</a> to share or cancel a network sale. Buyers can find active listings on <a href="/explore">Explore</a>.</li>
         </ol>
       </main>
       <SiteFooter />

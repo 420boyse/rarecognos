@@ -1,3 +1,4 @@
+import { assetLink } from "@/lib/nft/network-market";
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { useAccount, usePublicClient, useReadContract, useSwitchChain, useWalletClient } from "wagmi";
@@ -251,7 +252,7 @@ function EyedCollection() {
         <div className="section-heading eyed-heading">
           <div>
             <h1>Eyed</h1>
-            <p>Eight featured works from a set of nine. 100 editions each. Eyed editions are collected on their own contract and cannot be listed in the RareCognos 1/1 market.</p>
+            <p>Eight featured works from a set of nine. 100 editions each. After minting, list your Eyed edition from <a href="/#my-nfts">My NFTs</a> on the LiteForge market.</p>
           </div>
           <p className="status-pill" role="status">{statusText}</p>
         </div>
@@ -316,6 +317,7 @@ function EyedCollection() {
                 <p>{mintedWork?.name ?? "Eyed edition"}{receipt.tokenId && ` #${receipt.tokenId}`} minted to your wallet.</p>
                 {explorer && <>
                   <a href={`${explorer}/tx/${receipt.hash}`} target="_blank" rel="noreferrer">View transaction</a>
+                  {receipt.tokenId && <p><a className="primary-action" href={assetLink({ collection: receipt.contract, id: receipt.tokenId, multi: false })}>List this NFT</a></p>}
                   {receipt.tokenId && <p><a href={`${explorer}/token/${receipt.contract}/instance/${receipt.tokenId}`} target="_blank" rel="noreferrer">View minted token</a></p>}
                 </>}
               </div>

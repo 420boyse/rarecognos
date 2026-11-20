@@ -2,6 +2,7 @@ import { siteOrigin } from "../site-meta";
 import { createConfig, http, injected } from "wagmi";
 import { coinbaseWallet, walletConnect } from "wagmi/connectors";
 import { defineChain, isAddress, type Address, type EIP1193Provider } from "viem";
+import editionFactory from "../../../config/edition-factory.json";
 import deployment from "../../../config/liteforge.json";
 export const liteforge = defineChain({
   id: 4441,
@@ -56,7 +57,7 @@ const market = chain.id === 31337 ? import.meta.env.VITE_NFT_MARKET : deployment
 export const contracts = {
   collection: collection as Address | undefined,
   market: market as Address | undefined,
-  factory: (chain.id === 31337 ? import.meta.env.VITE_DROP_FACTORY : import.meta.env.VITE_DROP_FACTORY) as Address | undefined,
+  factory: (import.meta.env.VITE_DROP_FACTORY || (chain.id === 4441 ? editionFactory.address : undefined)) as Address | undefined,
 };
 export const dropsConfigured = !!contracts.factory && isAddress(contracts.factory);
 export const configured =

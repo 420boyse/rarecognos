@@ -7,17 +7,16 @@ import { useMarketResults } from "@/lib/nft/network-market";
 import { MarketplaceListingCard } from "@/components/marketplace-listing-card";
 import { useListings, useListingSearch } from "@/lib/nft/data";
 import { eyedNetwork, eyedPrice } from "@/data/eyed";
-import { halo, haloPrice } from "@/data/halo";
+import { haloPrice } from "@/data/halo";
 import { works, type Work } from "@/data/works";
 import eyedDeployment from "../../config/eyed.json";
 import haloDeployment from "../../config/halo.json";
-import rogues from "@/data/midnight-rogues.json";
 import { rogueImage, roguePage, useRoguesRelease } from "@/lib/nft/midnight-rogues";
-import { featuredEyed } from "@/lib/nft/piece-index";
+import { searchCatalog, searchParams } from "@/lib/nft/catalog";
 import { useDropStatus } from "@/lib/nft/use-drop-status";
 import { pageMeta } from "@/lib/site-meta";
 
-const faces = featuredEyed();
+
 const studioIds = ["nocturne", "blue-index", "red-aperture", "second-sight"];
 const featuredStudio = studioIds.flatMap((id) => works.filter((work) => work.id === id));
 
@@ -54,7 +53,7 @@ function DeferredArt({ src, eager = false, pixel = false }: { src: string; eager
 }
 
 export const Route = createFileRoute("/explore")({
-  validateSearch: (search: Record<string, unknown>) => ({ q: typeof search.q === "string" ? search.q.slice(0, 120) : "" }),
+  validateSearch: searchParams,
   head: () =>
     pageMeta({
       title: "Explore · RareCognos",
@@ -66,11 +65,12 @@ export const Route = createFileRoute("/explore")({
 });
 
 function ExplorePage() {
-  const searchParams = Route.useSearch();
-  const [query, setQuery] = useState(searchParams.q);
+  const { q: query = "" } = Route.useSearch();
+  const navigate = Route.useNavigate();
+  const setQuery = (q: string) => void navigate({ search: { q }, replace: true, resetScroll: false });
   const [activeStudioWork, setActiveStudioWork] = useState<Work | null>(null);
   const studioDialog = useRef<HTMLDialogElement>(null);
-  useEffect(() => setQuery(searchParams.q), [searchParams.q]);
+
   useEffect(() => {
     if (activeStudioWork && !studioDialog.current?.open) studioDialog.current?.showModal();
   }, [activeStudioWork]);
@@ -85,12 +85,10 @@ function ExplorePage() {
   const matches = [...local.matches.map(card => ({...card, href: `/token/${card.listing.tokenId}`})), ...network.matches];
   const searching = local.searching || !network.settled;
   const showRogues = "midnight rogues".includes(q);
-  const shownRogues = rogues.filter((r) => showRogues || (r.name + " " + r.title + " #" + r.id).toLowerCase().includes(q));
   const showEyedCollection = "eyed".includes(q);
   const showHaloCollection = "halo".includes(q);
-  const shownFaces = faces.filter((face) => showEyedCollection || `eyed ${face.name}`.toLowerCase().includes(q));
-  const shownFigures = halo.filter((figure) => showHaloCollection || `halo ${figure.name}`.toLowerCase().includes(q));
-  const shownStudio = q ? works.filter((work) => work.title.toLowerCase().includes(q)) : featuredStudio;
+  const { rogues: shownRogues, faces: shownFaces, figures: shownFigures, studio } = searchCatalog(q);
+  const shownStudio = q ? studio : featuredStudio;
   const nothing = q && !shownRogues.length && !shownStudio.length && !shownFaces.length && !shownFigures.length && !matches.length &&
     listings.isSuccess && !listings.hasNextPage && !searching;
 
@@ -110,7 +108,7 @@ function ExplorePage() {
             id="explore-q"
             className="explore-search"
             value={query}
-            placeholder="Eyed, Halo, Spire"
+            maxLength={120} placeholder="AURIC, Eyed, Spire…"
             onChange={(event) => setQuery(event.target.value)}
           />
         </label>
