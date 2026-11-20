@@ -8,7 +8,7 @@ import { records, resumeTransaction, transact, transactionError } from "./transa
 
 const mintAbi = parseAbi(["function MINT_PRICE() view returns (uint256)", "function mint(uint256 piece) payable"]);
 
-export function useEditionMint(contract?: Address) {
+export function useEditionMint(contract?: Address, releases?: readonly Address[]) {
   const account = useAccount();
   const wallet = useWalletClient();
   const client = usePublicClient({ chainId: chain.id });
@@ -30,9 +30,10 @@ export function useEditionMint(contract?: Address) {
     };
   }, []);
   const pending = history.find((r) => r.status === "pending" && r.chainId === chain.id &&
-    r.contract.toLowerCase() === contract?.toLowerCase() && r.wallet.toLowerCase() === account.address?.toLowerCase());
+    (r.contract.toLowerCase() === contract?.toLowerCase() || releases?.some((address) => address.toLowerCase() === r.contract.toLowerCase())) && r.kind === "mint" && r.wallet.toLowerCase() === account.address?.toLowerCase());
   async function run(piece: number) {
-    if (lock.current || !contract || !account.address || !client || !wallet.data) return;
+    const target = pending?.contract ?? contract;
+    if (lock.current || !target || !account.address || !client || !wallet.data) return;
     lock.current = true;
     setBusy(true);
     setReceipt(null);
@@ -46,10 +47,10 @@ export function useEditionMint(contract?: Address) {
       const confirmed = pending
         ? await resumeTransaction(rpc, pending, notify)
         : await transact(rpc, wallet.data as WalletClient, {
-            address: contract, abi: mintAbi, functionName: "mint", args: [BigInt(piece)],
-            value: await rpc.readContract({ address: contract, abi: mintAbi, functionName: "MINT_PRICE" }),
+            address: target, abi: mintAbi, functionName: "mint", args: [BigInt(piece)],
+            value: await rpc.readContract({ address: target, abi: mintAbi, functionName: "MINT_PRICE" }),
           }, notify);
-      setReceipt(editionReceipt(confirmed, contract, account.address));
+      setReceipt(editionReceipt(confirmed, target, account.address));
       setNotice("");
       setHash(undefined);
       void cache.invalidateQueries({ queryKey: ["readContract"] });

@@ -43,5 +43,41 @@ try {
   const fee = price * 25n / 10000n;
   assert.equal((await balance(release.owner)) - before, 19n * (price - fee));
   assert.equal((await balance(release.treasury)) - beforeFee, 19n * fee);
-  console.log("Passed deterministic launch, ownership, 10 character URIs, collector ownership, edition cap, price and payouts.");
+  const extension = JSON.parse(fs.readFileSync("config/midnight-rogues-expansion.json"));
+  const extraCode = JSON.parse(fs.readFileSync("public/contracts/MidnightRoguesExpansion.json")).initCode;
+  await confirmed(wallet.sendTransaction({ to: extension.proxy, data: concatHex([extension.salt, extraCode]) }));
+  assert.equal(keccak256(await client.getCode({ address: extension.address })), extension.runtimeHash);
+  const extra = { address: extension.address, abi: [...abi, ...parseAbi([
+    "function editionState(uint256) view returns (uint256,address)",
+    "function original() view returns (address)", "function PIECE_SUPPLY() view returns (uint256)",
+  ])] };
+  const state = (piece) => client.readContract({ ...extra, functionName: "editionState", args: [BigInt(piece)] });
+  const extraMint = (piece, value = price) => wallet.writeContract({ ...extra, functionName: "mint", args: [BigInt(piece)], value });
+  assert.equal(await client.readContract({ ...extra, functionName: "original" }), release.address);
+  assert.equal(await client.readContract({ ...extra, functionName: "PIECE_SUPPLY" }), 100n);
+  assert.equal(await client.readContract({ ...extra, functionName: "owner" }), release.owner);
+  assert.deepEqual(await state(0), [10n, extension.address]);
+  assert.deepEqual(await state(9), [1n, release.address]);
+  await assert.rejects(extraMint(9));
+  await assert.rejects(extraMint(10));
+  await assert.rejects(extraMint(0, price - 1n));
+
+  const creatorBalance = await balance(release.owner), feeBalance = await balance(release.treasury);
+  for (let i = 10; i < 100; ++i) await confirmed(extraMint(0));
+  assert.deepEqual(await state(0), [100n, extension.address]);
+  await assert.rejects(extraMint(0));
+  assert.equal((await balance(release.owner)) - creatorBalance, 90n * (price - fee));
+  assert.equal((await balance(release.treasury)) - feeBalance, 90n * fee);
+  for (const id of [101n, 190n]) {
+    assert.equal(await client.readContract({ ...extra, functionName: "tokenURI", args: [id] }),
+      await client.readContract({ ...call, functionName: "tokenURI", args: [1n] }));
+    assert.equal(await client.readContract({ ...extra, functionName: "ownerOf", args: [id] }), wallet.account.address);
+  }
+  for (let i = 1; i < 10; ++i) await confirmed(mint(9, price));
+  assert.deepEqual(await state(9), [10n, extension.address]);
+  await confirmed(extraMint(9));
+  assert.deepEqual(await state(9), [11n, extension.address]);
+  assert.equal(await client.readContract({ ...extra, functionName: "tokenURI", args: [911n] }),
+    await client.readContract({ ...call, functionName: "tokenURI", args: [91n] }));
+  console.log("Passed original ownership, 10→11 transition, 100th edition, sold-out protection, metadata and payouts.");
 } finally { await server.close(); }

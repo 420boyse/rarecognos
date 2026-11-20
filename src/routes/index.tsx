@@ -14,7 +14,7 @@ import { isAddress, type Address } from "viem";
 import { useMarketResults } from "@/lib/nft/network-market";
 import { MarketplaceListingCard } from "@/components/marketplace-listing-card";
 import { searchCatalog, searchParams } from "@/lib/nft/catalog";
-import { rogueImage, roguePage, useRoguesRelease } from "@/lib/nft/midnight-rogues";
+import { rogueImage, roguePage, rogueEditions, useRoguesRelease } from "@/lib/nft/midnight-rogues";
 import { useListings, useListingSearch } from "@/lib/nft/data";
 const NFTMarket = lazy(() => import("@/components/nft-market").then((module) => ({ default: module.NFTMarket })));
 const NFTDeploy = lazy(() => import("@/components/nft-deploy").then((module) => ({ default: module.NFTDeploy })));
@@ -103,7 +103,7 @@ function Home() {
           <div className="rc-hero-copy">
             <h1 id="hero-title">MIDNIGHT<br />ROGUES</h1>
             <p className="rc-kicker">{rogues.data === true ? "Mint open · LiteForge testnet" : rogues.label}</p>
-            <p>Ten raccoons hunt for a stolen sun. Collect one of 10 editions per character for 0.001 test zkLTC.</p>
+            <p>Ten raccoons hunt for a stolen sun. Collect one of {rogueEditions} editions per character for 0.001 test zkLTC.</p>
             <div className="rc-actions">
               <a className="rc-button rc-button-light" href="/midnight-rogues">Explore MIDNIGHT ROGUES <ArrowRight size={17} /></a>
               <a className="rc-button rc-button-outline" href="/create">Create</a>

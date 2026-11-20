@@ -1,8 +1,11 @@
 import { useRelease } from "./use-release";
 import type { Address } from "viem";
-import release from "../../../config/midnight-rogues.json";
+import release from "../../../config/midnight-rogues-expansion.json";
+import original from "../../../config/midnight-rogues.json";
 
 export const roguesAddress = release.address as Address;
+export const roguesMintContracts = [original.address as Address, roguesAddress] as const;
+export const rogueEditions = 100;
 export const rogueImage = (id: string) => `/art/midnight-rogues/${id}.jpg`;
 export const roguePage = (id: string) => `/midnight-rogues?piece=${id}`;
 export const roguesStory = "In a world where the sun was stolen, ten raccoons rise to change the fate of the night.";

@@ -12,6 +12,7 @@ import {
 import checkIn from "../../../config/checkin.json" with { type: "json" };
 import legacy from "../../../config/liteforge.json" with { type: "json" };
 import eyed from "../../../config/eyed.json" with { type: "json" };
+import expansion from "../../../config/midnight-rogues-expansion.json" with { type: "json" };
 import rogues from "../../../config/midnight-rogues.json" with { type: "json" };
 import halo from "../../../config/halo.json" with { type: "json" };
 import market from "../../../config/liteforge-market.json" with { type: "json" };
@@ -23,7 +24,7 @@ const client = createPublicClient({
   transport: http("https://rpc.testnet.liteforge.zeeve.net", { timeout: 8000, retryCount: 1 }),
 });
 const indexUrl = "https://explorer.testnet.liteforge.zeeve.net/api";
-const collections = [legacy.collection, eyed.address, rogues.address, halo.address].filter(
+const collections = [legacy.collection, eyed.address, expansion.address, rogues.address, halo.address].filter(
   (address) => isAddress(address),
 );
 const checkedIn = toEventSelector("CheckedIn(address,uint256,uint256)");
@@ -208,7 +209,7 @@ async function loadCheckpoint(key: string) {
 }
 
 export async function readWalletScore(wallet: Address, signal?: AbortSignal) {
-  const key = "rarecognos:xp:4441:v1:" + wallet.toLowerCase();
+  const key = "rarecognos:xp:4441:v2:" + wallet.toLowerCase();
   const read: ReadLogs = (address, topics, from, to) => readPage(address, topics, from, to, signal);
   const [head, hello, previous] = await Promise.all([
     client.getBlock({ blockTag: "latest" }),

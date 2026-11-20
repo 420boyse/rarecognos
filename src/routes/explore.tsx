@@ -11,7 +11,7 @@ import { haloPrice } from "@/data/halo";
 import { works, type Work } from "@/data/works";
 import eyedDeployment from "../../config/eyed.json";
 import haloDeployment from "../../config/halo.json";
-import { rogueImage, roguePage, useRoguesRelease } from "@/lib/nft/midnight-rogues";
+import { rogueImage, roguePage, rogueEditions, useRoguesRelease } from "@/lib/nft/midnight-rogues";
 import { searchCatalog, searchParams } from "@/lib/nft/catalog";
 import { useDropStatus } from "@/lib/nft/use-drop-status";
 import { pageMeta } from "@/lib/site-meta";
@@ -126,7 +126,7 @@ function ExplorePage() {
             <ul className="catalog-grid catalog-grid--collections">
               {showRogues && <li><a className="catalog-card" href="/midnight-rogues">
                 <DeferredArt src={rogueImage("001")} eager />
-                <strong>MIDNIGHT ROGUES</strong><em>10 characters · 10 editions each</em>
+                <strong>MIDNIGHT ROGUES</strong><em>10 characters · {rogueEditions} editions each</em>
                 <span>0.001 test zkLTC</span><span className="status-pill">{release.label}</span>
               </a></li>}
               {showEyedCollection && (
