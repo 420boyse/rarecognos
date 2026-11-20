@@ -15,6 +15,7 @@ import eyed from "../../../config/eyed.json" with { type: "json" };
 import rogues from "../../../config/midnight-rogues.json" with { type: "json" };
 import halo from "../../../config/halo.json" with { type: "json" };
 import market from "../../../config/liteforge-market.json" with { type: "json" };
+import { hasHello } from "./hello.server.ts";
 import { walletScore } from "./xp.ts";
 
 const client = createPublicClient({
@@ -98,7 +99,10 @@ export async function* logPages(
 }
 
 export async function readWalletScore(wallet: Address, signal?: AbortSignal) {
-  const head = await client.getBlock({ blockTag: "latest" });
+  const [head, hello] = await Promise.all([
+    client.getBlock({ blockTag: "latest" }),
+    hasHello(wallet).catch(() => null),
+  ]);
   const lastBlock = Number(head.number);
   const today = Number(head.timestamp / 86400n);
   const last = await client.readContract({
@@ -108,8 +112,13 @@ export async function readWalletScore(wallet: Address, signal?: AbortSignal) {
     args: [wallet],
     blockNumber: head.number,
   });
-  return scoreFromEvents(wallet, lastBlock, today, Number(last), (address, topics, from, to) =>
-    readPage(address, topics, from, to, signal),
+  return scoreFromEvents(
+    wallet,
+    lastBlock,
+    today,
+    Number(last),
+    (address, topics, from, to) => readPage(address, topics, from, to, signal),
+    hello,
   );
 }
 
@@ -119,6 +128,7 @@ export async function scoreFromEvents(
   today: number,
   lastCheckIn: number,
   read: (address: string, topics: Topics, from: number, to: number) => Promise<Entry[]>,
+  hello: boolean | null = false,
 ) {
   const who = padHex(wallet);
   const page = (address: string, topics: Topics, from = 0, to = lastBlock) =>
@@ -196,5 +206,5 @@ export async function scoreFromEvents(
     collectionMilestones(),
     firstSale(),
   ]);
-  return walletScore(days, collection.held, collection.minted, sold, today);
+  return walletScore(days, collection.held, collection.minted, sold, today, hello);
 }

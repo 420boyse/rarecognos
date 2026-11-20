@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useAccount } from "wagmi";
 import { MarketHeader } from "@/components/market-header";
 import { SiteFooter } from "@/components/site-footer";
+import { SayHello } from "@/components/say-hello";
 import { DailyCheckIn } from "@/components/daily-check-in";
 import { xpPoints } from "@/lib/nft/xp";
 import { useWalletXp } from "@/lib/nft/use-wallet-xp";
@@ -23,12 +24,6 @@ function QuestPage() {
   const progress = useWalletXp(address);
   const score = progress.data;
   const tasks = [
-    {
-      name: "Welcome to RareCognos",
-      points: xpPoints.hello,
-      earned: score?.hello,
-      detail: "Awarded once with your first verified quest.",
-    },
     {
       name: "Collect a work",
       points: xpPoints.hold,
@@ -83,6 +78,10 @@ function QuestPage() {
                 <p className="xp-figure">{score?.xp ?? "—"}</p>
               </div>
               <dl className="xp-ledger">
+                <div>
+                  <dt>Say hello</dt>
+                  <dd>{score?.hello == null ? "—" : score.hello ? xpPoints.hello : 0}</dd>
+                </div>
                 {tasks.map((task) => (
                   <div key={task.name}>
                     <dt>{task.name}</dt>
@@ -95,6 +94,15 @@ function QuestPage() {
                 </div>
               </dl>
             </section>
+            {score?.hello === null && (
+              <p className="market-notice" role="status">
+                {score.chainXp} XP from chain activity. The greeting record is temporarily
+                unavailable.{" "}
+                <button className="nft-button" onClick={() => void progress.refetch()}>
+                  Retry
+                </button>
+              </p>
+            )}
             {progress.isPending && <p role="status">Reading wallet history…</p>}
             {progress.isError && (
               <p className="market-notice" role="alert">
@@ -105,6 +113,11 @@ function QuestPage() {
               </p>
             )}
             <ul className="quest-list">
+              <SayHello
+                key={`hello-${address.toLowerCase()}`}
+                wallet={address}
+                earned={score?.hello}
+              />
               <DailyCheckIn key={address} wallet={address} score={score} />
               {tasks.map((task) => (
                 <li className={`quest-row ${task.earned ? "done" : "ready"}`} key={task.name}>
