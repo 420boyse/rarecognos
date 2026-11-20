@@ -6,6 +6,7 @@ import { walletScore } from "./xp.ts";
 import checkIn from "../../../config/checkin.json" with { type: "json" };
 import legacy from "../../../config/liteforge.json" with { type: "json" };
 import eyed from "../../../config/eyed.json" with { type: "json" };
+import expansion from "../../../config/midnight-rogues-expansion.json" with { type: "json" };
 import rogues from "../../../config/midnight-rogues.json" with { type: "json" };
 import market from "../../../config/liteforge-market.json" with { type: "json" };
 
@@ -58,7 +59,7 @@ test("check-ins backfill the full history and the last on-chain day bridges inde
   assert.equal(s.streak, 3);
 });
 test("a transfer earns hold once, a real mint earns a separate milestone on each supported collection", async () => {
-  for (const address of [legacy.collection, eyed.address, rogues.address]) {
+  for (const address of [legacy.collection, eyed.address, expansion.address, rogues.address]) {
     const acquired = event(address, [transfer, other, who, id]),
       sent = event(address, [transfer, who, other, id]);
     const first = await score([acquired, sent]);

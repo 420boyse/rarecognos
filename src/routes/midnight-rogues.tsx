@@ -8,11 +8,11 @@ import { MarketHeader } from "@/components/market-header";
 import { SiteFooter } from "@/components/site-footer";
 import { pageMeta } from "@/lib/site-meta";
 import { chain, explorer } from "@/lib/nft/config";
-import { rogueImage, roguePage, roguesAddress, roguesStory, useRoguesRelease } from "@/lib/nft/midnight-rogues";
+import { rogueImage, roguePage, roguesAddress, roguesMintContracts, rogueEditions, roguesStory, useRoguesRelease } from "@/lib/nft/midnight-rogues";
 import { useEditionMint } from "@/lib/nft/use-edition-mint";
-import release from "../../config/midnight-rogues.json";
+import release from "../../config/midnight-rogues-expansion.json";
 
-const mintedAbi = parseAbi(["function mintedOf(uint256) view returns (uint256)"]);
+const mintedAbi = parseAbi(["function editionState(uint256) view returns (uint256 minted, address mintContract)"]);
 export const Route = createFileRoute("/midnight-rogues")({
   validateSearch: (input: Record<string, unknown>) => ({
     piece: rogues.find((item) => item.id === input.piece)?.id,
@@ -42,8 +42,8 @@ function Collection() {
         <h1>{item ? `#${item.id} — ${item.name}` : "MIDNIGHT ROGUES"}</h1>
         <p>{item ? item.title + " " + item.icon : roguesStory}</p>
       </div></div>
-      {setup && !state.data && <OpenRelease release={release} artifact="MidnightRogues" title="Open the collection" action="Open public mint" explanation="One transaction opens all ten characters. Mint proceeds go to the creator after the 0.25% platform fee." ready={state.data === false && !state.isError} refresh={() => void state.refetch()} />}
-      <p className="market-notice">10 editions per character · 0.001 test zkLTC per edition · LiteForge testnet</p>
+      {setup && !state.data && <OpenRelease release={release} artifact="MidnightRoguesExpansion" title="Open the collection" action="Open public mint" explanation="One transaction opens all ten characters. Mint proceeds go to the creator after the 0.25% platform fee." ready={state.data === false && !state.isError} refresh={() => void state.refetch()} />}
+      <p className="market-notice">{rogueEditions} editions per character · 1,000 total · 0.001 test zkLTC per edition · LiteForge testnet</p>
       {item ? <div className="creation-grid">
         <div className="art-preview"><img src={rogueImage(item.id)} alt={item.name + " · " + item.title} /></div>
         <div className="creation-form"><p>{item.story}</p>
@@ -65,13 +65,14 @@ const connect = () => window.dispatchEvent(new Event("rarecognos-login"));
 function Mint({ index }: { index: number }) {
   const account = useAccount();
   const switcher = useSwitchChain();
-  const mint = useEditionMint(roguesAddress);
   const count = useReadContract({ chainId: chain.id, address: roguesAddress, abi: mintedAbi,
-    functionName: "mintedOf", args: [BigInt(index)], query: { refetchInterval: 15000 } });
+    functionName: "editionState", args: [BigInt(index)], query: { refetchInterval: 15000 } });
+  const minted = count.data?.[0];
+  const mint = useEditionMint(count.data?.[1], roguesMintContracts);
   const wrong = account.isConnected && account.chainId !== chain.id;
-  const sold = count.data !== undefined && count.data >= 10n;
+  const sold = minted !== undefined && minted >= BigInt(rogueEditions);
   return <>
-    <p>{count.data !== undefined ? `${count.data} of 10 minted` : count.isError ? "Edition count unavailable" : "Checking editions…"}</p>
+    <p>{minted !== undefined ? `${minted} of ${rogueEditions} minted` : count.isError ? "Edition count unavailable" : "Checking editions…"}</p>
     {!account.isConnected ? <button className="primary-action" onClick={connect}>Connect wallet to mint</button>
       : wrong ? <button className="primary-action" onClick={() => switcher.switchChain({chainId: chain.id})}>Switch to LiteForge</button>
       : <button className="primary-action" disabled={mint.busy || (!mint.pending && (sold || count.data === undefined || count.isError))} onClick={() => void mint.run(index)}>
