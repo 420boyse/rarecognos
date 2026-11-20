@@ -2157,7 +2157,7 @@ button:disabled {
 .market-global-search input::placeholder { color:#8e919c; opacity:1; }
 .market-global-search:focus-within { border-color:#698de8; box-shadow:0 0 0 2px #1558c53b; }
 @media(min-width:1280px) {
-  .market-header-inner { grid-template-columns:auto auto minmax(230px,330px) auto; gap:clamp(18px,2.5vw,38px); }
+  .market-header-inner { grid-template-columns:max-content max-content minmax(140px,1fr) max-content; gap:clamp(18px,2.5vw,38px); }
 }
 @media(max-width:1279px) { .market-global-search { display:none; } }
 
