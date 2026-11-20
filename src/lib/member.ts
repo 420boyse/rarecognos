@@ -1,26 +1,9 @@
 import { useEffect, useState } from "react";
 
 const GMAIL_KEY = "rarecognos.gmail.v1";
-const PROGRESS_KEY = "rarecognos.progress.v1";
 export const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID?.trim() || "";
 
 export type GmailUser = { email: string; name: string };
-
-type Progress = { xp: number; hello: boolean; checkin?: string; held?: boolean };
-
-function readProgress(): Record<string, Progress> {
-  try {
-    return JSON.parse(localStorage.getItem(PROGRESS_KEY) || "{}");
-  } catch {
-    return {};
-  }
-}
-
-export function memberKey(wallet?: string, email?: string) {
-  if (wallet) return `wallet:${wallet.toLowerCase()}`;
-  if (email) return `gmail:${email.toLowerCase()}`;
-  return "";
-}
 
 export function readGmail(): GmailUser | null {
   try {
@@ -37,21 +20,6 @@ export function writeGmail(user: GmailUser | null) {
   if (user) localStorage.setItem(GMAIL_KEY, JSON.stringify(user));
   else localStorage.removeItem(GMAIL_KEY);
   window.dispatchEvent(new Event("rarecognos-gmail"));
-}
-
-export function progressFor(key: string): Progress {
-  return readProgress()[key] || { xp: 0, hello: false };
-}
-
-export function saveProgress(key: string, next: Progress) {
-  const all = readProgress();
-  all[key] = next;
-  localStorage.setItem(PROGRESS_KEY, JSON.stringify(all));
-  window.dispatchEvent(new Event("rarecognos-progress"));
-}
-
-export function utcDay() {
-  return new Date().toISOString().slice(0, 10);
 }
 
 function loadGoogle() {
@@ -102,17 +70,6 @@ export function useGmail() {
     return () => window.removeEventListener("rarecognos-gmail", read);
   }, []);
   return user;
-}
-
-export function useProgress(key: string) {
-  const [value, setValue] = useState<Progress>({ xp: 0, hello: false });
-  useEffect(() => {
-    const read = () => setValue(key ? progressFor(key) : { xp: 0, hello: false });
-    read();
-    window.addEventListener("rarecognos-progress", read);
-    return () => window.removeEventListener("rarecognos-progress", read);
-  }, [key]);
-  return value;
 }
 
 declare global {

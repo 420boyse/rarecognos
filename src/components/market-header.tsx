@@ -4,10 +4,11 @@ import { ChevronDown, LogOut, Grid2X2, QrCode, Wallet, Search, X } from "lucide-
 import { useAccount, useConnect, useDisconnect, useSwitchChain } from "wagmi";
 import { useEffect, useState } from "react";
 import { EyeMark, Wordmark } from "./wordmark";
+import { useWalletXp } from "@/lib/nft/use-wallet-xp";
 import { chain } from "@/lib/nft/config";
 import { addLiteForge, faucetUrl } from "@/lib/nft/network";
 import { transactionError } from "@/lib/nft/transaction";
-import { signInGmail, useGmail, writeGmail, GOOGLE_CLIENT_ID, memberKey, useProgress } from "@/lib/member";
+import { signInGmail, useGmail, writeGmail, GOOGLE_CLIENT_ID } from "@/lib/member";
 function WalletMark({ name }: { name: string }) {
   const normalized = name.toLowerCase();
   const icon = normalized.includes("metamask") ? "metamask" : normalized.includes("trust") ? "trust" : normalized.includes("okx") || normalized.includes("okex") ? "okx" : normalized.includes("coinbase") || normalized.includes("base account") ? "coinbase" : null;
@@ -45,8 +46,8 @@ export function MarketHeader({ view }: { view: string }) {
   const [available, setAvailable] = useState<typeof connect.connectors | null>(null);
   const [connectionError, setConnectionError] = useState("");
   const gmail = useGmail();
-  const member = Boolean(account.address || gmail);
-  const progress = useProgress(memberKey(account.address, gmail?.email));
+  const [menuOpen, setMenuOpen] = useState(false);
+  const progress = useWalletXp(account.address, menuOpen);
   const wrong = account.isConnected && account.chainId !== chain.id;
   const address = account.address
     ? `${account.address.slice(0, 6)}...${account.address.slice(-4)}`
@@ -135,11 +136,9 @@ export function MarketHeader({ view }: { view: string }) {
           <a href="/create" aria-current={view === "Create" ? "page" : undefined}>
             Create
           </a>
-          {member && (
-            <a href="/quest" aria-current={view === "Quest" ? "page" : undefined}>
-              Quest
-            </a>
-          )}
+          <a href="/quest" aria-current={view === "Quest" ? "page" : undefined}>
+            Quest
+          </a>
         </nav>
         <form className="market-global-search" method="get" action="/explore" role="search">
           <Search size={17} aria-hidden="true" />
@@ -176,7 +175,7 @@ export function MarketHeader({ view }: { view: string }) {
             </button>
           )}
           {account.isConnected ? (
-            <Dropdown.Root>
+            <Dropdown.Root onOpenChange={setMenuOpen}>
               <Dropdown.Trigger
                 className={"wallet-button " + (wrong ? "wallet-address-compact" : "")}
                 aria-label={`Account ${address}`}
@@ -191,7 +190,7 @@ export function MarketHeader({ view }: { view: string }) {
                   </Dropdown.Label>
                   <Dropdown.Item asChild>
                     <a href="/quest">
-                      Total XP<span>{progress.xp}</span>
+                      Total XP<span>{progress.data?.xp ?? "—"}</span>
                     </a>
                   </Dropdown.Item>
                   {gmail && (

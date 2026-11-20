@@ -1,116 +1,138 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect } from "react";
-import { useAccount, useReadContract } from "wagmi";
+import { useAccount } from "wagmi";
 import { MarketHeader } from "@/components/market-header";
 import { SiteFooter } from "@/components/site-footer";
 import { DailyCheckIn } from "@/components/daily-check-in";
-import { memberKey, saveProgress, useGmail, useProgress } from "@/lib/member";
-import { configured } from "@/lib/nft/config";
-import { nftCall } from "@/lib/nft/data";
+import { xpPoints } from "@/lib/nft/xp";
+import { useWalletXp } from "@/lib/nft/use-wallet-xp";
+import { pageMeta } from "@/lib/site-meta";
 
 export const Route = createFileRoute("/quest")({
+  head: () =>
+    pageMeta({
+      title: "Wallet XP · RareCognos",
+      description: "Track your LiteForge quests, daily streak and collector milestones.",
+      path: "/quest",
+      image: "/og.jpg",
+    }),
   component: QuestPage,
 });
 
 function QuestPage() {
-  const account = useAccount();
-  const gmail = useGmail();
-  const pending = account.status === "connecting" || account.status === "reconnecting";
-  const key = memberKey(account.address, gmail?.email);
-  const progress = useProgress(key);
-  const allowed = Boolean(account.address || gmail);
-  const balance = useReadContract({
-    ...nftCall,
-    functionName: "balanceOf",
-    args: account.address ? [account.address] : undefined,
-    query: { enabled: configured && !!account.address && !!nftCall.address },
-  });
-  const holds = typeof balance.data === "bigint" && balance.data > 0n;
-
-  useEffect(() => {
-    if (!pending && !allowed) location.replace("/");
-  }, [pending, allowed]);
-
-  const helloXp = progress.hello ? 50 : 0;
-  const heldXp = progress.held ? 150 : 0;
-  const checkinXp = Math.max(0, progress.xp - helloXp - heldXp);
-  const lines = [
-    ["Say hello", helloXp],
-    ["Daily check-in", checkinXp],
-    ["Hold a work", heldXp],
-  ] as const;
-
+  const { address } = useAccount();
+  const progress = useWalletXp(address);
+  const score = progress.data;
+  const tasks = [
+    {
+      name: "Welcome to RareCognos",
+      points: xpPoints.hello,
+      earned: score?.hello,
+      detail: "Awarded once with your first verified quest.",
+    },
+    {
+      name: "Collect a work",
+      points: xpPoints.hold,
+      earned: score?.held,
+      detail:
+        "Receive a RareCognos, Eyed or MIDNIGHT ROGUES NFT. You keep the XP after transferring it.",
+      href: "/explore",
+      link: "Explore collections",
+    },
+    {
+      name: "First mint",
+      points: xpPoints.mint,
+      earned: score?.minted,
+      detail: "Mint your first NFT from one of these collections.",
+      href: "/midnight-rogues",
+      link: "Browse the mint",
+    },
+    {
+      name: "First completed sale",
+      points: xpPoints.sale,
+      earned: score?.sold,
+      detail: "Sell an NFT to another wallet through either RareCognos marketplace.",
+      href: "/#my-nfts",
+      link: "View wallet NFTs",
+    },
+  ];
   return (
-    <div>
+    <>
       <MarketHeader view="Quest" />
       <main className="market-section quest-page">
-        {allowed && (
+        <div className="section-heading">
+          <div>
+            <h1>Wallet XP</h1>
+            <p>Collector milestones and daily check-ins on LiteForge testnet.</p>
+          </div>
+        </div>
+        {!address ? (
+          <div className="market-notice">
+            <p>Connect your wallet to see your XP on any device.</p>
+            <button
+              className="primary-action"
+              onClick={() => window.dispatchEvent(new Event("rarecognos-login"))}
+            >
+              Connect wallet for quests
+            </button>
+          </div>
+        ) : (
           <>
-            <div className="section-heading">
-              <div>
-                <h1>Quest</h1>
-              </div>
-            </div>
-            <p className="quest-disclaimer" role="note">Testnet demo progress: XP is saved in this browser, not as an on-chain reward balance. It does not guarantee any airdrop or future rewards.</p>
             <section className="xp-total" aria-label="Total XP">
               <div>
                 <p className="checkin-kicker">Total XP</p>
-                <p className="xp-figure">{progress.xp}</p>
+                <p className="xp-figure">{score?.xp ?? "—"}</p>
               </div>
               <dl className="xp-ledger">
-                {lines.map(([name, amount]) => (
-                  <div key={name}>
-                    <dt>{name}</dt>
-                    <dd>{amount || "—"}</dd>
+                {tasks.map((task) => (
+                  <div key={task.name}>
+                    <dt>{task.name}</dt>
+                    <dd>{score ? (task.earned ? task.points : 0) : "—"}</dd>
                   </div>
                 ))}
-                <div className="xp-sum">
-                  <dt>Total</dt>
-                  <dd>{progress.xp}</dd>
+                <div>
+                  <dt>Daily check-ins</dt>
+                  <dd>{score ? score.days * xpPoints.day : "—"}</dd>
                 </div>
               </dl>
             </section>
+            {progress.isPending && <p role="status">Reading wallet history…</p>}
+            {progress.isError && (
+              <p className="market-notice" role="alert">
+                Wallet history is temporarily unavailable.{" "}
+                <button className="nft-button" onClick={() => void progress.refetch()}>
+                  Retry
+                </button>
+              </p>
+            )}
             <ul className="quest-list">
-              <li className={`quest-row ${progress.hello ? "done" : "ready"}`}>
-                <div>
-                  <h2>Say hello to Cognos</h2>
-                  <p>One click.</p>
-                </div>
-                <span className="xp-chip">50 XP</span>
-                <button
-                  className="primary-action"
-                  disabled={progress.hello}
-                  onClick={() => {
-                    if (!key || progress.hello) return;
-                    saveProgress(key, { ...progress, hello: true, xp: progress.xp + 50 });
-                  }}
-                >
-                  {progress.hello ? "Done" : "Say hello"}
-                </button>
-              </li>
-              <DailyCheckIn member={key} />
-              <li className={`quest-row ${progress.held ? "done" : holds ? "ready" : "locked"}`}>
-                <div>
-                  <h2>Hold a work</h2>
-                  <p>{holds ? "A work is in this wallet." : "Mint or collect one first."}</p>
-                </div>
-                <span className="xp-chip">150 XP</span>
-                <button
-                  className="primary-action"
-                  disabled={!holds || !!progress.held}
-                  onClick={() => {
-                    if (!key || progress.held || !holds) return;
-                    saveProgress(key, { ...progress, held: true, xp: progress.xp + 150 });
-                  }}
-                >
-                  {progress.held ? "Done" : holds ? "Claim" : "Locked"}
-                </button>
-              </li>
+              <DailyCheckIn key={address} wallet={address} score={score} />
+              {tasks.map((task) => (
+                <li className={`quest-row ${task.earned ? "done" : "ready"}`} key={task.name}>
+                  <div>
+                    <h2>{task.name}</h2>
+                    <p>{task.detail}</p>
+                  </div>
+                  <span className="xp-chip">{task.points} XP</span>
+                  {task.earned ? (
+                    <span className="checkin-recorded">Earned</span>
+                  ) : (
+                    task.href && (
+                      <a className="nft-button" href={task.href}>
+                        {task.link}
+                      </a>
+                    )
+                  )}
+                </li>
+              ))}
             </ul>
+            <p className="quest-disclaimer">
+              XP includes your earlier confirmed transactions. Browser-only demo points have been
+              retired. Testnet XP has no cash value or guaranteed rewards.
+            </p>
           </>
         )}
       </main>
       <SiteFooter />
-    </div>
+    </>
   );
 }
