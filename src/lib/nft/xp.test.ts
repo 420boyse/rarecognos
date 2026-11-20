@@ -40,7 +40,7 @@ test("empty wallet, repeated days, yesterday's streak, gaps and UTC rollover", (
   const s = walletScore([92, 98, 99, 99], false, false, false, 100);
   assert.equal(s.days, 3);
   assert.equal(s.streak, 2);
-  assert.equal(s.xp, 80);
+  assert.equal(s.xp, 30);
   assert.equal(walletScore([98, 99, 100], false, false, false, 100).streak, 3);
   assert.equal(walletScore([98], false, false, false, 100).streak, 0);
 });
@@ -66,7 +66,7 @@ test("a transfer earns hold once, a real mint earns a separate milestone on each
     assert.equal(first.minted, false);
     const mint = event(address, [transfer, padHex(zeroAddress), who, id]);
     const again = await score([mint, mint, acquired, sent]);
-    assert.equal(again.xp, 300);
+    assert.equal(again.xp, 250);
   }
 });
 test("cancellation, unfilled listings and another seller's purchase earn no seller XP", async () => {
@@ -101,4 +101,40 @@ test("an index outage never presents a zero wallet balance", async () => {
     }),
     /Unavailable/,
   );
+});
+
+test("a free greeting is wallet-specific, independent of chain activity and counted once", async () => {
+  const { generatePrivateKey, privateKeyToAccount } = await import("viem/accounts");
+  const { claimHello } = await import("./hello.server.ts");
+  const { helloMessage } = await import("./hello.ts");
+  const owner = privateKeyToAccount(generatePrivateKey());
+  const records = new Set<string>();
+  const store = {
+    has: async (address: string) => records.has(address),
+    save: async (address: string) => {
+      records.add(address);
+    },
+  };
+  const eoa = async () => false;
+  const signature = await owner.signMessage({ message: helloMessage(owner.address) });
+  const otherMessage = await owner.signMessage({ message: "hello" });
+  assert.equal(await claimHello(wallet, signature, store, eoa), false);
+  assert.equal(await claimHello(owner.address, otherMessage, store, eoa), false);
+  assert.equal(await claimHello(owner.address, "invalid", store, eoa), false);
+  assert.equal(records.size, 0);
+  assert.deepEqual(
+    await Promise.all([1, 2].map(() => claimHello(owner.address, signature, store, eoa))),
+    [true, true],
+  );
+  assert.equal(await claimHello(owner.address.toLowerCase(), signature, store, eoa), true);
+  assert.equal(records.size, 1);
+  assert.equal(
+    walletScore([], false, false, false, 100, await store.has(owner.address.toLowerCase())).xp,
+    50,
+  );
+  assert.equal(walletScore([100], true, true, true, 100, false).xp, 460);
+  assert.equal(walletScore([100], true, true, true, 100, true).xp, 510);
+  const unavailable = walletScore([100], true, false, false, 100, null);
+  assert.equal(unavailable.xp, null);
+  assert.equal(unavailable.chainXp, 160);
 });
