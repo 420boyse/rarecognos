@@ -408,7 +408,6 @@ const homeVisualCSS = `
   .rc-create-banner::after{background:linear-gradient(90deg,rgba(3,5,12,.80),rgba(3,5,12,.36) 100%)}
   .rc-create-banner > div:first-child{max-width:100%}
 }
-.rc-create-banner > div:first-child{position:relative;z-index:2}
 @media(max-width:900px){
 .rc-hero::after{background:linear-gradient(180deg,#050506 0%,rgba(5,5,6,.86) 37%,rgba(5,5,6,.18) 58%,transparent 82%)}
 .rc-atmosphere-ribbon-front{width:150%;left:-25%;top:66%;transform:rotate(-5deg)}
