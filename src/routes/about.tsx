@@ -9,7 +9,6 @@ export const Route = createFileRoute("/about")({
       title: "About · RareCognos",
       description: "Discover, create, collect and trade digital art on the LiteForge testnet.",
       path: "/about",
-      image: "/og.jpg",
     }),
   component: AboutPage,
 });

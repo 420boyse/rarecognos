@@ -9,7 +9,7 @@ import rogues from "@/data/midnight-rogues.json";
 import { MarketHeader } from "@/components/market-header";
 import { NetworkHelp } from "@/components/network-help";
 import { SiteFooter } from "@/components/site-footer";
-import { pageMeta } from "@/lib/site-meta";
+import { collectionShareImage, pageMeta } from "@/lib/site-meta";
 import { chain, explorer } from "@/lib/nft/config";
 import { rogueImage, roguePage, roguesAddress, roguesMintContracts, rogueEditions, roguesStory, useRoguesRelease } from "@/lib/nft/midnight-rogues";
 import { useEditionMint } from "@/lib/nft/use-edition-mint";
@@ -27,7 +27,7 @@ export const Route = createFileRoute("/midnight-rogues")({
       title: item ? `${item.name} · MIDNIGHT ROGUES · RareCognos` : "MIDNIGHT ROGUES · RareCognos",
       description: item?.story || roguesStory,
       path: item ? roguePage(item.id) : "/midnight-rogues",
-      image: rogueImage(item?.id || "001"),
+      image: collectionShareImage("midnight-rogues", item),
     });
   },
   component: Collection,

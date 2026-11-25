@@ -25,7 +25,7 @@ export async function marketPreview(assetKey?: string, sale?: string) {
       : "/network-market";
   let title = "LiteForge NFT market";
   let description = "Collect or list ERC-721 and ERC-1155 NFTs on the LiteForge testnet.";
-  let image = "/og.jpg";
+  let image: string | undefined;
   if (!asset && sale) {
     title = "Listing " + sale;
     try {
@@ -64,7 +64,7 @@ export async function marketPreview(assetKey?: string, sale?: string) {
     } catch {
       /* A token without indexed art still has its own share URL. */
     }
-    if (image === "/og.jpg") {
+    if (!image) {
       try {
         const uri = await client.readContract({
           address: asset.collection,
@@ -84,5 +84,5 @@ export async function marketPreview(assetKey?: string, sale?: string) {
       }
     }
   }
-  return pageMeta({ title: title + " · RareCognos", description, path, image });
+  return pageMeta({ title: title + " · RareCognos", description, path, image: image ? { url: image, alt: title } : undefined });
 }

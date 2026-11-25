@@ -14,7 +14,6 @@ export const Route = createFileRoute("/quest")({
       title: "Wallet XP · RareCognos",
       description: "Track your LiteForge quests, daily streak and collector milestones.",
       path: "/quest",
-      image: "/og.jpg",
     }),
   component: QuestPage,
 });

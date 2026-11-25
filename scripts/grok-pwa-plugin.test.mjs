@@ -343,6 +343,26 @@ test("a public host preserves the artwork share card", () => {
   assert.equal(out.split('property="og:image"').length - 1, 1);
 });
 
+test("keeps a page card's dimensions, MIME type and descriptions", () => {
+  const image = "https://rarecognos.com/social/midnight-rogues-001.jpg";
+  const alt = "Auric from Midnight Rogues";
+  const tags = [
+    `<meta property="og:image" content="${image}">`,
+    '<meta property="og:image:type" content="image/jpeg">',
+    '<meta property="og:image:width" content="960">',
+    '<meta property="og:image:height" content="504">',
+    `<meta property="og:image:alt" content="${alt}">`,
+    `<meta name="twitter:image" content="${image}">`,
+    `<meta name="twitter:image:alt" content="${alt}">`,
+  ];
+  const ctx = { host: "rarecognos.com", site: { card: "custom", image: "/og.jpg" } };
+  const out = injectGrokPwaHead(`<html><head>${tags.join("")}</head></html>`, ctx);
+  assert.ok(out.includes(tags.slice(0, 5).join("")));
+  assert.ok(out.includes(tags[6]));
+  assert.equal(out.split('property="og:image:width"').length - 1, 1);
+  assert.equal(injectGrokPwaHead(out, ctx), out);
+});
+
 test("emits og:image for a public host and prefers a custom card", () => {
   const placeholder = injectGrokPwaHead("<html><head></head></html>", {
     appName: "Wild Race",

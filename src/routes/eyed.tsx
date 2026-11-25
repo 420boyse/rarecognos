@@ -16,7 +16,7 @@ import { availabilityLabel, dropStatus } from "@/lib/nft/availability";
 import { phaseLabel, txFailure, type MintPhase } from "@/lib/nft/mint-phase";
 import { eyedContractIndex, eyedVisible } from "@/lib/nft/piece-index";
 import { abi } from "@/lib/nft/RareCognosEyed";
-import { pageMeta } from "@/lib/site-meta";
+import { collectionShareImage, pageMeta } from "@/lib/site-meta";
 import { useEditionMint } from "@/lib/nft/use-edition-mint";
 import { transactionError } from "@/lib/nft/transaction";
 
@@ -38,7 +38,7 @@ export const Route = createFileRoute("/eyed")({
         ? face.story
         : "Eyed is a character collection available to discover and mint on LiteForge.",
       path,
-      image: face ? `/art/eyed/${face.id}.jpg` : "/art/eyed/02.jpg",
+      image: collectionShareImage("eyed", face),
     });
   },
   component: EyedPage,

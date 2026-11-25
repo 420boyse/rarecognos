@@ -59,7 +59,6 @@ export const Route = createFileRoute("/explore")({
       title: "Explore · RareCognos",
       description: "Discover MIDNIGHT ROGUES, Eyed, Halo and works listed on LiteForge.",
       path: "/explore",
-      image: "/art/eyed/02.jpg",
     }),
   component: ExplorePage,
 });

@@ -13,7 +13,7 @@ import haloDeployment from "../../config/halo.json";
 import { availabilityLabel, dropStatus } from "@/lib/nft/availability";
 import { phaseLabel, txFailure, type MintPhase } from "@/lib/nft/mint-phase";
 import { abi } from "@/lib/nft/RareCognosHalo";
-import { pageMeta } from "@/lib/site-meta";
+import { collectionShareImage, pageMeta } from "@/lib/site-meta";
 import { useEditionMint } from "@/lib/nft/use-edition-mint";
 import { transactionError } from "@/lib/nft/transaction";
 
@@ -33,7 +33,7 @@ export const Route = createFileRoute("/halo")({
       title: figure ? `${figure.name} · Halo · RareCognos` : "Halo · RareCognos",
       description: figure ? figure.story : "Halo is a set of six figures. The drop is not open yet.",
       path,
-      image: figure ? `/art/halo/${figure.id}.png` : "/art/halo/01.png",
+      image: collectionShareImage("halo", figure),
     });
   },
   component: HaloPage,

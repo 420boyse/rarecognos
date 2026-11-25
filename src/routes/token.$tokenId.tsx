@@ -25,7 +25,7 @@ export const Route = createFileRoute("/token/$tokenId")({
     title: `${loaderData?.name || `Token #${params.tokenId}`} · RareCognos`,
     description: loaderData?.description || `Discover RareCognos token #${params.tokenId} on the LiteForge testnet.`,
     path: `/token/${params.tokenId}`,
-    image: loaderData?.image || "/og.jpg",
+    image: loaderData?.image ? { url: loaderData.image, alt: loaderData.name } : undefined,
   }),
   component: TokenPage,
 });

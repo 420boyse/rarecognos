@@ -19,7 +19,6 @@ export const Route = createFileRoute("/create")({
       title: "Create · RareCognos",
       description: "Prepare an image, then mint it. Uploading is not the same as minting.",
       path: "/create",
-      image: "/og.jpg",
     }),
   component: CreatePage,
 });

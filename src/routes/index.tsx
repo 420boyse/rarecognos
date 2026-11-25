@@ -24,9 +24,8 @@ export const Route = createFileRoute("/")({
   head: () =>
     pageMeta({
       title: "RareCognos",
-      description: "An eye for the rare. Distinctive digital art on LiteForge.",
+      description: "Discover, mint and trade NFTs on the LiteForge testnet.",
       path: "/",
-      image: rogueImage("001"),
     }),
   component: Home,
 });

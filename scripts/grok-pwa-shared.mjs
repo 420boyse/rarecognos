@@ -14,14 +14,17 @@ const SHARE_META_KEYS = new Set([
   "og:title",
   "og:description",
   "og:image",
+  "og:image:type",
   "og:image:width",
   "og:image:height",
+  "og:image:alt",
   "og:type",
   "og:url",
   "og:site_name",
   "twitter:card",
   "twitter:title",
   "twitter:image",
+  "twitter:image:alt",
   "twitter:description",
   "x:game:image",
   "x:game:image:width",
@@ -457,10 +460,15 @@ export function normalizeHeadContext(ctx = {}) {
 const PAGE_SHARE_KEYS = new Set([
   "og:description",
   "og:image",
+  "og:image:type",
+  "og:image:width",
+  "og:image:height",
+  "og:image:alt",
   "og:url",
   "twitter:title",
   "twitter:description",
   "twitter:image",
+  "twitter:image:alt",
 ]);
 
 function metaAttribute(tag, name) {
@@ -484,9 +492,13 @@ function isAbsoluteHttps(value) {
   return /^https:\/\/[^\s<>"']+$/i.test(value);
 }
 
-function upsertShareMeta(html, key, content) {
+function shareMetaTag(key, content) {
   const attr = key.startsWith("twitter:") ? "name" : "property";
-  const tag = `<meta ${attr}="${key}" content="${escapeHtml(content)}">`;
+  return `<meta ${attr}="${key}" content="${escapeHtml(content)}">`;
+}
+
+function upsertShareMeta(html, key, content, structuredTags = "") {
+  const tag = shareMetaTag(key, content) + structuredTags;
   const re = new RegExp(
     `<meta\\b[^>]*\\b(?:property|name)\\s*=\\s*["']${key.replaceAll(":", "\\:")}["'][^>]*>`,
     "i",
@@ -504,10 +516,15 @@ function applyPageShareMeta(html, authored) {
   if (isAbsoluteHttps(authored["og:image"] || "")) {
     // Platform dimensions describe the default card only.
     next = next.replace(/<meta\b[^>]*property=["']og:image:(?:width|height)["'][^>]*>/gi, "");
-    next = upsertShareMeta(next, "og:image", authored["og:image"]);
+    const details = ["og:image:type", "og:image:width", "og:image:height", "og:image:alt"]
+      .filter((key) => authored[key])
+      .map((key) => shareMetaTag(key, authored[key]))
+      .join("");
+    next = upsertShareMeta(next, "og:image", authored["og:image"], details);
   }
   if (isAbsoluteHttps(authored["twitter:image"] || "")) {
     next = upsertShareMeta(next, "twitter:image", authored["twitter:image"]);
+    if (authored["twitter:image:alt"]) next = upsertShareMeta(next, "twitter:image:alt", authored["twitter:image:alt"]);
   }
   return next;
 }

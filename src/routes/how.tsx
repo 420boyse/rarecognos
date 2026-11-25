@@ -10,7 +10,6 @@ export const Route = createFileRoute("/how")({
       title: "How it works · RareCognos",
       description: "Connect a wallet, add LiteForge, get test zkLTC, then mint.",
       path: "/how",
-      image: "/og.jpg",
     }),
   component: HowPage,
 });
