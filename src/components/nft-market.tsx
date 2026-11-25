@@ -219,6 +219,15 @@ export function NFTMarket({
         </p>
       )}
       {status.wallet === address && status.message && (
+        tab === "Create" && status.token ? (
+          <details className="token-technical">
+            <summary>Mint receipt</summary>
+            <a className="text-link" href={`/token/${status.token}`}>View NFT</a>
+            {status.hash && explorer && (
+              <a className="text-link" href={`${explorer}/tx/${status.hash}`} target="_blank" rel="noreferrer">View transaction</a>
+            )}
+          </details>
+        ) : (
         <div role="status" className="market-notice">
           <p>{status.message}</p>
           {status.hash && explorer && (
@@ -237,15 +246,14 @@ export function NFTMarket({
             </a>
           )}
         </div>
+        )
       )}
       {pending.map((r) => (
         <div key={r.id} className="market-notice">
-          <p>
-            Pending {r.kind} · {r.wallet.slice(0, 6)}… · chain {r.chainId}
-          </p>
-          <p className="uri-text">{r.hash}</p>
+          <p>{tab === "Create" ? "Waiting for confirmation…" : `Pending ${r.kind} · ${r.wallet.slice(0, 6)}… · chain ${r.chainId}`}</p>
+          {tab !== "Create" && <p className="uri-text">{r.hash}</p>}
           <button className="nft-button" disabled={busy} onClick={() => void resume(r)}>
-            Recheck receipt (does not resend)
+            Check transaction status
           </button>
         </div>
       ))}

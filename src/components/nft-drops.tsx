@@ -148,14 +148,17 @@ export function DropCreated({ address, hash }: { address: Address; hash?: Hash }
   const url = dropURL(address);
   return (
     <div className="market-notice drop-created-box" role="status" data-testid="drop-created">
-      <h3>Your drop is live.</h3>
-      <p>Collection deployed and confirmed. Share this public mint page:</p>
-      <p className="uri-text">{url}</p>
+      <h3>Your drop is live</h3>
       <div className="drop-card-actions">
-        <a className="primary-action" href={`/#drop/${address}`}>Open public mint</a>
-        <button className="nft-button" onClick={() => void navigator.clipboard.writeText(url)}>Copy share link</button>
-        {hash && explorer && <a className="text-link" href={`${explorer}/tx/${hash}`} target="_blank" rel="noreferrer">View deployment transaction</a>}
+        <a className="primary-action" href={`/#drop/${address}`}>View mint page</a>
+        <button type="button" className="nft-button" onClick={() => void navigator.clipboard.writeText(url)}>Copy mint link</button>
       </div>
+      {hash && explorer && (
+        <details className="token-technical">
+          <summary>Transaction details</summary>
+          <a className="text-link" href={`${explorer}/tx/${hash}`} target="_blank" rel="noreferrer">View transaction</a>
+        </details>
+      )}
     </div>
   );
 }

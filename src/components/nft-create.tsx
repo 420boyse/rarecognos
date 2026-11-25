@@ -1,10 +1,10 @@
 import { useEffect, useState, useRef } from "react";
-import { useAccount, useWalletClient, useReadContract, usePublicClient } from "wagmi";
+import { useAccount, useWalletClient, useReadContract } from "wagmi";
 import { useQuery } from "@tanstack/react-query";
 import { formatEther, keccak256, parseEther, toHex, type Address, type Hash } from "viem";
 import { chain, contracts, configured } from "@/lib/nft/config";
 import { mediaURL, nftCall } from "@/lib/nft/data";
-import { assertChain, records, resumeTransaction, transactionError, type transact } from "@/lib/nft/transaction";
+import { assertChain, records, transactionError, type transact } from "@/lib/nft/transaction";
 import { useEditionFactory } from "@/lib/nft/drops";
 import { createDrop, DropCreated } from "./nft-drops";
 export const uploadAPI = (import.meta.env.VITE_UPLOAD_API_URL || "/api/upload").replace(/\/$/, "");
@@ -30,8 +30,7 @@ export function NFTCreate({
   const factory = useEditionFactory();
   const dropsConfigured = factory.data === true && !factory.isError;
   const account = useAccount(),
-    wallet = useWalletClient(),
-    client = usePublicClient({ chainId: chain.id });
+    wallet = useWalletClient();
   const [file, setFile] = useState<File>(),
     [preview, setPreview] = useState(""),
     [name, setName] = useState(""),
@@ -65,6 +64,8 @@ export function NFTCreate({
     retry: 1,
   });
   useEffect(() => {
+    setCreated(undefined);
+    setProgress("");
     try {
       const saved = JSON.parse(localStorage.getItem(key) || "null") as Prepared | null;
       setPrepared(saved || undefined);
@@ -171,12 +172,12 @@ export function NFTCreate({
         description,
         rights,
       });
-      setProgress("Confirm in your wallet. This only allows the upload. It does not send zkLTC.");
+      setProgress("Approve the upload in your wallet. This signature is free.");
       const signature = await wallet.data.signTypedData(challenge.typed);
       const current = await wallet.data.getAddresses();
       if (current[0]?.toLowerCase() !== address.toLowerCase())
         throw Error("Account changed. Prepare again with the current wallet.");
-      setProgress("Uploading image and metadata…");
+      setProgress("Uploading artwork…");
       let binary = "";
       for (const n of new Uint8Array(bytes)) binary += String.fromCharCode(n);
       const result = (await post("/prepare", {
@@ -189,7 +190,7 @@ export function NFTCreate({
       localStorage.setItem(key, JSON.stringify(result));
       if (currentAccount.current?.toLowerCase() !== address.toLowerCase()) return;
       setPrepared(result);
-      setProgress("Artwork prepared. Review it before minting.");
+      setProgress("");
     } catch (e) {
       setProgress(transactionError(e));
     } finally {
@@ -201,8 +202,12 @@ export function NFTCreate({
     functionName: "tokenForURI",
     args: [keccak256(toHex(prepared?.uri || ""))],
     chainId: chain.id,
-    query: { enabled: configured && !!prepared },
+    query: { enabled: configured && !!prepared && kind === "single" },
   });
+  const mintedId = kind === "single" && minted.data ? minted.data : undefined;
+  const finished = !!mintedId || !!created;
+  const checkingMint = kind === "single" && minted.isPending;
+  const actionLabel = busy ? (kind === "single" ? "Minting…" : "Creating collection…") : kind === "single" ? "Mint NFT" : "Create collection";
   const disabled = busy || uploading;
   const priceValue = (() => { try { return parseEther(price || "0"); } catch { return 0n; } })();
   const fee = priceValue * 25n / 10000n;
@@ -233,59 +238,68 @@ export function NFTCreate({
         )}
       </div>
       <div className="creation-form">
-        {dropsConfigured && <div className="kind-toggle" role="group" aria-label="Creation type"><button type="button" disabled={!!prepared || uploading} aria-pressed={kind === "single"} onClick={() => setKind("single")}>1/1 artwork</button><button type="button" disabled={!!prepared || uploading} aria-pressed={kind === "edition"} onClick={() => setKind("edition")}>Limited edition</button></div>}
-        <h3>{prepared ? (kind === "edition" ? "Ready to launch" : "Ready to mint") : kind === "edition" ? "Create a limited edition" : "Create a 1/1 work"}</h3>
-        <p>
-          {kind === "edition"
-            ? "A fixed supply from one artwork. Collectors mint from that edition."
-            : "One artwork, one NFT."}
-        </p>
+        {dropsConfigured && !prepared && <div className="kind-toggle" role="group" aria-label="Creation type"><button type="button" disabled={uploading} aria-pressed={kind === "single"} onClick={() => setKind("single")}>1/1 artwork</button><button type="button" disabled={uploading} aria-pressed={kind === "edition"} onClick={() => setKind("edition")}>Limited edition</button></div>}
+        {!created && <h3 aria-live="polite">{mintedId ? "NFT minted" : prepared ? (kind === "edition" ? "Ready to launch" : "Ready to mint") : kind === "edition" ? "Create a limited edition" : "Create a 1/1 work"}</h3>}
         {prepared ? (
           <>
-            {pending && <button className="nft-button" disabled={busy} onClick={async () => { if (!client) return; setProgress("Checking transaction receipt…"); try { await resumeTransaction(client, pending, setProgress); } catch (e) { setProgress(transactionError(e)); } }}>Recheck pending transaction (does not resend)</button>}
             {created && <DropCreated address={created.address} hash={created.hash} />}
             <h4>{prepared.name}</h4>
-            <p>{prepared.description}</p>
-            <p className="uri-text">Metadata: {prepared.uri}</p>
-            <p>Creator: {prepared.creator}</p>
-            <p>Edition 1/1 · Mint price 0 zkLTC + estimated network fee shown in your wallet</p>
-            {kind === "edition" && <>
-              <label>Collection symbol<input maxLength={32} value={symbol} disabled={disabled || !!created} onChange={e => setSymbol(e.target.value.toUpperCase())} /></label>
-              <label>Max supply<input type="number" min="1" value={supply} disabled={disabled || !!created} onChange={e => setSupply(e.target.value)} /></label>
-              <label>Max mints per wallet<input type="number" min="1" value={limit} disabled={disabled || !!created} onChange={e => setLimit(e.target.value)} /></label>
-              <label>Mint price ({chain.nativeCurrency.symbol})<input inputMode="decimal" value={price} disabled={disabled || !!created} onChange={e => setPrice(e.target.value)} /></label>
-              <label>Optional mint start<input type="datetime-local" value={start} disabled={disabled || !!created} onChange={e => setStart(e.target.value)} /></label>
-              <label>Optional mint end<input type="datetime-local" value={end} disabled={disabled || !!created} onChange={e => setEnd(e.target.value)} /></label>
-              <p className="market-notice">{priceValue === 0n ? "Free mint: no RareCognos platform fee. Collectors pay network gas." : <>Total paid per mint: {formatEther(priceValue)} {chain.nativeCurrency.symbol}<br />RareCognos Treasury: 0.25% ({formatEther(fee)} {chain.nativeCurrency.symbol})<br />Creator proceeds: 99.75% ({formatEther(priceValue - fee)} {chain.nativeCurrency.symbol})<br />Network gas is paid separately by the collector.</>}</p>
-            </>}
-            <button
-              className="primary-action"
-              disabled={!ready || disabled || !!pending || !!created || (kind === "single" ? !!minted.data : !validEdition || !dropsConfigured) || prepared.creator.toLowerCase() !== account.address?.toLowerCase()}
-              onClick={() => kind === "single" ? void run({ ...nftCall, functionName: "mint", args: [prepared.uri] }) : void createDrop(run, { name: prepared.name, symbol: symbol.trim(), description: prepared.description, uri: prepared.uri, supply: BigInt(supply), price: priceValue, limit: BigInt(limit), start: start ? BigInt(Math.floor(new Date(start).getTime() / 1000)) : 0n, end: end ? BigInt(Math.floor(new Date(end).getTime() / 1000)) : 0n }, (address, hash) => setCreated({ address, hash }))}
-            >
-              {kind === "single" ? (minted.data ? "Already minted" : "Mint this work") : created ? "Drop created" : "Create collection"}
-            </button>
-            {kind === "edition" && !dropsConfigured && <p className="market-notice">The new drop factory is not deployed/configured on this network. Existing NFT creation remains available.</p>}
-            {!!minted.data && (
-              <a className="text-link" href={`/token/${minted.data}`}>
-                View minted token #{String(minted.data)}
-              </a>
+            {prepared.description && <p>{prepared.description}</p>}
+            {!mintedId && kind === "single" && (
+              <p>1/1 edition · 0 {chain.nativeCurrency.symbol} + network fee</p>
             )}
+            {kind === "edition" && !created && <>
+              <label>Collection symbol<input maxLength={32} value={symbol} disabled={disabled} onChange={e => setSymbol(e.target.value.toUpperCase())} /></label>
+              <label>Max supply<input type="number" min="1" value={supply} disabled={disabled} onChange={e => setSupply(e.target.value)} /></label>
+              <label>Max mints per wallet<input type="number" min="1" value={limit} disabled={disabled} onChange={e => setLimit(e.target.value)} /></label>
+              <label>Mint price ({chain.nativeCurrency.symbol})<input inputMode="decimal" value={price} disabled={disabled} onChange={e => setPrice(e.target.value)} /></label>
+              <details className="token-technical">
+                <summary>Mint schedule</summary>
+                <label>Mint starts<input type="datetime-local" value={start} disabled={disabled} onChange={e => setStart(e.target.value)} /></label>
+                <label>Mint ends<input type="datetime-local" value={end} disabled={disabled} onChange={e => setEnd(e.target.value)} /></label>
+              </details>
+              <p>{priceValue === 0n ? "Collectors pay only the network fee." : `You receive ${formatEther(priceValue - fee)} ${chain.nativeCurrency.symbol} per mint after the 0.25% platform fee.`}</p>
+            </>}
+            {mintedId ? (
+              <a className="primary-action" href={`/token/${mintedId}`}>View NFT</a>
+            ) : !created && (
+              <button
+                type="button"
+                className="primary-action"
+                disabled={!ready || disabled || !!pending || checkingMint || (kind === "edition" && (!validEdition || !dropsConfigured)) || prepared.creator.toLowerCase() !== account.address?.toLowerCase()}
+                onClick={() => kind === "single" ? void run({ ...nftCall, functionName: "mint", args: [prepared.uri] }) : void createDrop(run, { name: prepared.name, symbol: symbol.trim(), description: prepared.description, uri: prepared.uri, supply: BigInt(supply), price: priceValue, limit: BigInt(limit), start: start ? BigInt(Math.floor(new Date(start).getTime() / 1000)) : 0n, end: end ? BigInt(Math.floor(new Date(end).getTime() / 1000)) : 0n }, (address, hash) => setCreated({ address, hash }))}
+              >
+                {pending ? "Waiting for confirmation…" : checkingMint ? "Checking mint status…" : actionLabel}
+              </button>
+            )}
+            {kind === "edition" && !dropsConfigured && <p className="market-notice">Limited editions are unavailable on this network.</p>}
             <button
+              type="button"
               className="nft-button"
-              disabled={disabled}
+              disabled={disabled || !!pending}
               onClick={() => {
                 localStorage.removeItem(key);
                 setPrepared(undefined);
                 setCreated(undefined);
+                setProgress("");
+                if (finished) {
+                  setFile(undefined);
+                  setName("");
+                  setDescription("");
+                  setRights(false);
+                }
               }}
             >
-              Prepare another work
+              {finished ? "Create another NFT" : "Back to editing"}
             </button>
-            <p>
-              Rejecting mint keeps this prepared record. After confirmation, the same URI cannot be
-              minted twice.
-            </p>
+            <details className="token-technical">
+              <summary>Technical details</summary>
+              <dl className="token-technical-facts">
+                <dt>Network</dt><dd>{chain.name}</dd>
+                <dt>Creator</dt><dd>{prepared.creator}</dd>
+                <dt>Metadata URI</dt><dd>{prepared.uri}</dd>
+              </dl>
+            </details>
           </>
         ) : (
           <>
@@ -382,9 +396,7 @@ export function NFTCreate({
             )}
           </>
         )}
-        {!account.address && prepared && (
-          <p>Connect a wallet to mint. This prepared record stays in the browser.</p>
-        )}
+        {!account.address && prepared && <p>Connect your wallet to continue.</p>}
         <p role="status" aria-live="polite">
           {progress}
         </p>

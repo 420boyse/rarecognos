@@ -6,6 +6,7 @@ import { formatEther, isAddress, type Address, type Hash } from "viem";
 import { FanStackNFT } from "@/components/fan-stack-nft";
 import { DropFacts } from "@/components/drop-facts";
 import { MarketHeader } from "@/components/market-header";
+import { NetworkHelp } from "@/components/network-help";
 import { SiteFooter } from "@/components/site-footer";
 import { eyed, eyedNetwork, eyedPrice } from "@/data/eyed";
 import { chain, explorer } from "@/lib/nft/config";
@@ -256,6 +257,7 @@ function EyedCollection() {
           </div>
           <p className="status-pill" role="status">{statusText}</p>
         </div>
+        {live && (!account.isConnected || wrong) && <NetworkHelp />}
         <FanStackNFT
           initialId={pieceId}
           focusId={pieceId}

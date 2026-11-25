@@ -165,7 +165,7 @@ try {
   await page.getByLabel('Description').fill('End-to-end verified free edition drop.');
   await page.getByRole('checkbox').check();
   await page.getByRole('button', { name: 'Upload & prepare NFT' }).click();
-  await page.getByText('Artwork prepared. Review it before minting.').waitFor({ timeout: 20000 });
+  await page.getByRole('heading', { name: 'Ready to launch' }).waitFor({ timeout: 20000 });
 
   // 3. Configure & deploy FREE Limited Edition drop (price = 0, maxSupply = 10, limit = 2)
   await page.getByLabel('Collection symbol').fill('GFREE');

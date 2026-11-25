@@ -7,6 +7,9 @@ import { chain, contracts, configured } from "./config";
 import catalogMetadata from "./catalog-metadata.json";
 
 const knownContent = new Map(Object.entries(catalogMetadata));
+const listingPreviews = new Map([
+  ["ipfs://bafkreia7jam5772x3ueypnq3sracocossuskjcvuxb6ejpnkng6bbfhxhu", "/art/rare-listing.webp"],
+]);
 
 export const nftCall = { address: contracts.collection!, abi: nft },
   marketCall = { address: contracts.market!, abi: market };
@@ -234,8 +237,9 @@ export function useListingSearch(listings: MarketplaceListing[], query: string) 
   const matches = listings.flatMap((listing, i) => {
     const title = art[i].data?.name?.trim() || `Token #${listing.tokenId}`;
     const fields = [title, `token #${listing.tokenId}`, listing.seller, tokens[i].data?.creator];
+    const preview = listingPreviews.get(tokens[i].data?.uri ?? "");
     return fields.some((field) => field?.toLowerCase().includes(term))
-      ? [{ listing, title, image: art[i].data?.image, loading: tokens[i].isPending || art[i].isFetching }]
+      ? [{ listing, title, image: preview ?? art[i].data?.image, loading: tokens[i].isPending || art[i].isFetching }]
       : [];
   });
   return { matches, searching: tokens.some((token) => token.isPending) || art.some((entry) => entry.isFetching) };

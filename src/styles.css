@@ -705,6 +705,7 @@
 }
 .network-help {
   display: flex;
+  flex-wrap: wrap;
   gap: 16px;
   align-items: center;
   margin: 0 0 16px;
@@ -1939,6 +1940,9 @@ button:disabled {
 .steps {
   margin: 0;
   padding-left: 1.2em;
+}
+.steps .network-help {
+  margin: 8px 0 0;
 }
 .home-collections {
   padding-top: 48px;

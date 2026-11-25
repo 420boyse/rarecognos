@@ -270,13 +270,24 @@ export function NFTToken({ id, detail = false, ready, run }: Props) {
             ) : (
               t.active && (
                 <div className="token-actions">
-                  <button
-                    className="primary-action"
-                    disabled={!ready || fee.data === undefined}
-                    onClick={() => void buy()}
-                  >
-                    Buy for {formatEther(salePrice!)} zkLTC
-                  </button>
+                  {account.isConnected ? (
+                    <button
+                      type="button"
+                      className="primary-action"
+                      disabled={!ready || fee.data === undefined}
+                      onClick={() => void buy()}
+                    >
+                      Buy for {formatEther(salePrice!)} zkLTC
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      className="primary-action"
+                      onClick={() => window.dispatchEvent(new Event("rarecognos-login"))}
+                    >
+                      Connect wallet to buy
+                    </button>
+                  )}
                   <details className="token-more">
                     <summary>More</summary>
                     <p>
@@ -346,10 +357,9 @@ export function NFTToken({ id, detail = false, ready, run }: Props) {
                 </a>
               )}
             </details>
-            {!account.address && (
+            {!account.address && !t.active && (
               <p className="market-notice">
-                Connect your wallet in the top bar to{" "}
-                {t.active ? "buy this work" : "manage this work"}. You will stay on this artwork.
+                Connect your wallet in the top bar to manage this work. You will stay on this artwork.
               </p>
             )}
           </>

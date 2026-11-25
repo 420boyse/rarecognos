@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { MarketHeader } from "@/components/market-header";
+import { NetworkHelp } from "@/components/network-help";
 import { SiteFooter } from "@/components/site-footer";
-import { faucetUrl } from "@/lib/nft/network";
 import { pageMeta } from "@/lib/site-meta";
 
 export const Route = createFileRoute("/how")({
@@ -32,11 +32,8 @@ function HowPage() {
             Wallet, Rainbow, or OKX.
           </li>
           <li>
-            <strong>Add LiteForge.</strong> The network button is in the header. Then{" "}
-            <a href={faucetUrl} target="_blank" rel="noreferrer">
-              get test zkLTC
-            </a>
-            .
+            <strong>Add LiteForge.</strong> Add the testnet to your wallet, then get test zkLTC from the faucet.
+            <NetworkHelp />
           </li>
           <li>
             <strong>Choose a work.</strong> Browse <a href="/midnight-rogues">MIDNIGHT ROGUES</a> or <a href="/eyed">Eyed</a>. Each work shows its mint status and price.

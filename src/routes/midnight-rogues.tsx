@@ -7,6 +7,7 @@ import { parseAbi, parseEther } from "viem";
 import { useAccount, useBalance, useReadContract, useSwitchChain } from "wagmi";
 import rogues from "@/data/midnight-rogues.json";
 import { MarketHeader } from "@/components/market-header";
+import { NetworkHelp } from "@/components/network-help";
 import { SiteFooter } from "@/components/site-footer";
 import { pageMeta } from "@/lib/site-meta";
 import { chain, explorer } from "@/lib/nft/config";
@@ -79,6 +80,7 @@ function Mint({ index }: { index: number }) {
   const sold = minted !== undefined && minted >= BigInt(rogueEditions);
   return <>
     <p>{minted !== undefined ? `${minted} of ${rogueEditions} minted` : count.isError ? "Edition count unavailable" : "Checking editions…"}</p>
+    {(!account.isConnected || wrong) && <NetworkHelp />}
     <div className="rogue-mint-action">
     <span className="rogue-mint-price">0.001 test zkLTC <small>+ network fee</small></span>
     {!account.isConnected ? <button className="primary-action" onClick={connect}>Connect wallet to mint</button>
